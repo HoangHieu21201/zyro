@@ -1,0 +1,264 @@
+const admin = [
+  {
+    path: '/admin/login',
+    name: 'admin-login',
+    component: () => import('../pages/admin/auth/Login.vue'),
+  },
+  {
+    path: '/admin/register',
+    name: 'admin-register',
+    component: () => import('../pages/admin/auth/Register.vue'),
+  },
+  {
+    path: '/admin/forgot-password',
+    name: 'admin-forgot-password',
+    component: () => import('../pages/admin/auth/ForgotPassword.vue'),
+  },
+  {
+    path: '/admin/reset-password',
+    name: 'admin-reset-password',
+    component: () => import('../pages/admin/auth/ResetPassword.vue'),
+  },
+  {
+    path: '/admin',
+    component: () => import('../layouts/AdminLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'admin-dashboard',
+        component: () => import('../pages/admin/index.vue'),
+      },
+      {
+        path: '/admin/profile',
+        name: 'admin-profile',
+        component: () => import('../pages/admin/account/Profile.vue'),
+      },
+      {
+        path: 'roles',
+        name: 'admin-roles',
+        component: () => import('../pages/admin/role/Index.vue'),
+        meta: { moduleCode: 'admin_roles' },
+      },
+      // crud staff
+      {
+        path: 'staff',
+        name: 'admin-staff-index',
+        component: () => import('../pages/admin/account/staff/Index.vue'),
+        meta: { moduleCode: 'admin_staff' },
+      },
+      {
+        path: 'staff/create',
+        name: 'admin-staff-create',
+        component: () => import('../pages/admin/account/staff/Create.vue'),
+        meta: { moduleCode: 'admin_staff' },
+      },
+      {
+        path: 'staff/:id/edit',
+        name: 'admin-staff-edit',
+        component: () => import('../pages/admin/account/staff/Edit.vue'),
+        meta: { moduleCode: 'admin_staff' },
+      },
+      {
+        // ROUTE QUẢN LÝ KHÁCH HÀNG (USERS)
+        path: 'users',
+        name: 'admin-users',
+        meta: { moduleCode: 'admin_users' },
+        component: () => import('../pages/admin/account/user/Index.vue'),
+      },
+      {
+        path: 'account/users/create',
+        name: 'admin-user-create',
+        meta: { moduleCode: 'admin_users' },
+        component: () => import('../pages/admin/account/user/Create.vue'),
+      },
+      {
+        path: 'account/users/edit/:id',
+        name: 'admin-user-edit',
+        meta: { moduleCode: 'admin_users' },
+        component: () => import('../pages/admin/account/user/Edit.vue'),
+      },
+      // ROUTE QUẢN LÝ DANH MỤC (CATEGORIES)
+      {
+        path: 'categories',
+        name: 'admin-categories',
+        meta: { moduleCode: 'admin_categories' },
+        component: () => import('../pages/admin/category/Index.vue'),
+      },
+      {
+        path: 'categories/create',
+        name: 'admin-category-create',
+        meta: { moduleCode: 'admin_categories' },
+        component: () => import('../pages/admin/category/Create.vue'),
+      },
+      {
+        path: 'categories/edit/:id',
+        name: 'admin-category-edit',
+        meta: { moduleCode: 'admin_categories' },
+        component: () => import('../pages/admin/category/Edit.vue'),
+      },
+      // ROUTE QUẢN LÝ SẢN PHẨM (PRODUCTS)
+      {
+        path: 'products',
+        name: 'admin-products',
+        component: () => import('../pages/admin/product/Index.vue'),
+        meta: { moduleCode: 'admin_products' },
+      },
+      {
+        path: 'products/create',
+        name: 'admin-products-create',
+        component: () => import('../pages/admin/product/Create.vue'),
+        meta: { moduleCode: 'admin_products' },
+      },
+      {
+        path: 'products/:id/edit',
+        name: 'admin-products-edit',
+        component: () => import('../pages/admin/product/Edit.vue'),
+        meta: { moduleCode: 'admin_products' },
+      },
+      // ROUTE QUẢN LÝ THƯƠNG HIỆU (BRANDS)
+      {
+        path: 'brands',
+        name: 'admin-brands',
+        component: () => import('../pages/admin/brand/Index.vue'),
+        meta: { moduleCode: 'admin_brands' },
+      },
+      {
+        path: 'brands/create',
+        name: 'admin-brands-create',
+        component: () => import('../pages/admin/brand/Create.vue'),
+        meta: { moduleCode: 'admin_brands' },
+      },
+      {
+        path: 'brands/:id/edit',
+        name: 'admin-brands-edit',
+        component: () => import('../pages/admin/brand/Edit.vue'),
+        meta: { moduleCode: 'admin_brands' },
+      },
+
+      // ROUTE QUẢN LÝ BANNER (BANNERS) - THÊM MỚI
+      {
+        path: 'banners',
+        name: 'admin-banners',
+        component: () => import('../pages/admin/banner/Index.vue'),
+        meta: { moduleCode: 'admin_banners' },
+      },
+      {
+        path: 'banners/create',
+        name: 'admin-banners-create',
+        component: () => import('../pages/admin/banner/Create.vue'),
+        meta: { moduleCode: 'admin_banners' },
+      },
+      {
+        path: 'banners/:id/edit',
+        name: 'admin-banners-edit',
+        component: () => import('../pages/admin/banner/Edit.vue'),
+        meta: { moduleCode: 'admin_banners' },
+      },
+
+      // ROUTE QUẢN LÝ CHÂN DUNG SORA (GALLERY)
+      {
+        path: 'gallery',
+        name: 'admin-gallery',
+        component: () => import('../pages/admin/gallery/Index.vue'),
+        meta: { moduleCode: 'admin_gallery' },
+      },
+      {
+        path: 'gallery/create',
+        name: 'admin-gallery-create',
+        component: () => import('../pages/admin/gallery/Create.vue'),
+        meta: { moduleCode: 'admin_gallery' },
+      },
+      {
+        path: 'gallery/:id/edit',
+        name: 'admin-gallery-edit',
+        component: () => import('../pages/admin/gallery/Edit.vue'),
+        meta: { moduleCode: 'admin_gallery' },
+      },
+
+      // ROUTE QUẢN LÝ ĐƠN HÀNG (ORDERS)
+      {
+        path: 'orders',
+        name: 'admin-orders',
+        component: () => import('../pages/admin/order/Index.vue'),
+        meta: { moduleCode: 'admin_orders' },
+      },
+      {
+        path: 'orders/returns',
+        name: 'admin-orders-returns',
+        component: () => import('../pages/admin/order/Returns.vue'),
+        meta: { moduleCode: 'admin_orders' },
+      },
+      {
+        path: 'coupons',
+        name: 'admin-coupons',
+        component: () => import('../pages/admin/coupon/index.vue'),
+      },
+      {
+        path: 'coupons/create',
+        name: 'admin-coupon-create',
+        component: () => import('../pages/admin/coupon/create.vue'),
+      },
+      {
+        path: 'coupons/:id/edit',
+        name: 'admin-coupon-edit',
+        component: () => import('../pages/admin/coupon/edit.vue'),
+      },
+
+      // ROUTE QUẢN LÝ HẠNG THÀNH VIÊN (MEMBERSHIP TIERS)
+      {
+        path: 'tiers',
+        name: 'admin-tiers',
+        component: () => import('../pages/admin/tier/Index.vue'),
+        meta: { moduleCode: 'admin_roles' },
+      },
+      {
+        path: 'tiers/create',
+        name: 'admin-tiers-create',
+        component: () => import('../pages/admin/tier/Create.vue'),
+        meta: { moduleCode: 'admin_roles' },
+      },
+      {
+        path: 'tiers/:id/edit',
+        name: 'admin-tiers-edit',
+        component: () => import('../pages/admin/tier/Edit.vue'),
+        meta: { moduleCode: 'admin_roles' },
+      },
+      // ROUTE QUẢN LÝ COMBO SẢN PHẨM (PRODUCT COMBOS)
+      {
+        path: 'combos',
+        name: 'admin-combos',
+        component: () => import('../pages/admin/combo/Index.vue'),
+        meta: { moduleCode: 'admin_combos' },
+      },
+      {
+        path: 'combos/create',
+        name: 'admin-combos-create',
+        component: () => import('../pages/admin/combo/Create.vue'),
+        meta: { moduleCode: 'admin_combos' },
+      },
+      {
+        path: 'combos/:id/edit',
+        name: 'admin-combos-edit',
+        component: () => import('../pages/admin/combo/Edit.vue'),
+        meta: { moduleCode: 'admin_combos' },
+      },
+        // ROUTE QUẢN LÝ ĐÁNH GIÁ (REVIEWS)
+      {
+        path: 'reviews',
+        name: 'admin-reviews',
+        component: () => import('../pages/admin/review/Index.vue'),
+        meta: { moduleCode: 'admin_reviews' },
+      },
+      // ROUTE QUẢN LÝ KHO HÀNG (INVENTORY)
+      {
+        path: 'inventory',
+        name: 'admin-inventory',
+        component: () => import('../pages/admin/inventory/Index.vue'),
+        meta: { moduleCode: 'admin_inventory' },
+      }
+
+    ],
+  },
+]
+
+export default admin

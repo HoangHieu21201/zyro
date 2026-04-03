@@ -1,0 +1,866 @@
+<template>
+  <div class="profile-page bg-light-custom font-sans pb-5 min-vh-100 position-relative">
+    
+    <!-- Tiêu đề trang -->
+    <section class="py-5 bg-white text-center shadow-sm mb-5">
+      <div class="container py-3">
+        <h1 class="display-6 font-serif text-main mb-3">Tài Khoản Của Tôi</h1>
+        <div class="divider bg-accent mx-auto"></div>
+      </div>
+    </section>
+
+    <div class="container">
+      <div v-if="!isLoggedIn" class="text-center py-5 bg-white shadow-sm p-5 border border-light mb-5">
+        <h4 class="text-danger-custom mb-3">Bạn chưa đăng nhập!</h4>
+        <p class="text-secondary mb-4">Vui lòng đăng nhập để xem và chỉnh sửa thông tin cá nhân.</p>
+        <router-link to="/login" class="btn btn-main px-5 py-2 text-uppercase">Đăng nhập ngay</router-link>
+      </div>
+
+      <div v-else class="row g-4 g-lg-5">
+        
+        <!-- SIDEBAR MENU BÊN TRÁI -->
+        <div class="col-lg-3">
+          <div class="bg-white p-4 shadow-sm border border-light text-center mb-4 rounded-3">
+            
+            <!-- Avatar (Có thể click để đổi ảnh) -->
+            <div class="avatar-wrapper mx-auto mb-4 position-relative rounded-circle overflow-hidden bg-light" 
+                 style="width: 130px; height: 130px; cursor: pointer; border: 4px solid #fff; box-shadow: 0 0 0 2px #e7ce7d, 0 8px 16px rgba(0,0,0,0.1);" 
+                 @click="triggerFileInput" title="Click để thay đổi ảnh đại diện">
+              
+              <img :src="previewAvatar || getImageUrl(form.avatar_url) || 'https://ui-avatars.com/api/?name=' + form.fullName + '&background=9f273b&color=fff'" 
+                   alt="Avatar" class="w-100 h-100 object-fit-cover" style="object-position: center;">
+              
+              <!-- Lớp phủ khi hover -->
+              <div class="avatar-upload-overlay position-absolute top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span class="small mt-1 fw-medium" style="font-size: 0.75rem; letter-spacing: 0.5px;">Đổi ảnh</span>
+              </div>
+            </div>
+            
+            <!-- Thẻ input file ẩn -->
+            <input type="file" ref="fileInput" class="d-none" accept="image/*" @change="handleFileChange">
+
+            <h5 class="font-serif text-dark mb-1 fw-bold" style="font-size: 1.25rem;">{{ form.fullName || 'Thành viên SORA' }}</h5>
+            <p class="text-muted small fw-light mb-0">{{ form.email }}</p>
+          </div>
+
+          <div class="bg-white shadow-sm border border-light overflow-hidden rounded-3">
+            <ul class="list-unstyled mb-0 profile-menu">
+              <li>
+                <router-link to="/profile" class="d-flex align-items-center p-3 text-decoration-none active-menu">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="me-3"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                  Hồ sơ cá nhân
+                </router-link>
+              </li>
+              <li>
+                <router-link to="/order" class="d-flex align-items-center p-3 text-decoration-none text-secondary">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="me-3"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
+                  Đơn mua của tôi
+                </router-link>
+              </li>
+              <li>
+                <router-link to="/favourite" class="d-flex align-items-center p-3 text-decoration-none text-secondary">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="me-3"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                  Sản phẩm yêu thích
+                </router-link>
+              </li>
+              <li class="border-top">
+                <a href="#" @click.prevent="logout" class="d-flex align-items-center p-3 text-decoration-none text-danger-custom">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="me-3"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                  Đăng xuất
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- CÁC FORM CẬP NHẬT BÊN PHẢI -->
+        <div class="col-lg-9">
+          <div class="bg-white p-4 p-md-5 shadow-sm border border-light mb-4 rounded-3">
+            
+            <!-- FORM 1: THÔNG TIN CÁ NHÂN & ĐỊA CHỈ -->
+            <h3 class="h4 font-serif text-dark mb-1">Hồ Sơ Của Tôi</h3>
+            <p class="text-secondary fw-light border-bottom pb-3 mb-4">Quản lý thông tin hồ sơ để bảo mật tài khoản</p>
+
+            <div v-if="isLoading" class="text-center py-5">
+              <div class="spinner-border text-accent" role="status"></div>
+            </div>
+
+            <form v-else @submit.prevent="updateProfile">
+              <div class="row mb-4 align-items-center">
+                <label class="col-sm-3 col-form-label text-sm-end text-secondary fw-medium">Tên Đăng Nhập / Email</label>
+                <div class="col-sm-9 col-md-7">
+                  <input type="email" class="form-control bg-light text-muted" :value="form.email" disabled>
+                  <small class="text-muted fw-light mt-1 d-block">Email không thể thay đổi</small>
+                </div>
+              </div>
+
+              <div class="row mb-4 align-items-center">
+                <label for="fullName" class="col-sm-3 col-form-label text-sm-end text-secondary fw-medium">Họ Và Tên</label>
+                <div class="col-sm-9 col-md-7">
+                  <input type="text" class="form-control custom-input" id="fullName" v-model="form.fullName" required placeholder="Nhập họ và tên của bạn">
+                </div>
+              </div>
+
+              <div class="row mb-4 align-items-center">
+                <label for="phone" class="col-sm-3 col-form-label text-sm-end text-secondary fw-medium">Số Điện Thoại</label>
+                <div class="col-sm-9 col-md-7">
+                  <input type="tel" class="form-control custom-input" id="phone" v-model="form.phone" placeholder="Nhập số điện thoại liên hệ">
+                </div>
+              </div>
+
+              <div class="row mb-4 align-items-center">
+                <label class="col-sm-3 col-form-label text-sm-end text-secondary fw-medium">Giới Tính</label>
+                <div class="col-sm-9 col-md-7 d-flex gap-4 pt-2">
+                  <div class="form-check custom-radio">
+                    <input class="form-check-input" type="radio" name="gender" id="genderMale" value="Nam" v-model="form.gender">
+                    <label class="form-check-label text-secondary" for="genderMale">Nam</label>
+                  </div>
+                  <div class="form-check custom-radio">
+                    <input class="form-check-input" type="radio" name="gender" id="genderFemale" value="Nữ" v-model="form.gender">
+                    <label class="form-check-label text-secondary" for="genderFemale">Nữ</label>
+                  </div>
+                  <div class="form-check custom-radio">
+                    <input class="form-check-input" type="radio" name="gender" id="genderOther" value="Khác" v-model="form.gender">
+                    <label class="form-check-label text-secondary" for="genderOther">Khác</label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row mb-4 align-items-center">
+                <label for="birthday" class="col-sm-3 col-form-label text-sm-end text-secondary fw-medium">Ngày Sinh</label>
+                <div class="col-sm-9 col-md-7">
+                  <input type="date" class="form-control custom-input" id="birthday" v-model="form.birthday">
+                </div>
+              </div>
+
+              <!-- ĐÃ CẬP NHẬT: HIỂN THỊ ĐỊA CHỈ TRỰC TIẾP TRONG FORM -->
+              <div class="row mb-5 align-items-start">
+                <label class="col-sm-3 col-form-label text-sm-end text-secondary fw-medium pt-2">Sổ Địa Chỉ</label>
+                <div class="col-sm-9 col-md-7">
+                  
+                  <div v-if="isLoadingAddresses" class="spinner-border spinner-border-sm text-accent mt-2" role="status"></div>
+                  
+                  <!-- Trạng thái chưa có địa chỉ -->
+                  <div v-else-if="!defaultAddress" class="d-flex align-items-center justify-content-between bg-light p-3 rounded border border-light">
+                    <span class="text-secondary fw-light small">Chưa có địa chỉ nhận hàng.</span>
+                    <button type="button" @click="openAddAddressModal" class="btn btn-sm btn-outline-main text-uppercase fw-medium rounded-0" style="letter-spacing: 0.05em;">
+                      + Thêm Mới
+                    </button>
+                  </div>
+
+                  <!-- Trạng thái đã có địa chỉ (Hiện trực tiếp) -->
+                  <div v-else class="border border-light p-3 rounded-3 bg-light-custom position-relative transition-all hover-shadow">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                      <h6 class="mb-0 text-dark font-serif d-flex align-items-center fw-bold">
+                        {{ defaultAddress.customer_name }}
+                        <span class="text-muted mx-2 fw-light fw-normal">|</span>
+                        <span class="text-secondary fw-normal fs-6">{{ defaultAddress.customer_phone }}</span>
+                      </h6>
+                      <!-- Nút Mở Modal Sổ địa chỉ -->
+                      <button type="button" @click="openAddressListModal" class="btn btn-link text-accent p-0 text-decoration-none fw-medium small" style="font-size: 0.85rem;">
+                        Thay Đổi
+                      </button>
+                    </div>
+                    <p class="text-secondary mb-1 small">{{ defaultAddress.shipping_address }}</p>
+                    <p class="text-secondary mb-0 fw-light small">{{ defaultAddress.ward }}, {{ defaultAddress.district }}, {{ defaultAddress.city }}</p>
+                    
+                    <span v-if="defaultAddress.is_default" class="badge bg-main text-white mt-2 px-2 py-1" style="font-size: 0.65rem;">Mặc Định</span>
+                    <span v-if="addresses.length > 1" class="text-muted small ms-2 fw-light fst-italic">(và {{ addresses.length - 1 }} địa chỉ khác)</span>
+                  </div>
+
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-sm-9 offset-sm-3">
+                  <button type="submit" class="btn btn-main px-5 py-2 text-uppercase fw-medium rounded-0" :disabled="isSaving" style="letter-spacing: 0.1em;">
+                    <span v-if="isSaving" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                    Lưu Thay Đổi
+                  </button>
+                </div>
+              </div>
+            </form>
+
+            <!-- FORM 2: ĐỔI MẬT KHẨU -->
+            <div class="mt-5 pt-4 border-top">
+              <h3 class="h4 font-serif text-dark mb-1">Đổi Mật Khẩu</h3>
+              <p class="text-secondary fw-light mb-4">Để bảo mật tài khoản, vui lòng không chia sẻ mật khẩu cho người khác</p>
+              
+              <form @submit.prevent="changePassword">
+                <div class="row mb-4 align-items-center">
+                  <label for="currentPassword" class="col-sm-3 col-form-label text-sm-end text-secondary fw-medium">Mật Khẩu Hiện Tại</label>
+                  <div class="col-sm-9 col-md-7">
+                    <input type="password" class="form-control custom-input" id="currentPassword" v-model="passwordForm.current_password" required placeholder="Nhập mật khẩu hiện tại">
+                  </div>
+                </div>
+                
+                <div class="row mb-4 align-items-center">
+                  <label for="newPassword" class="col-sm-3 col-form-label text-sm-end text-secondary fw-medium">Mật Khẩu Mới</label>
+                  <div class="col-sm-9 col-md-7">
+                    <input type="password" class="form-control custom-input" id="newPassword" v-model="passwordForm.password" required minlength="6" placeholder="Nhập mật khẩu mới (ít nhất 6 ký tự)">
+                  </div>
+                </div>
+
+                <div class="row mb-4 align-items-center">
+                  <label for="confirmPassword" class="col-sm-3 col-form-label text-sm-end text-secondary fw-medium">Xác Nhận Mật Khẩu</label>
+                  <div class="col-sm-9 col-md-7">
+                    <input type="password" class="form-control custom-input" id="confirmPassword" v-model="passwordForm.password_confirmation" required placeholder="Nhập lại mật khẩu mới">
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="col-sm-9 offset-sm-3">
+                    <button type="submit" class="btn btn-outline-main px-5 py-2 text-uppercase fw-medium rounded-0" :disabled="isChangingPassword" style="letter-spacing: 0.1em;">
+                      <span v-if="isChangingPassword" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                      Đổi Mật Khẩu
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL QUẢN LÝ SỔ ĐỊA CHỈ (CỬA SỔ BẬT LÊN)  -->
+    <!-- ========================================== -->
+    <transition name="modal-fade">
+      <div v-if="isAddressModalOpen" class="custom-modal-overlay" @click.self="closeAddressModal">
+        <div class="custom-modal-content p-4 p-md-5 position-relative">
+          
+          <!-- Nút Đóng Modal -->
+          <button type="button" class="btn-close position-absolute top-0 end-0 m-4" @click="closeAddressModal" aria-label="Close"></button>
+
+          <!-- TIÊU ĐỀ & NÚT THÊM -->
+          <div class="d-flex justify-content-between align-items-end mb-4 border-bottom pb-3">
+            <div>
+              <h3 class="h4 font-serif text-dark mb-1">Sổ Địa Chỉ</h3>
+              <p class="text-secondary fw-light mb-0">Quản lý địa chỉ nhận hàng của bạn</p>
+            </div>
+            <button v-if="!showAddressForm" @click="openAddAddressForm" class="btn btn-main px-4 py-2 text-uppercase fw-medium rounded-0" style="font-size: 0.85rem; letter-spacing: 0.05em;">
+              + Thêm Địa Chỉ
+            </button>
+          </div>
+
+          <!-- GIAO DIỆN HIỂN THỊ DANH SÁCH -->
+          <div v-if="!showAddressForm">
+            <div v-if="addresses.length === 0" class="text-center py-5 bg-light border border-light rounded-3">
+              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="text-muted mb-3 opacity-50 mx-auto">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <p class="text-secondary mb-0">Bạn chưa có địa chỉ nào được lưu.</p>
+            </div>
+
+            <div v-else class="row g-3">
+              <div v-for="addr in addresses" :key="addr.id" class="col-12">
+                <div class="border border-light p-4 position-relative bg-light-custom rounded-3 transition-all hover-shadow">
+                  <!-- Badge Mặc Định -->
+                  <span v-if="addr.is_default" class="badge bg-main position-absolute top-0 end-0 m-3 px-3 py-2 fw-medium tracking-wide">Mặc Định</span>
+                  
+                  <div class="row align-items-center">
+                    <div class="col-md-8 col-lg-9">
+                      <h5 class="font-serif text-dark mb-2 d-flex align-items-center fw-bold">
+                        {{ addr.customer_name }} 
+                        <span class="text-muted mx-2 fw-light fw-normal">|</span> 
+                        <span class="text-secondary fw-normal fs-6">{{ addr.customer_phone }}</span>
+                      </h5>
+                      <p class="text-secondary mb-1">{{ addr.shipping_address }}</p>
+                      <p class="text-secondary mb-0 fw-light">{{ addr.ward }}, {{ addr.district }}, {{ addr.city }}</p>
+                    </div>
+                    
+                    <div class="col-md-4 col-lg-3 d-flex flex-column justify-content-center align-items-md-end mt-3 mt-md-0 border-md-start ps-md-4">
+                      <div class="d-flex gap-3 mb-2">
+                        <a href="#" @click.prevent="openEditAddressForm(addr)" class="text-accent text-decoration-none fw-medium hover-main transition-all">Cập nhật</a>
+                        <a href="#" @click.prevent="confirmDeleteAddress(addr.id)" class="text-danger-custom text-decoration-none fw-medium transition-all">Xóa</a>
+                      </div>
+                      <button v-if="!addr.is_default" @click="setDefaultAddress(addr.id)" class="btn btn-sm btn-outline-secondary rounded-0 mt-2 w-100">Làm mặc định</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- GIAO DIỆN FORM THÊM / CẬP NHẬT TRONG MODAL -->
+          <div v-if="showAddressForm" class="bg-white">
+            <h4 class="font-serif text-main mb-4">{{ isEditingAddress ? 'Cập Nhật Địa Chỉ' : 'Thêm Địa Chỉ Mới' }}</h4>
+            <form @submit.prevent="saveAddress">
+              <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                  <label class="form-label text-secondary small fw-medium">Họ và tên người nhận</label>
+                  <input type="text" class="form-control custom-input bg-white" v-model="addressForm.customer_name" required placeholder="Nhập họ tên">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label text-secondary small fw-medium">Số điện thoại</label>
+                  <input type="tel" class="form-control custom-input bg-white" v-model="addressForm.customer_phone" required placeholder="Nhập số điện thoại">
+                </div>
+              </div>
+
+              <div class="row g-4 mb-4">
+                <div class="col-md-4">
+                  <label class="form-label text-secondary small fw-medium">Tỉnh / Thành phố</label>
+                  <input type="text" class="form-control custom-input bg-white" v-model="addressForm.city" required placeholder="VD: TP. Hồ Chí Minh">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label text-secondary small fw-medium">Quận / Huyện</label>
+                  <input type="text" class="form-control custom-input bg-white" v-model="addressForm.district" required placeholder="VD: Quận 1">
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label text-secondary small fw-medium">Phường / Xã</label>
+                  <input type="text" class="form-control custom-input bg-white" v-model="addressForm.ward" required placeholder="VD: Phường Bến Nghé">
+                </div>
+              </div>
+
+              <div class="mb-4">
+                <label class="form-label text-secondary small fw-medium">Địa chỉ cụ thể</label>
+                <input type="text" class="form-control custom-input bg-white" v-model="addressForm.shipping_address" required placeholder="Số nhà, tên tòa nhà, tên đường...">
+              </div>
+
+              <div class="form-check custom-checkbox mb-5">
+                <input class="form-check-input" type="checkbox" id="isDefaultAddress" v-model="addressForm.is_default">
+                <label class="form-check-label text-secondary" for="isDefaultAddress">Đặt làm địa chỉ mặc định</label>
+              </div>
+
+              <div class="d-flex gap-3">
+                <button type="submit" class="btn btn-main px-5 py-2 rounded-0 text-uppercase fw-medium" :disabled="isSavingAddress" style="letter-spacing: 0.05em;">
+                  <span v-if="isSavingAddress" class="spinner-border spinner-border-sm me-2"></span>Hoàn Thành
+                </button>
+                <button type="button" @click="closeAddressForm" class="btn btn-outline-secondary px-5 py-2 rounded-0 text-uppercase fw-medium" style="letter-spacing: 0.05em;">Trở Lại</button>
+              </div>
+            </form>
+          </div>
+
+        </div>
+      </div>
+    </transition>
+
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted } from 'vue';
+import axios from 'axios';
+import { useRouter } from 'vue-router';
+// ĐÃ FIX: Import thư viện SweetAlert2 giống hệt trang Sản Phẩm
+import Swal from 'sweetalert2';
+
+const router = useRouter();
+
+// ==========================================
+// CẤU HÌNH THÔNG BÁO (SWEETALERT2 ĐỒNG BỘ UI)
+// ==========================================
+const soraAlert = Swal.mixin({
+  buttonsStyling: true,
+  confirmButtonColor: '#9f273b',
+  customClass: {
+    confirmButton: 'px-4 py-2 mx-2 rounded-0 shadow-sm fw-bold font-oswald tracking-widest text-uppercase'
+  }
+});
+
+const showToast = (message, type = 'success') => {
+  soraAlert.fire({
+    icon: type,
+    title: type === 'success' ? 'Thành Công!' : 'Có Lỗi Xảy Ra!',
+    text: message,
+    timer: type === 'success' ? 2500 : undefined,
+    showConfirmButton: type !== 'success'
+  });
+};
+
+// Trạng thái chung
+const isLoggedIn = ref(false);
+const isLoading = ref(true);
+const isSaving = ref(false);
+const isChangingPassword = ref(false);
+
+// Khai báo quản lý upload Ảnh
+const fileInput = ref(null);
+const avatarFile = ref(null);
+const previewAvatar = ref(null);
+
+// ==========================================
+// STATE QUẢN LÝ SỔ ĐỊA CHỈ
+// ==========================================
+const addresses = ref([]);
+const isLoadingAddresses = ref(false);
+const isAddressModalOpen = ref(false); 
+const showAddressForm = ref(false);
+const isEditingAddress = ref(false);
+const isSavingAddress = ref(false);
+const addressForm = ref({
+  id: null,
+  customer_name: '',
+  customer_phone: '',
+  shipping_address: '',
+  city: '',
+  district: '',
+  ward: '',
+  is_default: false
+});
+
+// Computed: Lấy địa chỉ mặc định để show lên Form Hồ Sơ (Trực quan ngay từ đầu)
+const defaultAddress = computed(() => {
+  if (addresses.value.length === 0) return null;
+  const def = addresses.value.find(addr => addr.is_default);
+  return def || addresses.value[0]; // Nếu không set mặc định, tự lấy cái đầu tiên
+});
+
+// Form data hồ sơ
+const form = ref({
+  fullName: '',
+  email: '',
+  phone: '',
+  gender: '',
+  birthday: '',
+  avatar_url: ''
+});
+
+// Form data đổi mật khẩu
+const passwordForm = ref({
+  current_password: '',
+  password: '',
+  password_confirmation: ''
+});
+
+const apiBase = 'http://localhost:8000/api/client/profile'; 
+
+// Quét Token
+const getToken = () => {
+  const commonKeys = ['access_token', 'token', 'auth_token', 'userToken', 'user_token'];
+  for (const k of commonKeys) {
+    const val = localStorage.getItem(k) || sessionStorage.getItem(k);
+    if (val && val.length > 15) return val; 
+  }
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    try {
+      const parsed = JSON.parse(localStorage.getItem(key));
+      if (parsed && typeof parsed === 'object') {
+        if (parsed.access_token) return parsed.access_token;
+        if (parsed.token) return parsed.token;
+      }
+    } catch(e) {}
+  }
+  return '';
+};
+
+// Hàm lấy URL ảnh đầy đủ
+const getImageUrl = (path) => {
+  if (!path) return null;
+  if (path.startsWith('http')) return path;
+  return `http://localhost:8000/storage/${path}`;
+};
+
+// ==========================================
+// CÁC HÀM XỬ LÝ SỔ ĐỊA CHỈ 
+// ==========================================
+
+// Mở Modal kèm form Thêm mới luôn
+const openAddAddressModal = () => {
+  isAddressModalOpen.value = true;
+  openAddAddressForm();
+};
+
+// Mở Modal nhưng show danh sách
+const openAddressListModal = () => {
+  isAddressModalOpen.value = true;
+  showAddressForm.value = false;
+};
+
+// Đóng Modal (Tự động chuyển về danh sách)
+const closeAddressModal = () => {
+  isAddressModalOpen.value = false;
+  setTimeout(() => {
+    showAddressForm.value = false;
+  }, 300); // Đợi modal mờ đi rồi mới reset view
+};
+
+const fetchAddresses = async () => {
+  isLoadingAddresses.value = true;
+  try {
+    const response = await axios.get(`${apiBase}/addresses`, {
+      headers: { Authorization: `Bearer ${getToken()}`, Accept: 'application/json' }
+    });
+    if (response.data.status) {
+      addresses.value = response.data.data;
+    }
+  } catch (error) {
+    console.error('Lỗi lấy địa chỉ:', error);
+  } finally {
+    isLoadingAddresses.value = false;
+  }
+};
+
+const openAddAddressForm = () => {
+  isEditingAddress.value = false;
+  addressForm.value = { 
+    id: null, 
+    customer_name: form.value.fullName || '', 
+    customer_phone: form.value.phone || '',   
+    shipping_address: '', 
+    city: '', 
+    district: '', 
+    ward: '', 
+    is_default: addresses.value.length === 0 
+  };
+  showAddressForm.value = true;
+};
+
+const openEditAddressForm = (addr) => {
+  isEditingAddress.value = true;
+  addressForm.value = { 
+    ...addr, 
+    is_default: addr.is_default === 1 || addr.is_default === true 
+  };
+  showAddressForm.value = true;
+};
+
+const closeAddressForm = () => {
+  // Nếu list rỗng mà user tắt form, đóng hẳn modal
+  if (addresses.value.length === 0) {
+    closeAddressModal();
+  } else {
+    showAddressForm.value = false;
+  }
+};
+
+const saveAddress = async () => {
+  isSavingAddress.value = true;
+  try {
+    const url = isEditingAddress.value ? `${apiBase}/addresses/${addressForm.value.id}` : `${apiBase}/addresses`;
+    const method = isEditingAddress.value ? 'put' : 'post';
+    const payload = { ...addressForm.value, is_default: addressForm.value.is_default ? 1 : 0 };
+
+    const response = await axios[method](url, payload, {
+      headers: { Authorization: `Bearer ${getToken()}`, Accept: 'application/json' }
+    });
+
+    if (response.data.status) {
+      showToast(response.data.message, 'success');
+      fetchAddresses(); 
+      showAddressForm.value = false; // Quay lại danh sách
+    }
+  } catch (error) {
+    if (error.response && error.response.status === 422) {
+       showToast('Vui lòng điền đầy đủ thông tin địa chỉ.', 'error');
+    } else {
+       showToast('Lỗi lưu địa chỉ.', 'error');
+    }
+  } finally {
+    isSavingAddress.value = false;
+  }
+};
+
+const confirmDeleteAddress = async (id) => {
+  soraAlert.fire({
+    title: 'Xóa Địa Chỉ?',
+    text: "Bạn có chắc chắn muốn xóa địa chỉ này khỏi sổ tay?",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'XÓA NGAY',
+    cancelButtonText: 'HỦY'
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        const response = await axios.delete(`${apiBase}/addresses/${id}`, {
+          headers: { Authorization: `Bearer ${getToken()}`, Accept: 'application/json' }
+        });
+        if (response.data.status) {
+          showToast('Đã xóa địa chỉ', 'success');
+          fetchAddresses();
+        }
+      } catch (error) {
+        showToast('Lỗi khi xóa địa chỉ.', 'error');
+      }
+    }
+  });
+};
+
+const setDefaultAddress = async (id) => {
+  try {
+    const response = await axios.put(`${apiBase}/addresses/${id}/default`, {}, {
+      headers: { Authorization: `Bearer ${getToken()}`, Accept: 'application/json' }
+    });
+    if (response.data.status) {
+      showToast('Đã thay đổi địa chỉ mặc định', 'success');
+      fetchAddresses();
+    }
+  } catch (error) {
+    showToast('Lỗi thiết lập địa chỉ mặc định', 'error');
+  }
+};
+// ==========================================
+
+
+// Lấy thông tin Profile từ API
+const fetchProfile = async () => {
+  try {
+    const response = await axios.get(apiBase, {
+      headers: { Authorization: `Bearer ${getToken()}`, Accept: 'application/json' }
+    });
+    
+    if (response.data.status) {
+      const userData = response.data.data;
+      form.value = {
+        fullName: userData.fullName || '',
+        email: userData.email || '',
+        phone: userData.phone || '',
+        gender: userData.gender || '',
+        birthday: userData.birthday || '',
+        avatar_url: userData.avatar_url || ''
+      };
+    }
+  } catch (error) {
+    console.error('Lỗi lấy profile:', error);
+    if (error.response && error.response.status === 401) {
+      isLoggedIn.value = false;
+    }
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+// XỬ LÝ UPLOAD ẢNH (Giao diện)
+const triggerFileInput = () => {
+  fileInput.value.click();
+};
+
+const handleFileChange = (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    avatarFile.value = file;
+    previewAvatar.value = URL.createObjectURL(file);
+  }
+};
+
+// CẬP NHẬT PROFILE
+const updateProfile = async () => {
+  isSaving.value = true;
+  try {
+    const formData = new FormData();
+    
+    formData.append('fullName', form.value.fullName || '');
+    if (form.value.phone) formData.append('phone', form.value.phone);
+    if (form.value.gender) formData.append('gender', form.value.gender);
+    if (form.value.birthday) formData.append('birthday', form.value.birthday);
+    
+    if (avatarFile.value) {
+      formData.append('avatar', avatarFile.value);
+    }
+
+    const response = await axios.post(apiBase, formData, {
+      headers: { Authorization: `Bearer ${getToken()}` }
+    });
+
+    if (response.data.status) {
+      showToast(response.data.message, 'success');
+      if (response.data.data.avatar_url) form.value.avatar_url = response.data.data.avatar_url;
+      previewAvatar.value = null;
+      avatarFile.value = null;
+      updateLocalAuthData(response.data.data);
+    }
+  } catch (error) {
+    if (error.response && error.response.status === 422) {
+      const errors = error.response.data.errors;
+      const firstErrorMsg = Object.values(errors)[0][0]; 
+      showToast(`Lỗi dữ liệu: ${firstErrorMsg}`, 'error');
+    } else {
+      showToast('Lỗi cập nhật. Vui lòng thử lại sau.', 'error');
+    }
+  } finally {
+    isSaving.value = false;
+  }
+};
+
+// ĐỔI MẬT KHẨU
+const changePassword = async () => {
+  if (passwordForm.value.password !== passwordForm.value.password_confirmation) {
+    showToast('Mật khẩu xác nhận không khớp!', 'error');
+    return;
+  }
+
+  isChangingPassword.value = true;
+  try {
+    const response = await axios.post(`${apiBase}/password`, passwordForm.value, {
+      headers: { Authorization: `Bearer ${getToken()}`, Accept: 'application/json' }
+    });
+
+    if (response.data.status) {
+      showToast(response.data.message, 'success');
+      passwordForm.value = { current_password: '', password: '', password_confirmation: '' };
+    }
+  } catch (error) {
+    if (error.response && error.response.status === 400) {
+      showToast(error.response.data.message, 'error'); 
+    } else if (error.response && error.response.status === 422) {
+      const errors = error.response.data.errors;
+      const firstErrorMsg = Object.values(errors)[0][0]; 
+      showToast(`Lỗi: ${firstErrorMsg}`, 'error');
+    } else {
+      showToast('Có lỗi xảy ra. Vui lòng thử lại.', 'error');
+    }
+  } finally {
+    isChangingPassword.value = false;
+  }
+};
+
+// Hàm phụ trợ: Cập nhật tên mới vào LocalStorage
+const updateLocalAuthData = (newData) => {
+  try {
+    let authState = JSON.parse(localStorage.getItem('auth') || '{}');
+    if (authState.user) {
+      authState.user.fullName = newData.fullName;
+      if (newData.avatar_url) authState.user.avatar_url = newData.avatar_url;
+      localStorage.setItem('auth', JSON.stringify(authState));
+    }
+  } catch(e) {}
+};
+
+// Đăng xuất
+const logout = () => {
+  localStorage.clear();
+  sessionStorage.clear();
+  window.location.href = '/login'; 
+};
+
+onMounted(() => {
+  const token = getToken();
+  if (token) {
+    isLoggedIn.value = true;
+    fetchProfile();
+    fetchAddresses(); 
+  } else {
+    isLoggedIn.value = false;
+    isLoading.value = false;
+  }
+});
+</script>
+
+<style scoped>
+/* Màu sắc thương hiệu SORA */
+.bg-light-custom { background-color: #faf9f8 !important; }
+.bg-main { background-color: #9f273b !important; }
+.text-main { color: #9f273b !important; }
+.bg-accent { background-color: #e7ce7d !important; }
+.text-accent { color: #e7ce7d !important; }
+.text-danger-custom { color: #cc1e2e !important; }
+
+.font-serif { font-family: "Playfair Display", "Merriweather", serif; }
+.font-oswald { font-family: 'Oswald', sans-serif; }
+.divider { width: 4rem; height: 2px; }
+.object-fit-cover { object-fit: cover !important; }
+.tracking-wide { letter-spacing: 0.1em; }
+.tracking-widest { letter-spacing: 2px; }
+
+/* Menu Sidebar */
+.profile-menu a {
+  transition: all 0.3s ease;
+}
+.profile-menu a:hover {
+  background-color: #faf9f8;
+  color: #9f273b !important;
+}
+.active-menu {
+  color: #9f273b !important;
+  background-color: #f8eaec;
+  font-weight: 500;
+  border-left: 3px solid #9f273b;
+}
+
+/* Avatar Hover Effect */
+.avatar-upload-overlay {
+  background-color: rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.avatar-wrapper:hover .avatar-upload-overlay {
+  opacity: 1;
+}
+
+/* Hiệu ứng hover cho card địa chỉ */
+.transition-all { transition: all 0.3s ease; }
+.hover-shadow:hover { box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.05); border-color: #e7ce7d !important; }
+.hover-main:hover { color: #9f273b !important; }
+
+/* Custom Input */
+.custom-input {
+  border-radius: 4px;
+  border: 1px solid #ced4da;
+  padding: 0.6rem 1rem;
+  transition: all 0.3s ease;
+}
+.custom-input:focus {
+  border-color: #9f273b;
+  box-shadow: 0 0 0 0.2rem rgba(159, 39, 59, 0.15);
+}
+
+/* Custom Checkbox / Radio */
+.custom-radio .form-check-input:checked,
+.custom-checkbox .form-check-input:checked {
+  background-color: #9f273b;
+  border-color: #9f273b;
+}
+
+/* Nút bấm (Button) */
+.btn-main {
+  background-color: #9f273b;
+  color: white;
+  border: 1px solid #9f273b;
+  transition: all 0.3s ease;
+}
+.btn-main:hover {
+  background-color: #cc1e2e;
+  border-color: #cc1e2e;
+  color: white;
+}
+.btn-outline-main {
+  background-color: transparent;
+  color: #9f273b;
+  border: 1px solid #9f273b;
+  transition: all 0.3s ease;
+}
+.btn-outline-main:hover {
+  background-color: #9f273b;
+  color: white;
+}
+
+/* ======================================= */
+/* TÙY CHỈNH MODAL SỔ ĐỊA CHỈ              */
+/* ======================================= */
+.custom-modal-overlay {
+  position: fixed;
+  top: 0; 
+  left: 0; 
+  width: 100vw; 
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.55);
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(3px); /* Làm mờ background nhẹ */
+}
+.custom-modal-content {
+  background: white;
+  width: 100%;
+  max-width: 850px;
+  max-height: 85vh;
+  overflow-y: auto; /* Tạo cuộn trong nếu danh sách quá dài */
+  border-radius: 12px;
+  box-shadow: 0 1rem 4rem rgba(0,0,0,0.25);
+}
+/* Hiệu ứng trượt và mờ khi bật Modal */
+.modal-fade-enter-active,
+.modal-fade-leave-active { transition: opacity 0.3s ease, transform 0.3s ease; }
+.modal-fade-enter-from,
+.modal-fade-leave-to { opacity: 0; transform: translateY(-20px); }
+</style>

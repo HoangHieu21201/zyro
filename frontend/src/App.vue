@@ -1,0 +1,118 @@
+<template>
+  <div v-if="isCheckingAuth" class="vh-100 d-flex flex-column justify-content-center align-items-center bg-light">
+    
+    <div class="logo-pulse-wrapper mb-4">
+      <img src="@/assets/images/icon-logo.png" alt="SORA Logo" class="logo-pulse-img">
+    </div>
+
+  </div>
+
+  <router-view v-else></router-view>
+</template>
+
+<script setup>
+import { ref, onMounted, provide } from 'vue';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
+
+const isCheckingAuth = ref(true);
+
+const currentUser = ref(null);
+
+provide('currentUser', currentUser);
+
+const checkAuthentication = async () => {
+  const token = localStorage.getItem('admin_token');
+  
+  if (!token) {
+    isCheckingAuth.value = false;
+    return;
+  }
+
+  try {
+    const res = await fetch('http://127.0.0.1:8000/api/admin/me', {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (res.ok) {
+      const result = await res.json();
+      
+      currentUser.value = result.data;
+      
+      if (result.data.role) {
+         localStorage.setItem('admin_level', result.data.role.level);
+      }
+    } else {
+      throw new Error('Unauthorized');
+    }
+  } catch (err) {
+    console.error('Lỗi xác thực:', err);
+    localStorage.removeItem('admin_token');
+    localStorage.removeItem('admin_level');
+    currentUser.value = null;
+    
+    router.push('/admin/login');
+  } finally {
+    isCheckingAuth.value = false;
+  }
+};
+
+onMounted(() => {
+  checkAuthentication();
+});
+</script>
+
+<style>
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #f8f9fa;
+}
+
+.logo-pulse-wrapper {
+  display: inline-block;
+}
+
+.logo-pulse-img {
+  width: 140px; 
+  height: auto;
+  object-fit: contain;
+  animation: luxury-pulse 1.8s infinite alternate ease-in-out;
+}
+
+@keyframes luxury-pulse {
+  0% {
+    transform: scale(0.95);
+    filter: drop-shadow(0 0 5px rgba(159, 39, 59, 0.2)) brightness(1);
+  }
+  100% {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 25px rgba(159, 39, 59, 0.8)) brightness(1.15);
+  }
+}
+
+.tracking-widest {
+  letter-spacing: 0.25em;
+}
+
+.logo-shimmer {
+  font-size: 3.5rem;
+  font-weight: 900;
+  letter-spacing: -1.5px;
+  background: linear-gradient(120deg, #9f273b 30%, #cc1e2e 50%, #9f273b 70%);
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: shine 1.5s linear infinite;
+}
+
+@keyframes shine {
+  to { background-position: 200% center; }
+}
+</style>
