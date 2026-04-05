@@ -16,13 +16,21 @@ class UpdateCategoryRequest extends FormRequest
 
     public function rules(): array
     {
+        // Lấy ID từ URL để loại trừ chính nó (Không được chọn chính mình làm danh mục cha)
+        $categoryId = $this->route('category');
+
         return [
             'name'              => ['required', 'string', 'max:255'],
-            'parent_id'         => ['nullable', 'integer', 'exists:categories,id'],
+            'parent_id'         => [
+                'nullable', 
+                'integer', 
+                Rule::exists('categories', 'id')->whereNull('deleted_at')->whereNot('id', $categoryId)
+            ],
             'description'       => ['nullable', 'string'],
             'thumbnail'         => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
+            'remove_thumbnail'  => ['nullable', 'in:true,false,1,0'],
             'size_guide_image'  => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
-            'sort_order'        => ['nullable', 'integer', 'min:0'],
+            'remove_size_guide' => ['nullable', 'in:true,false,1,0'],
             'attributes_schema' => ['nullable', 'array'],
             'status'            => ['required', 'string', Rule::in(['active', 'hidden'])],
         ];
@@ -36,7 +44,7 @@ class UpdateCategoryRequest extends FormRequest
             'name.max'           => 'Tên danh mục không được vượt quá 255 ký tự.',
             
             'parent_id.integer'  => 'Danh mục cha không hợp lệ.',
-            'parent_id.exists'   => 'Danh mục cha không tồn tại trong hệ thống.',
+            'parent_id.exists'   => 'Danh mục cha không tồn tại (Hoặc bạn đang cố chọn chính danh mục này làm cha của nó).',
             
             'thumbnail.image'    => 'File tải lên phải là hình ảnh.',
             'thumbnail.mimes'    => 'Ảnh đại diện chỉ hỗ trợ định dạng: jpeg, png, jpg, webp.',

@@ -1,160 +1,177 @@
 <?php
 
+// File: backend/app/Http/Controllers/Api/Admin/AdminController.php
+
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
 use App\Http\Requests\Admin\StoreAdminRequest;
 use App\Http\Requests\Admin\UpdateAdminRequest;
+use App\Events\AdminEvent;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Auth;
 
 class AdminController extends Controller
 {
     /**
-     * Danh sách tài khoản (Bao gồm cả tài khoản đã bị khóa/xóa mềm)
+     * Danh sách Admin (bao gồm cả tài khoản bị khóa/xóa mềm)
      */
-    public function index()
+    public function index(): JsonResponse
     {
-        // Dùng withTrashed() để Admin có thể xem được cả những tài khoản đã bị xóa mềm
-        $admins = Admin::withTrashed()->with('role')->orderBy('id', 'desc')->get();
-        
-        return response()->json([
-            'success' => true, 
-            'data' => $admins
-        ]);
-    }
-
-    /**
-     * Thêm mới tài khoản
-     */
-    public function store(StoreAdminRequest $request)
-    {
-        // Lấy dữ liệu đã được Request validate sạch sẽ
-        $data = $request->validated();
-        
-        // Băm mật khẩu
-        $data['password'] = Hash::make($data['password']);
-
-        // Xử lý upload ảnh (Lưu vào thư mục avatars/admins)
-        if ($request->hasFile('avatar')) {
-            $data['avatar_url'] = $request->file('avatar')->store('avatars/admins', 'public');
+        try {
+            $admins = Admin::withTrashed()->with('role')->orderBy('id', 'desc')->get();
+            return response()->json(['success' => true, 'data' => $admins]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Lỗi tải danh sách: ' . $e->getMessage()], 500);
         }
-
-        $admin = Admin::create($data);
-
-        return response()->json([
-            'success' => true, 
-            'message' => 'Tạo tài khoản thành công!', 
-            'data' => $admin
-        ], 201);
     }
 
     /**
-     * Lấy thông tin 1 nhân viên chi tiết
+     * Thêm mới nhân sự
      */
-    public function show($id)
+    public function store(StoreAdminRequest $request): JsonResponse
     {
-        $admin = Admin::withTrashed()->with('role')->findOrFail($id);
-        
-        return response()->json([
-            'success' => true, 
-            'data' => $admin
-        ]);
-    }
-
-    /**
-     * Cập nhật thông tin tài khoản
-     */
-    public function update(UpdateAdminRequest $request, $id)
-    {
-        $admin = Admin::findOrFail($id);
-
-        // Logic bảo vệ: Người khác không được sửa Super Admin gốc (ID = 1)
-        if ($admin->id == 1 && Auth::id() != 1) {
-            return response()->json([
-                'success' => false, 
-                'message' => 'Bạn không có quyền sửa tài khoản Super Admin gốc!'
-            ], 403);
-        }
-
-        $data = $request->validated();
-
-        // Xử lý mật khẩu (Nếu có nhập mới thì băm, không thì loại bỏ khỏi mảng update)
-        if (!empty($data['password'])) {
+        try {
+            $data = $request->validated();
             $data['password'] = Hash::make($data['password']);
-        } else {
-            unset($data['password']);
-        }
+            $data['email_verified_at'] = now();
+            $data['status'] = $data['status'] ?? 'active';
 
-        // Xử lý Avatar (Upload mới hoặc Xóa ảnh cũ)
-        if ($request->hasFile('avatar')) {
-            // Xóa ảnh cũ trên disk nếu tồn tại
-            if ($admin->avatar_url && Storage::disk('public')->exists($admin->avatar_url)) {
-                Storage::disk('public')->delete($admin->avatar_url);
+            // Xử lý upload Avatar
+            if ($request->hasFile('avatar')) {
+                $data['avatar_url'] = $request->file('avatar')->store('avatars/admins', 'public');
             }
-            $data['avatar_url'] = $request->file('avatar')->store('avatars/admins', 'public');
+
+            $admin = Admin::create($data);
+            $admin->load('role'); // Load role để Event gửi cục data đẹp xuống Vue
+
+            // Bắn Real-time
+            broadcast(new AdminEvent('created', $admin))->toOthers();
+
+            return response()->json(['success' => true, 'message' => 'Tạo tài khoản thành công!', 'data' => $admin], 201);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Lỗi tạo mới: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Xem chi tiết nhân sự
+     */
+    public function show($id): JsonResponse
+    {
+        try {
+            $admin = Admin::withTrashed()->with('role')->findOrFail($id);
+            return response()->json(['success' => true, 'data' => $admin]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Không tìm thấy tài khoản này.'], 404);
+        }
+    }
+
+    /**
+     * Cập nhật thông tin nhân sự
+     */
+    public function update(UpdateAdminRequest $request, $id): JsonResponse
+    {
+        try {
+            $admin = Admin::findOrFail($id);
+            /** @var \App\Models\Admin|null $currentUser */
+            $currentUser = $request->user();
+
+            // Bảo vệ: Chỉ Super Admin gốc mới được sửa thông tin của Super Admin gốc
+            if ($admin->id == 1 && $currentUser?->id != 1) {
+                return response()->json(['success' => false, 'message' => 'Bạn không có quyền sửa tài khoản của Người sáng lập!'], 403);
+            }
+
+            $data = $request->validated();
+
+            // Cập nhật mật khẩu nếu có
+            if (!empty($data['password'])) {
+                $data['password'] = Hash::make($data['password']);
+            } else {
+                unset($data['password']); // Xóa key để DB không bị set NULL
+            }
+
+            // Quản lý Avatar
+            if ($request->hasFile('avatar')) {
+                if ($admin->avatar_url && Storage::disk('public')->exists($admin->avatar_url)) {
+                    Storage::disk('public')->delete($admin->avatar_url);
+                }
+                $data['avatar_url'] = $request->file('avatar')->store('avatars/admins', 'public');
+            } elseif (isset($data['remove_avatar']) && filter_var($data['remove_avatar'], FILTER_VALIDATE_BOOLEAN)) {
+                if ($admin->avatar_url && Storage::disk('public')->exists($admin->avatar_url)) {
+                    Storage::disk('public')->delete($admin->avatar_url);
+                }
+                $data['avatar_url'] = null;
+            }
+
+            $admin->update($data);
+            $admin->load('role');
+
+            // Bắn Real-time
+            broadcast(new AdminEvent('updated', $admin))->toOthers();
+
+            return response()->json(['success' => true, 'message' => 'Cập nhật tài khoản thành công!']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Lỗi cập nhật: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Xóa nhân sự (Soft Delete)
+     */
+    public function destroy(Request $request, $id): JsonResponse
+    {
+        try {
+            $admin = Admin::findOrFail($id);
+            /** @var \App\Models\Admin|null $currentUser */
+            $currentUser = $request->user();
+
+            // Bảo vệ Super Admin
+            if ($admin->id == 1) {
+                return response()->json(['success' => false, 'message' => 'Không thể xóa Người sáng lập của hệ thống!'], 403);
+            }
+
+            // Chống tự sát
+            if ($admin->id == $currentUser?->id) {
+                return response()->json(['success' => false, 'message' => 'Bạn không thể tự khóa/xóa chính mình đang thao tác!'], 400);
+            }
+
+            $admin->delete();
+
+            // Bắn Real-time
+            broadcast(new AdminEvent('deleted', $admin))->toOthers();
             
-        } elseif ($request->input('remove_avatar') == 'true') {
-            // Người dùng chủ động bấm nút "Xóa ảnh đại diện"
-            if ($admin->avatar_url && Storage::disk('public')->exists($admin->avatar_url)) {
-                Storage::disk('public')->delete($admin->avatar_url);
+            return response()->json(['success' => true, 'message' => 'Đã chuyển tài khoản vào thùng rác!']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Lỗi xóa tài khoản: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Khôi phục nhân sự
+     */
+    public function restore($id): JsonResponse
+    {
+        try {
+            $admin = Admin::withTrashed()->findOrFail($id);
+            
+            // Check bảo mật: Nếu Role của họ đã bị xóa cứng, không cho khôi phục nhân viên
+            if (!$admin->role || $admin->role->deleted_at) {
+                return response()->json(['success' => false, 'message' => 'Chức vụ của nhân sự này đã bị xóa khỏi hệ thống. Vui lòng khôi phục chức vụ trước!'], 422);
             }
-            $data['avatar_url'] = null;
+
+            $admin->restore();
+            $admin->load('role');
+
+            // Bắn Real-time
+            broadcast(new AdminEvent('restored', $admin))->toOthers();
+
+            return response()->json(['success' => true, 'message' => 'Đã khôi phục tài khoản nhân viên thành công!']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Lỗi khôi phục: ' . $e->getMessage()], 500);
         }
-
-        $admin->update($data);
-
-        return response()->json([
-            'success' => true, 
-            'message' => 'Cập nhật tài khoản thành công!'
-        ]);
-    }
-
-    /**
-     * Xóa tài khoản (Xóa mềm - Soft Delete)
-     */
-    public function destroy($id)
-    {
-        $admin = Admin::findOrFail($id);
-
-        // Bảo vệ Super Admin gốc
-        if ($admin->id == 1) {
-            return response()->json([
-                'success' => false, 
-                'message' => 'Không thể xóa Super Admin gốc của hệ thống!'
-            ], 403);
-        }
-
-        // Chặn người dùng tự xóa chính tài khoản mình đang đăng nhập
-        if ($admin->id == Auth::id()) {
-            return response()->json([
-                'success' => false, 
-                'message' => 'Bạn không thể tự khóa/xóa chính mình!'
-            ], 400);
-        }
-
-        $admin->delete();
-        
-        return response()->json([
-            'success' => true, 
-            'message' => 'Đã chuyển tài khoản vào thùng rác!'
-        ]);
-    }
-
-    /**
-     * Khôi phục tài khoản từ Thùng rác (Restore)
-     */
-    public function restore($id)
-    {
-        // Phải dùng withTrashed() mới tìm ra được đứa đã bị xóa mềm
-        $admin = Admin::withTrashed()->findOrFail($id);
-        $admin->restore();
-
-        return response()->json([
-            'success' => true, 
-            'message' => 'Đã khôi phục tài khoản nhân viên thành công!'
-        ]);
     }
 }

@@ -1,80 +1,81 @@
 <?php
 
-namespace App\Http\Controllers\Api\admin;
+namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\Profile\UpdateProfileInfoRequest;
+use App\Http\Requests\Profile\UpdateProfilePasswordRequest;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use App\Http\Requests\AdminUpdateAdminProfileRequest;
-use App\Http\Requests\AdminUpdateAdminPasswordRequest;
-use Illuminate\Support\Str;
+use App\Events\AdminEvent;
 
 class AdminProfileController extends Controller
 {
-    public function updateProfile(AdminUpdateAdminProfileRequest $request)
+    /**
+     * Cập nhật thông tin cá nhân (Không có chức vụ, Không có trạng thái)
+     */
+    public function updateInfo(UpdateProfileInfoRequest $request): JsonResponse
     {
-        $admin = $request->user(); 
-        
-        // Cập nhật thông tin text
-        $admin->fullname = $request->fullname;
-        $admin->phone = $request->phone;
-        $admin->address = $request->address;
+        try {
+            /** @var \App\Models\Admin $admin */
+            $admin = $request->user();
+            $data = $request->validated();
 
-        // Xử lý XÓA avatar
-        if ($request->has('remove_avatar') && $request->remove_avatar == 'true') {
-            $this->safeDeleteAvatar($admin->avatar_url);
-            $admin->avatar_url = null;
-        }
-
-        // Xử lý UPLOAD avatar mới
-        if ($request->hasFile('avatar')) {
-            $this->safeDeleteAvatar($admin->avatar_url);
-
-            $file = $request->file('avatar');
-            $filename = 'avatar_admin_' . $admin->id . '_' . time() . '.' . $file->getClientOriginalExtension();
-            $path = $file->storeAs('avatars/admin', $filename, 'public');
-            
-            $admin->avatar_url = $path;
-        }
-
-        $admin->save();
-
-        $admin->load('role');
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Cập nhật hồ sơ thành công',
-            'data'    => $admin
-        ]);
-    }
-
-    public function updatePassword(AdminUpdateAdminPasswordRequest $request)
-    {
-        $admin = $request->user();
-
-        $admin->password = Hash::make($request->new_password);
-        $admin->save();
-
-        $admin->tokens()->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Mật khẩu đã được thay đổi. Vui lòng đăng nhập lại!',
-            'require_relogin' => true 
-        ]);
-    }
-
-    
-    private function safeDeleteAvatar($avatarUrl)
-    {
-        if ($avatarUrl) {
-            // Không xóa nếu avatar là link HTTP (vd: đăng nhập bằng Google)
-            if (!Str::startsWith($avatarUrl, ['http://', 'https://'])) {
-                if (Storage::disk('public')->exists($avatarUrl)) {
-                    Storage::disk('public')->delete($avatarUrl);
+            if ($request->hasFile('avatar')) {
+                if ($admin->avatar_url && Storage::disk('public')->exists($admin->avatar_url)) {
+                    Storage::disk('public')->delete($admin->avatar_url);
                 }
+                $data['avatar_url'] = $request->file('avatar')->store('avatars/admins', 'public');
+            } elseif (isset($data['remove_avatar']) && filter_var($data['remove_avatar'], FILTER_VALIDATE_BOOLEAN)) {
+                if ($admin->avatar_url && Storage::disk('public')->exists($admin->avatar_url)) {
+                    Storage::disk('public')->delete($admin->avatar_url);
+                }
+                $data['avatar_url'] = null;
             }
+
+            $admin->update($data);
+            $admin->load('role');
+
+            // Broadcast để các máy khác cập nhật giao diện
+            broadcast(new AdminEvent('updated', $admin))->toOthers();
+
+            return response()->json([
+                'success' => true, 
+                'message' => 'Cập nhật hồ sơ thành công!',
+                'data'    => $admin
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Lỗi hệ thống: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Đổi mật khẩu cá nhân (Cần xác thực mật khẩu cũ)
+     */
+    public function updatePassword(UpdateProfilePasswordRequest $request): JsonResponse
+    {
+        try {
+            /** @var \App\Models\Admin $admin */
+            $admin = $request->user();
+            $data = $request->validated();
+
+            // Kiểm tra mật khẩu cũ có đúng không
+            if (!Hash::check($data['current_password'], $admin->password)) {
+                return response()->json([
+                    'success' => false, 
+                    'errors' => ['current_password' => ['Mật khẩu hiện tại không chính xác.']]
+                ], 422);
+            }
+
+            // Lưu mật khẩu mới
+            $admin->update([
+                'password' => Hash::make($data['password'])
+            ]);
+
+            return response()->json(['success' => true, 'message' => 'Đổi mật khẩu thành công!']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Lỗi hệ thống: ' . $e->getMessage()], 500);
         }
     }
 }

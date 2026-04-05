@@ -29,9 +29,39 @@ const admin = [
         component: () => import('../pages/admin/index.vue'),
       },
       {
-        path: '/admin/profile',
+        path: 'roles/create',
+        name: 'admin-roles-create',
+        component: () => import('../pages/admin/role/Create.vue'),
+        meta: { moduleCode: 'admin_roles' },
+      },
+      {
+        path: 'roles/:id/edit',
+        name: 'admin-roles-edit',
+        component: () => import('../pages/admin/role/Edit.vue'),
+        meta: { moduleCode: 'admin_roles' },
+      },
+      {
+        path: 'admins',
+        name: 'admin-admins',
+        component: () => import('../pages/admin/admin/Index.vue'),
+        meta: { moduleCode: 'admin_staff' },
+      },
+      {
+        path: 'admins/create',
+        name: 'admin-admins-create',
+        component: () => import('../pages/admin/admin/Create.vue'),
+        meta: { moduleCode: 'admin_staff' },
+      },
+      {
+        path: 'admins/:id/edit',
+        name: 'admin-admins-edit',
+        component: () => import('../pages/admin/admin/Edit.vue'),
+        meta: { moduleCode: 'admin_staff' },
+      },
+      {
+        path: 'profile',
         name: 'admin-profile',
-        component: () => import('../pages/admin/account/Profile.vue'),
+        component: () => import('../pages/admin/profile/Index.vue'),
       },
       {
         path: 'roles',
@@ -39,25 +69,28 @@ const admin = [
         component: () => import('../pages/admin/role/Index.vue'),
         meta: { moduleCode: 'admin_roles' },
       },
-      // crud staff
       {
-        path: 'staff',
-        name: 'admin-staff-index',
-        component: () => import('../pages/admin/account/staff/Index.vue'),
-        meta: { moduleCode: 'admin_staff' },
+        path: 'categories',
+        name: 'admin-categories',
+        component: () => import('../pages/admin/category/Index.vue'),
+        meta: { moduleCode: 'admin_categories' },
       },
       {
-        path: 'staff/create',
-        name: 'admin-staff-create',
-        component: () => import('../pages/admin/account/staff/Create.vue'),
-        meta: { moduleCode: 'admin_staff' },
+        path: 'categories/create',
+        name: 'admin-categories-create',
+        component: () => import('../pages/admin/category/Create.vue'),
+        meta: { moduleCode: 'admin_categories' },
       },
       {
-        path: 'staff/:id/edit',
-        name: 'admin-staff-edit',
-        component: () => import('../pages/admin/account/staff/Edit.vue'),
-        meta: { moduleCode: 'admin_staff' },
+        path: 'categories/:id/edit',
+        name: 'admin-categories-edit',
+        component: () => import('../pages/admin/category/Edit.vue'),
+        meta: { moduleCode: 'admin_categories' },
       },
+
+
+      // --------------------------------------
+
       {
         // ROUTE QUẢN LÝ KHÁCH HÀNG (USERS)
         path: 'users',
@@ -242,7 +275,7 @@ const admin = [
         component: () => import('../pages/admin/combo/Edit.vue'),
         meta: { moduleCode: 'admin_combos' },
       },
-        // ROUTE QUẢN LÝ ĐÁNH GIÁ (REVIEWS)
+      // ROUTE QUẢN LÝ ĐÁNH GIÁ (REVIEWS)
       {
         path: 'reviews',
         name: 'admin-reviews',

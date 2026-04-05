@@ -1,347 +1,295 @@
+<!-- File: frontend/src/pages/admin/category/Edit.vue -->
 <template>
-    <div class="category-edit-wrapper">
-        <div class="container-fluid py-4" v-if="isLoaded">
-            <div class="d-flex align-items-center mb-4">
-                <router-link :to="{ name: 'admin-categories' }"
-                    class="btn btn-light shadow-sm me-3 rounded-circle d-flex align-items-center justify-content-center"
-                    style="width: 40px; height: 40px;">
-                    <i class="bi bi-arrow-left fw-bold"></i>
-                </router-link>
-                <div>
-                    <h3 class="fw-bold text-dark mb-0">Cập Nhật Danh Mục</h3>
-                    <p class="text-muted mb-0 small">Mã: #{{ route.params.id }} | Đường dẫn: /{{ form.slug }}</p>
+  <div class="category-edit-wrapper pb-5 mb-5">
+    <div class="container-fluid py-4" v-if="!isLoading">
+      <div class="d-flex align-items-center mb-4">
+        <router-link :to="{ name: 'admin-categories' }" class="text-decoration-none text-muted me-3 hover:text-urban transition-all">
+          <i class="bi bi-arrow-left-circle fs-3"></i>
+        </router-link>
+        <h3 class="fw-bold text-dark dark:text-white mb-0">Cập Nhật Danh Mục</h3>
+      </div>
+
+      <form @submit.prevent="saveCategory" autocomplete="off">
+        <div class="row g-4">
+          <!-- Cột Trái: Thông tin chính -->
+          <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 dark:bg-[#1a2533] p-4 h-100">
+              <h5 class="fw-bold text-urban mb-4"><i class="bi bi-info-circle me-2"></i>Thông tin cơ bản</h5>
+              
+              <div class="row g-4">
+                <div class="col-md-12">
+                  <label class="form-label fw-bold text-dark dark:text-gray-200">Tên danh mục <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control py-2 dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" 
+                         v-model="form.name" :class="{'is-invalid': errors.name}" placeholder="VD: Áo thun nam">
+                  <div class="invalid-feedback">{{ errors.name?.[0] }}</div>
                 </div>
+
+                <div class="col-md-6">
+                  <label class="form-label fw-bold text-dark dark:text-gray-200">Danh mục cha</label>
+                  <select class="form-select py-2 dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" v-model="form.parent_id" :class="{'is-invalid': errors.parent_id}">
+                    <option value="">-- Là danh mục Gốc --</option>
+                    <option v-for="cat in parentCategories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+                  </select>
+                  <div class="invalid-feedback">{{ errors.parent_id?.[0] }}</div>
+                </div>
+
+                <!-- ĐÃ FIX: Ô Read-only cho thứ tự ưu tiên -->
+                <div class="col-md-6">
+                  <label class="form-label fw-bold text-dark dark:text-gray-200">Thứ tự hiển thị</label>
+                  <div class="p-2 bg-light dark:bg-[#212529] border dark:border-gray-700 rounded-3 d-flex align-items-center justify-content-between h-100" style="min-height: 42px;">
+                    <div class="d-flex align-items-center">
+                      <i class="bi bi-sort-numeric-down text-urban me-2 fs-5"></i>
+                      <span class="fw-bold text-dark dark:text-white">{{ form.sort_order ? '#' + form.sort_order : 'Chưa cấp phát' }}</span>
+                    </div>
+                    <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary fw-normal" title="Được hệ thống tự động quản lý">Tự động</span>
+                  </div>
+                  <small class="text-muted mt-1 d-block fst-italic"><i class="bi bi-info-circle me-1"></i>Sử dụng thao tác Kéo/Thả ngoài trang Danh sách để thay đổi.</small>
+                </div>
+
+                <div class="col-12">
+                  <label class="form-label fw-bold text-dark dark:text-gray-200">Mô tả danh mục</label>
+                  <textarea class="form-control dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" 
+                            rows="3" v-model="form.description" placeholder="Nhập mô tả ngắn về danh mục này..."></textarea>
+                </div>
+
+                <!-- BOX NHẬP THUỘC TÍNH SCHEMA XỊN XÒ -->
+                <div class="col-12 mt-4">
+                  <div class="p-4 bg-light dark:bg-[#212529] border dark:border-gray-700 rounded-4">
+                    <label class="form-label fw-bold text-urban"><i class="bi bi-tags-fill me-2"></i>Cấu hình Thuộc tính (Schema)</label>
+                    <p class="text-muted small mb-3">Thêm các thuộc tính biến thể mà danh mục này sẽ có (VD: Kích cỡ, Màu sắc, Chất liệu...).</p>
+                    
+                    <div class="input-group shadow-sm mb-3">
+                      <span class="input-group-text bg-white dark:bg-[#1a2533] border-end-0 text-muted"><i class="bi bi-tag"></i></span>
+                      <input type="text" class="form-control border-start-0 py-2 dark:bg-[#1a2533] dark:text-white dark:border-gray-700" 
+                             v-model="newAttribute" @keyup.enter.prevent="addAttribute" placeholder="Nhập tên thuộc tính và ấn Enter">
+                      <button class="btn btn-urban px-4 fw-bold" type="button" @click.prevent="addAttribute">Thêm</button>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2">
+                      <div v-for="(attr, index) in attributesList" :key="index" class="badge bg-white dark:bg-[#1a2533] border dark:border-gray-600 text-dark dark:text-gray-200 shadow-sm py-2 px-3 d-flex align-items-center gap-2">
+                        <span style="font-size: 0.85rem;">{{ attr }}</span>
+                        <i class="bi bi-x-circle-fill text-danger cursor-pointer hover-zoom" @click="removeAttribute(index)"></i>
+                      </div>
+                      <span v-if="attributesList.length === 0" class="text-muted small fst-italic mt-1">Chưa có thuộc tính nào được thêm.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
+          </div>
+          
+          <!-- Cột Phải: Hình ảnh & Trạng thái -->
+          <div class="col-lg-4">
+             <div class="card border-0 shadow-sm rounded-4 dark:bg-[#1a2533] p-4 h-100">
+                <h5 class="fw-bold text-urban mb-4"><i class="bi bi-image me-2"></i>Hình ảnh & Cài đặt</h5>
 
-            <form @submit.prevent="updateCategory" autocomplete="off">
-                <div class="row g-4">
-                    <!-- Cột Trái: Thumbnail & Trạng thái -->
-                    <div class="col-md-4 col-lg-3">
-                        <div class="card border-0 shadow-sm rounded-4 text-center p-4 h-100">
-                            <label class="form-label fw-bold mb-3">Ảnh đại diện</label>
-                            <div class="position-relative d-inline-block mx-auto mb-3 w-100">
-                                <img :src="previewImage"
-                                    class="rounded-4 shadow-sm border border-2 border-light object-fit-cover w-100"
-                                    style="height: 200px;" alt="Thumbnail">
-                                <label for="imageUpload"
-                                    class="position-absolute bottom-0 end-0 bg-brand rounded-circle shadow-sm p-2 text-white m-2"
-                                    style="cursor: pointer;">
-                                    <i class="bi bi-camera-fill fs-6"></i>
-                                </label>
-                                <input type="file" id="imageUpload" class="d-none" accept="image/png, image/jpeg, image/webp"
-                                    @change="handleImageChange">
-                            </div>
-
-                            <div class="mb-4" v-if="previewImage && !previewImage.includes('placeholder.png') && !selectedFile">
-                              <button type="button" @click="removeImage" class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold w-100 shadow-sm">
-                                <i class="bi bi-trash me-1"></i> Xóa ảnh hiện tại
-                              </button>
-                            </div>
-
-                            <div class="text-start border-top pt-3">
-                                <label class="form-label fw-bold">Cập nhật trạng thái</label>
-                                <select class="form-select fw-bold shadow-sm" v-model="form.status" :class="form.status === 'active' ? 'text-success border-success bg-success bg-opacity-10' : 'text-danger border-danger bg-danger bg-opacity-10'">
-                                    <option value="active" class="text-success fw-bold">Hiển thị (Active)</option>
-                                    <option value="hidden" class="text-danger fw-bold">Ẩn (Hidden)</option>
-                                </select>
-                                <div class="invalid-feedback">{{ errors.status?.[0] }}</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Cột Phải: Thông tin chi tiết -->
-                    <div class="col-md-8 col-lg-9">
-                        <div class="card border-0 shadow-sm rounded-4 mb-4">
-                            <div class="card-body p-4">
-                                <h5 class="fw-bold mb-4 text-brand"><i class="bi bi-info-square-fill me-2"></i>Thông tin danh mục</h5>
-                                
-                                <div class="alert alert-danger d-flex align-items-center mb-4" role="alert" v-if="Object.keys(errors).length > 0">
-                                    <i class="bi bi-exclamation-triangle-fill flex-shrink-0 me-2"></i>
-                                    <div>Vui lòng kiểm tra lại các trường bị báo đỏ bên dưới.</div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-bold">Tên danh mục <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" v-model="form.name" @input="generateSlug" :class="{'is-invalid': errors.name || errors.slug}" placeholder="VD: Nhẫn Kim Cương">
-                                        <div class="invalid-feedback d-block" v-if="errors.name || errors.slug">
-                                            {{ errors.name?.[0] }} <br v-if="errors.name && errors.slug" /> {{ errors.slug?.[0] }}
-                                        </div>
-                                        <small class="text-muted fst-italic mt-1 d-block" v-if="!errors.name && !errors.slug">Đường dẫn (Slug) tự động cập nhật theo tên.</small>
-                                    </div>
-                                    
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-bold">Danh mục cha</label>
-                                        <select class="form-select" v-model="form.parent_id" :class="{'is-invalid': errors.parent_id}">
-                                            <option :value="null">-- Là Danh Mục Gốc --</option>
-                                            <option v-for="cat in treeCategories" :key="cat.id" :value="cat.id" :disabled="cat.id == route.params.id">
-                                                {{ cat.name }} <span v-if="cat.id == route.params.id">(Đang thao tác)</span>
-                                            </option>
-                                        </select>
-                                        <div class="invalid-feedback">{{ errors.parent_id?.[0] }}</div>
-                                    </div>
-
-                                    <div class="col-md-12 mb-3">
-                                        <label class="form-label fw-bold">Thứ tự ưu tiên hiển thị</label>
-                                        <input type="number" class="form-control" v-model="form.sort_order" :class="{'is-invalid': errors.sort_order}" min="0" placeholder="VD: 0, 1, 2...">
-                                        <div class="invalid-feedback">{{ errors.sort_order?.[0] }}</div>
-                                        <small class="text-muted fst-italic mt-1 d-block">Danh mục có số nhỏ hơn sẽ được ưu tiên hiển thị lên trước. Mặc định là 0.</small>
-                                    </div>
-
-                                    <div class="col-12 mb-3">
-                                        <label class="form-label fw-bold">Mô tả chi tiết</label>
-                                        <textarea class="form-control" v-model="form.description" rows="3" :class="{'is-invalid': errors.description}"></textarea>
-                                        <div class="invalid-feedback">{{ errors.description?.[0] }}</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Quản lý Attributes Schema -->
-                        <div class="card border-0 shadow-sm rounded-4">
-                            <div class="card-body p-4">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h5 class="fw-bold mb-0 text-brand"><i class="bi bi-tags-fill me-2"></i>Định nghĩa Thuộc tính</h5>
-                                    <button type="button" class="btn btn-sm btn-outline-brand rounded-pill px-3" @click="addAttribute">
-                                        <i class="bi bi-plus-lg"></i> Thêm thuộc tính
-                                    </button>
-                                </div>
-                                <p class="text-muted small mb-4">Những thuộc tính này sẽ áp dụng cho tất cả sản phẩm thuộc danh mục.</p>
-                                
-                                <div v-if="!form.attributes_schema || form.attributes_schema.length === 0" class="text-center p-4 bg-light rounded-3 border-dashed border-secondary-subtle">
-                                    <span class="text-muted">Chưa có thuộc tính nào được định nghĩa.</span>
-                                </div>
-
-                                <div class="row g-2 mb-3" v-else v-for="(attr, index) in form.attributes_schema" :key="index">
-                                    <div class="col-10 col-md-11">
-                                        <input type="text" class="form-control bg-light" v-model="form.attributes_schema[index]" placeholder="Nhập tên thuộc tính">
-                                    </div>
-                                    <div class="col-2 col-md-1 text-end">
-                                        <button type="button" class="btn btn-danger text-white w-100" @click="removeAttribute(index)" title="Xóa">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <hr class="text-muted opacity-25 my-4">
-                                <div class="text-end">
-                                    <button type="button" class="btn btn-light me-2 px-4 shadow-sm fw-bold border" @click="handleRestore" :disabled="isRestoring">
-                                      <span v-if="isRestoring" class="spinner-border spinner-border-sm me-2"></span>Khôi phục gốc
-                                    </button>
-                                    <button type="submit" class="btn btn-brand btn-brand-solid px-5 fw-bold shadow-sm"
-                                        :disabled="isSaving">
-                                        <span v-if="isSaving" class="spinner-border spinner-border-sm me-2"></span> 
-                                        {{ isSaving ? 'ĐANG LƯU...' : 'LƯU THAY ĐỔI' }}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="mb-4">
+                  <label class="form-label fw-bold text-dark dark:text-gray-200">Trạng thái</label>
+                  <select class="form-select py-2 dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" v-model="form.status">
+                    <option value="active">Hiển thị (Active)</option>
+                    <option value="hidden">Đang ẩn (Hidden)</option>
+                  </select>
                 </div>
-            </form>
+
+                <!-- Thumbnail -->
+                <div class="mb-4 text-center p-3 border border-dashed dark:border-gray-700 rounded-4 bg-light dark:bg-[#212529]">
+                  <label class="form-label fw-bold text-dark dark:text-gray-200 d-block mb-3">Ảnh đại diện</label>
+                  <img :src="previewThumbnail" class="rounded-4 object-fit-cover shadow-sm mb-3 bg-white dark:bg-[#1a2533] p-1" style="width: 100%; height: 160px;">
+                  <div class="d-flex gap-2 justify-content-center">
+                    <button type="button" class="btn btn-sm btn-outline-urban rounded-pill px-3 fw-semibold flex-grow-1" @click="$refs.thumbnailInput.click()">
+                      <i class="bi bi-cloud-upload"></i> Thay ảnh
+                    </button>
+                    <button v-if="hasOldThumbnail || form.thumbnail" type="button" class="btn btn-sm btn-light text-danger border dark:border-gray-600 rounded-pill px-3" @click="removeImage('thumbnail')">
+                      Xóa
+                    </button>
+                  </div>
+                  <input type="file" ref="thumbnailInput" @change="onThumbnailChange" class="d-none" accept="image/*">
+                  <div class="text-danger small mt-2 fw-bold" v-if="errors.thumbnail">{{ errors.thumbnail[0] }}</div>
+                </div>
+
+                <!-- Size Guide -->
+                <div class="text-center p-3 border border-dashed dark:border-gray-700 rounded-4 bg-light dark:bg-[#212529]">
+                  <label class="form-label fw-bold text-dark dark:text-gray-200 d-block mb-3">Bảng size (Size Guide)</label>
+                  <img :src="previewSizeGuide" class="rounded-4 object-fit-cover shadow-sm mb-3 bg-white dark:bg-[#1a2533] p-1" style="width: 100%; height: 160px;">
+                  <div class="d-flex gap-2 justify-content-center">
+                    <button type="button" class="btn btn-sm btn-outline-urban rounded-pill px-3 fw-semibold flex-grow-1" @click="$refs.sizeGuideInput.click()">
+                      <i class="bi bi-rulers"></i> Thay ảnh
+                    </button>
+                    <button v-if="hasOldSizeGuide || form.size_guide_image" type="button" class="btn btn-sm btn-light text-danger border dark:border-gray-600 rounded-pill px-3" @click="removeImage('size_guide_image')">
+                      Xóa
+                    </button>
+                  </div>
+                  <input type="file" ref="sizeGuideInput" @change="onSizeGuideChange" class="d-none" accept="image/*">
+                  <div class="text-danger small mt-2 fw-bold" v-if="errors.size_guide_image">{{ errors.size_guide_image[0] }}</div>
+                </div>
+             </div>
+          </div>
         </div>
-        <div v-else class="d-flex flex-column justify-content-center align-items-center w-100" style="min-height: 70vh;">
-          <h1 class="logo-shimmer mb-3">ThinkHub</h1>
-          <p class="text-muted fw-semibold small text-uppercase tracking-widest" style="letter-spacing: 2px;">Đang tải dữ liệu...</p>
+        
+        <hr class="my-4 dark:border-gray-700">
+        <div class="text-end">
+          <router-link :to="{ name: 'admin-categories' }" class="btn btn-light dark:bg-[#2b3035] dark:text-gray-300 dark:border-gray-600 me-2 px-4 shadow-sm border fw-bold text-decoration-none">Hủy</router-link>
+          <button type="submit" class="btn btn-urban text-white px-5 fw-bold shadow-sm" :disabled="isSaving">
+            <span v-if="isSaving" class="spinner-border spinner-border-sm me-2"></span> Cập Nhật Ngay
+          </button>
         </div>
+      </form>
+
     </div>
+    
+    <div v-else class="text-center py-5"><span class="spinner-border text-urban"></span></div>
+  </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import Swal from 'sweetalert2';
-import axios from 'axios'; // ĐÃ THÊM AXIOS
-import defaultImage from '../../../assets/images/defaults/placeholder.png';
+import axios from 'axios';
+import defaultImage from '@/assets/images/defaults/placeholder.png';
 
 const router = useRouter();
 const route = useRoute();
-const isLoaded = ref(false);
+const categoryId = parseInt(route.params.id);
+
+const isLoading = ref(true);
 const isSaving = ref(false);
-const isRestoring = ref(false);
-
-const previewImage = ref(defaultImage);
-const selectedFile = ref(null);
-const isRemoveImage = ref(false);
+const parentCategories = ref([]);
 const errors = ref({});
-const treeCategories = ref([]);
 
-const form = ref({
-    name: '', slug: '', parent_id: null, description: '', status: '', sort_order: 0, attributes_schema: []
+// Logic quản lý hình ảnh
+const previewThumbnail = ref(defaultImage);
+const previewSizeGuide = ref(defaultImage);
+const thumbnailInput = ref(null);
+const sizeGuideInput = ref(null);
+const hasOldThumbnail = ref(false);
+const hasOldSizeGuide = ref(false);
+
+// Logic Schema Tag
+const newAttribute = ref('');
+const attributesList = ref([]);
+
+const form = ref({ 
+  name: '', parent_id: '', description: '', sort_order: '', status: 'active',
+  thumbnail: null, remove_thumbnail: false,
+  size_guide_image: null, remove_size_guide: false
 });
 
-// Cấu hình headers cho Axios
-const getHeaders = () => ({ 
-    'Accept': 'application/json', 
-    'Authorization': `Bearer ${localStorage.getItem('admin_token')}` 
-});
+const getHeaders = () => ({ 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
 
-const generateSlug = () => {
-    let slug = form.value.name.toLowerCase();
-    slug = slug.replace(/á|à|ả|ạ|ã|ă|ắ|ằ|ẳ|ẵ|ặ|â|ấ|ầ|ẩ|ẫ|ậ/gi, 'a');
-    slug = slug.replace(/é|è|ẻ|ẽ|ẹ|ê|ế|ề|ể|ễ|ệ/gi, 'e');
-    slug = slug.replace(/i|í|ì|ỉ|ĩ|ị/gi, 'i');
-    slug = slug.replace(/ó|ò|ỏ|õ|ọ|ô|ố|ồ|ổ|ỗ|ộ|ơ|ớ|ờ|ở|ỡ|ợ/gi, 'o');
-    slug = slug.replace(/ú|ù|ủ|ũ|ụ|ư|ứ|ừ|ử|ữ|ự/gi, 'u');
-    slug = slug.replace(/ý|ỳ|ỷ|ỹ|ỵ/gi, 'y');
-    slug = slug.replace(/đ/gi, 'd');
-    slug = slug.replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '').replace(/\-\-+/g, '-'); 
-    form.value.slug = slug;
-};
-
-const fetchTreeCategories = async () => {
-    try {
-        const res = await axios.get('http://127.0.0.1:8000/api/admin/categories/tree', { headers: getHeaders() });
-        treeCategories.value = res.data.data;
-    } catch (e) {
-        console.error("Lỗi lấy danh mục cha:", e);
-    }
-};
-
-const fetchCategory = async () => {
+const fetchData = async () => {
   try {
-    const res = await axios.get(`http://127.0.0.1:8000/api/admin/categories/${route.params.id}`, { headers: getHeaders() });
-    const u = res.data.data;
-    
-    form.value = { 
-      name: u.name, slug: u.slug, parent_id: u.parent_id, 
-      description: u.description || '', status: u.status,
-      sort_order: u.sort_order || 0,
-      attributes_schema: u.attributes_schema || [] 
-    };
-    
-    previewImage.value = u.thumbnail ? `http://127.0.0.1:8000/storage/${u.thumbnail}` : defaultImage;
-    isRemoveImage.value = false;
-    selectedFile.value = null;
-    errors.value = {};
-  } catch (err) {
-    Swal.fire('Lỗi', 'Không thể tải dữ liệu danh mục', 'error');
-    router.push({ name: 'admin-categories' });
-  } finally { 
-    isLoaded.value = true; 
+    const [resCats, resDetail] = await Promise.all([
+      axios.get('http://127.0.0.1:8000/api/v1/admin/categories', { headers: getHeaders() }),
+      axios.get(`http://127.0.0.1:8000/api/v1/admin/categories/${categoryId}`, { headers: getHeaders() })
+    ]);
+
+    const allCats = Array.isArray(resCats.data.data) ? resCats.data.data : [];
+    parentCategories.value = allCats.filter(c => !c.deleted_at && !c.parent_id && c.id !== categoryId);
+
+    const cat = resDetail.data.data;
+    form.value.name = cat.name;
+    form.value.parent_id = cat.parent_id || '';
+    form.value.description = cat.description;
+    form.value.sort_order = cat.sort_order;
+    form.value.status = cat.status;
+
+    if (cat.attributes_schema && Array.isArray(cat.attributes_schema)) {
+      attributesList.value = cat.attributes_schema;
+    }
+
+    if (cat.thumbnail) {
+       previewThumbnail.value = `http://127.0.0.1:8000/storage/${cat.thumbnail}`;
+       hasOldThumbnail.value = true;
+    }
+    if (cat.size_guide_image) {
+       previewSizeGuide.value = `http://127.0.0.1:8000/storage/${cat.size_guide_image}`;
+       hasOldSizeGuide.value = true;
+    }
+
+  } catch (err) { 
+    Swal.fire('Lỗi', 'Không tìm thấy danh mục', 'error'); 
+    router.push({ name: 'admin-categories' }); 
+  } finally { isLoading.value = false; }
+};
+
+// Xử lý File
+const handleImageSelect = (e, formKey, previewRef, removeKey, hasOldRef) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { Swal.fire('Lỗi', 'Ảnh không được vượt quá 5MB', 'error'); return; }
+  form.value[formKey] = file;
+  form.value[removeKey] = false;
+  const reader = new FileReader();
+  reader.onload = (e) => { previewRef.value = e.target.result; };
+  reader.readAsDataURL(file);
+};
+
+const onThumbnailChange = (e) => handleImageSelect(e, 'thumbnail', previewThumbnail, 'remove_thumbnail', hasOldThumbnail);
+const onSizeGuideChange = (e) => handleImageSelect(e, 'size_guide_image', previewSizeGuide, 'remove_size_guide', hasOldSizeGuide);
+
+const removeImage = (type) => {
+  if (type === 'thumbnail') {
+    previewThumbnail.value = defaultImage; form.value.thumbnail = null; form.value.remove_thumbnail = true; hasOldThumbnail.value = false;
+  } else {
+    previewSizeGuide.value = defaultImage; form.value.size_guide_image = null; form.value.remove_size_guide = true; hasOldSizeGuide.value = false;
   }
 };
 
-const handleRestore = async () => {
-  isRestoring.value = true;
-  await fetchCategory();
-  setTimeout(() => {
-    isRestoring.value = false;
-    Swal.fire({ icon: 'success', title: 'Đã khôi phục dữ liệu gốc', timer: 1500, showConfirmButton: false });
-  }, 400); 
-};
-
-const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-        if(file.size > 15 * 1024 * 1024) { 
-            Swal.fire('Lỗi', 'Ảnh tối đa 15MB', 'error'); 
-            return; 
-        }
-        selectedFile.value = file;
-        previewImage.value = URL.createObjectURL(file);
-        isRemoveImage.value = false;
-    }
-};
-
-const removeImage = () => { 
-    selectedFile.value = null; 
-    previewImage.value = defaultImage; 
-    isRemoveImage.value = true; 
-};
-
 const addAttribute = () => {
-    if(!form.value.attributes_schema) form.value.attributes_schema = [];
-    form.value.attributes_schema.push('');
+  const val = newAttribute.value.trim();
+  if (val && !attributesList.value.includes(val)) {
+    attributesList.value.push(val);
+  }
+  newAttribute.value = '';
 };
-
 const removeAttribute = (index) => {
-    form.value.attributes_schema.splice(index, 1);
+  attributesList.value.splice(index, 1);
 };
 
-// ĐÃ NÂNG CẤP AXIOS VÀ BẮT LỖI CAO CẤP
-const updateCategory = async () => {
-    if (form.value.attributes_schema) {
-        form.value.attributes_schema = form.value.attributes_schema.filter(attr => attr.trim() !== '');
+const saveCategory = async () => {
+  isSaving.value = true; errors.value = {};
+  const formData = new FormData();
+  formData.append('_method', 'PUT');
+
+  Object.keys(form.value).forEach(key => { 
+    // Tuyệt đối KHÔNG append sort_order để hệ thống Backend tự xử lý
+    if(key !== 'sort_order' && form.value[key] !== null && form.value[key] !== '') {
+        formData.append(key, form.value[key]); 
     }
+  });
 
-    isSaving.value = true;
-    errors.value = {}; 
-    
-    const formData = new FormData();
-    formData.append('_method', 'PUT'); 
+  attributesList.value.forEach((attr, index) => {
+    formData.append(`attributes_schema[${index}]`, attr);
+  });
 
-    Object.keys(form.value).forEach(key => {
-        if (key === 'attributes_schema') {
-            formData.append('attributes_schema', JSON.stringify(form.value.attributes_schema));
-        } else if (key === 'parent_id') {
-            formData.append('parent_id', form.value[key] === null ? '' : form.value[key]);
-        } else if (form.value[key] !== null && form.value[key] !== '') {
-            formData.append(key, form.value[key]);
-        } else if (key === 'sort_order') {
-            formData.append('sort_order', form.value[key]);
-        }
-    });
-    
-    if (selectedFile.value) formData.append('thumbnail', selectedFile.value);
-    if (isRemoveImage.value) formData.append('remove_thumbnail', 'true');
-
-    try {
-        const res = await axios.post(`http://127.0.0.1:8000/api/admin/categories/${route.params.id}`, formData, {
-            headers: getHeaders()
-        });
-        
-        Swal.fire({ icon: 'success', title: 'Thành công', text: res.data.message || 'Cập nhật thành công', timer: 1500, showConfirmButton: false });
-        fetchCategory();
-        
-    } catch (err) { 
-        if (err.response) {
-            if (err.response.status === 422) {
-                errors.value = err.response.data.errors || {};
-                
-                // Hiển thị list lỗi đỏ đẹp mắt
-                let errorHtml = '<ul class="text-start text-danger small mt-2" style="max-height: 200px; overflow-y: auto; padding-left: 20px;">';
-                Object.values(errors.value).flat().forEach(msg => {
-                    errorHtml += `<li class="mb-1">${msg}</li>`;
-                });
-                errorHtml += '</ul>';
-
-                Swal.fire({ 
-                    title: 'Dữ liệu không hợp lệ', 
-                    html: errorHtml, 
-                    icon: 'error', 
-                    confirmButtonColor: '#dc3545' 
-                });
-            } else if (err.response.status === 401) {
-                Swal.fire('Lỗi xác thực', 'Phiên đăng nhập đã hết hạn!', 'error');
-            } else {
-                Swal.fire('Lỗi', err.response.data.message || 'Có lỗi xảy ra', 'error');
-            }
-        } else {
-            Swal.fire('Lỗi', 'Mất kết nối server', 'error'); 
-        }
-    } finally { 
-        isSaving.value = false; 
-    }
+  try {
+    await axios.post(`http://127.0.0.1:8000/api/v1/admin/categories/${categoryId}`, formData, { headers: { ...getHeaders(), 'Content-Type': 'multipart/form-data' } });
+    Swal.fire({ icon: 'success', title: 'Thành công', text: 'Cập nhật danh mục thành công', timer: 1500, showConfirmButton: false });
+    router.push({ name: 'admin-categories' });
+  } catch (err) {
+    if (err.response?.data?.errors) errors.value = err.response.data.errors;
+    else Swal.fire('Lỗi', err.response?.data?.message || 'Lỗi hệ thống', 'error');
+  } finally { isSaving.value = false; }
 };
 
-onMounted(() => {
-    fetchTreeCategories();
-    fetchCategory();
-});
+onMounted(fetchData);
 </script>
 
 <style scoped>
-.logo-shimmer { font-size: 3.5rem; font-weight: 900; letter-spacing: -1.5px; background: linear-gradient(120deg, #009981 30%, #4dffdf 50%, #009981 70%); background-size: 200% auto; color: transparent; -webkit-background-clip: text; background-clip: text; animation: shine 1.5s linear infinite; }
-@keyframes shine { to { background-position: 200% center; } }
-.bg-brand { background-color: #009981 !important; }
-.text-brand { color: #009981 !important; }
-.btn-brand-solid { background-color: #009981 !important; color: white !important; transition: all 0.2s ease; border: none; }
-.btn-brand-solid:hover { background-color: #007a67 !important; color: white !important; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-.btn-brand-solid:disabled { background-color: #a5d6cd !important; cursor: not-allowed; }
-.btn-outline-brand { color: #009981; border-color: #009981; transition: 0.2s; }
-.btn-outline-brand:hover { background-color: #009981; color: white;}
-.form-control:focus, .form-select:focus { border-color: #009981; box-shadow: 0 0 0 0.25rem rgba(0, 153, 129, 0.25); }
+.text-urban { color: var(--color-c-hover, #547792) !important; }
+.bg-urban { background-color: var(--color-c-hover, #547792) !important; }
+.border-urban { border-color: var(--color-c-hover, #547792) !important; }
+.btn-urban { background-color: var(--color-c-hover, #547792); color: white; border: none; transition: 0.2s; }
+.btn-urban:hover { background-color: var(--color-c-dark, #213448); color: white; }
+.btn-outline-urban { color: var(--color-c-hover, #547792); border-color: var(--color-c-hover, #547792); background: transparent; transition: 0.2s; }
+.btn-outline-urban:hover { background-color: var(--color-c-hover, #547792); color: white; }
+
+.hover\:text-urban:hover { color: var(--color-c-hover, #547792) !important; }
+.shadow-sm-hover { transition: box-shadow 0.2s ease, border-color 0.2s ease; }
+.shadow-sm-hover:focus-within { box-shadow: 0 4px 15px rgba(84, 119, 146, 0.1) !important; }
+.form-control:focus, .form-select:focus { border-color: var(--color-c-hover, #547792); box-shadow: none !important; }
+.cursor-pointer { cursor: pointer; }
+.hover-zoom:hover { transform: scale(1.15); transition: 0.2s; }
 .border-dashed { border-style: dashed !important; border-width: 2px !important; }
-.invalid-feedback { font-size: 0.8rem; font-weight: 500; }
 </style>

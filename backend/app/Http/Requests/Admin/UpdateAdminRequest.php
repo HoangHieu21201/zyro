@@ -1,5 +1,7 @@
 <?php
 
+// File: backend/app/Http/Requests/Admin/UpdateAdminRequest.php
+
 namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
@@ -14,44 +16,37 @@ class UpdateAdminRequest extends FormRequest
 
     public function rules(): array
     {
-        // Lấy ID của admin đang được update từ URL
         $adminId = $this->route('admin');
 
         return [
             'fullname' => ['required', 'string', 'max:100'],
             'email'    => [
-                'required',
-                'email',
+                'required', 
+                'email', 
                 'max:100',
-                Rule::unique('admins', 'email')->ignore($adminId)->whereNull('deleted_at')
+                Rule::unique('admins', 'email')->ignore($adminId)->whereNull('deleted_at'),
             ],
-            'password' => ['nullable', 'string', 'min:8'],
-            'role_id'  => ['required', 'integer', 'exists:roles,id'],
-            'phone'    => ['nullable', 'string', 'max:20', 'regex:/^[0-9\-\+\s\(\)]+$/'],
-            'status'   => ['required', 'string', Rule::in(['active', 'locked'])],
-            'avatar'   => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
+            'password' => ['nullable', 'string', 'min:6', 'confirmed'],
+            'role_id'  => ['required', 'integer', Rule::exists('roles', 'id')->whereNull('deleted_at')],
+            'phone'    => ['nullable', 'string', 'regex:/^(0|\+84)[3|5|7|8|9][0-9]{8}$/'],
             'address'  => ['nullable', 'string', 'max:255'],
+            'status'   => ['nullable', 'string', Rule::in(['active', 'inactive', 'locked'])],
+            'avatar'   => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
+            'remove_avatar' => ['nullable', 'in:true,false,1,0'],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'fullname.required' => 'Họ và tên không được để trống.',
-            'fullname.max'      => 'Họ và tên không được vượt quá 100 ký tự.',
-            'email.required'    => 'Email không được để trống.',
-            'email.email'       => 'Định dạng email không hợp lệ.',
-            'email.unique'      => 'Email này đã bị trùng với một tài khoản khác trên hệ thống.',
-            'password.min'      => 'Mật khẩu mới phải có ít nhất 8 ký tự.',
-            'role_id.required'  => 'Vui lòng chọn chức vụ/phân quyền.',
-            'role_id.exists'    => 'Chức vụ không hợp lệ hoặc đã bị xóa.',
-            'phone.regex'       => 'Số điện thoại chỉ được chứa chữ số và các ký tự (+, -, ngoặc).',
-            'phone.max'         => 'Số điện thoại quá dài (tối đa 20 ký tự).',
-            'status.required'   => 'Vui lòng chọn trạng thái.',
-            'status.in'         => 'Trạng thái không hợp lệ.',
-            'avatar.image'      => 'File tải lên phải là hình ảnh.',
-            'avatar.mimes'      => 'Hình ảnh chỉ hỗ trợ định dạng: jpeg, png, jpg, webp.',
-            'avatar.max'        => 'Dung lượng ảnh tối đa không được vượt quá 5MB.',
+            'fullname.required'  => 'Họ tên không được để trống.',
+            'email.required'     => 'Email không được để trống.',
+            'email.unique'       => 'Email này đã bị trùng lặp với nhân sự khác.',
+            'password.min'       => 'Mật khẩu mới phải có ít nhất 6 ký tự.',
+            'password.confirmed' => 'Xác nhận mật khẩu mới không khớp. Vui lòng kiểm tra lại.', // Lời nhắn cho QC
+            'role_id.exists'     => 'Chức vụ không tồn tại.',
+            'phone.regex'        => 'Số điện thoại không hợp lệ.',
+            'avatar.max'         => 'Dung lượng ảnh không được vượt quá 5MB.',
         ];
     }
 }

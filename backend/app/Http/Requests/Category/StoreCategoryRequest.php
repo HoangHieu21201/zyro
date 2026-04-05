@@ -22,7 +22,6 @@ class StoreCategoryRequest extends FormRequest
             'description'       => ['nullable', 'string'],
             'thumbnail'         => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'], // Max 5MB
             'size_guide_image'  => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
-            'sort_order'        => ['nullable', 'integer', 'min:0'],
             'attributes_schema' => ['nullable', 'array'],
             'status'            => ['required', 'string', Rule::in(['active', 'hidden'])],
         ];

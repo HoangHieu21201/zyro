@@ -11,7 +11,7 @@
     </button>
 
     <!-- Logo Brand -->
-    <router-link to="/admin"
+    <router-link to="/admin/dashboard"
       class="brand-link text-decoration-none text-white p-3 border-bottom border-secondary d-flex align-items-center"
       :class="isCollapsed ? 'justify-content-center' : ''"
       style="border-color: rgba(255,255,255,0.1) !important; height: 60px; overflow: hidden;">
@@ -27,20 +27,47 @@
 
     <!-- Menu Navigation -->
     <div class="sidebar flex-grow-1 overflow-auto custom-scrollbar" :class="isCollapsed ? 'p-2' : 'p-3'">
-      <nav class="mt-2">
+      
+      <!-- Shimmer Loading khi đang tải quyền -->
+      <div v-if="isLoading" class="text-center text-white-50 mt-4">
+        <div class="spinner-border spinner-border-sm mb-2 text-urban" role="status"></div>
+        <p class="small" v-show="!isCollapsed">Đang tải cấu hình...</p>
+      </div>
+
+      <nav class="mt-2" v-else>
         <ul class="nav nav-pills nav-sidebar flex-column gap-2" role="menu">
 
           <template v-for="(item, index) in menuItems" :key="index">
             <!-- Menu Không có Menu con -->
             <li class="nav-item position-relative" v-if="!item.children">
-              <router-link :to="item.path"
-                :active-class="item.path === '/admin' ? 'ignore-active' : 'router-link-active'"
+              
+              <!-- Badge hiển thị Cấp độ yêu cầu -->
+              <span v-if="getModuleLevel(item.moduleCode) && !isCollapsed"
+                class="position-absolute badge rounded-pill shadow-sm level-badge"
+                :class="hasAccess(item.moduleCode) ? 'bg-success' : 'bg-danger'">
+                Cấp {{ getModuleLevel(item.moduleCode) }}
+              </span>
+
+              <!-- Trường hợp: CÓ QUYỀN TRUY CẬP -->
+              <router-link v-if="hasAccess(item.moduleCode)" :to="item.path"
+                :active-class="item.path === '/admin/dashboard' ? 'ignore-active' : 'router-link-active'"
                 class="nav-link text-white py-2 rounded shadow-sm-hover transition-all d-flex align-items-center"
                 :class="isCollapsed ? 'justify-content-center px-0' : 'px-3'" 
                 :title="isCollapsed ? item.name : ''">
                 <i class="nav-icon bi" :class="[item.icon, isCollapsed ? 'fs-5' : 'me-3']"></i>
                 <p class="m-0 fw-semibold text-nowrap" v-show="!isCollapsed">{{ item.name }}</p>
               </router-link>
+
+              <!-- Trường hợp: KHÔNG CÓ QUYỀN (Hiển thị Khóa) -->
+              <div v-else class="nav-link py-2 rounded disabled-menu d-flex align-items-center"
+                :class="isCollapsed ? 'justify-content-center px-0' : 'px-3'"
+                :title="isCollapsed ? item.name + ' (Khóa)' : ''"
+                @click="showAccessDenied(item.name, getModuleLevel(item.moduleCode))">
+                <i class="nav-icon bi" :class="[item.icon, isCollapsed ? 'fs-5' : 'me-3']"></i>
+                <p class="m-0 fw-semibold text-nowrap" v-show="!isCollapsed">{{ item.name }}</p>
+                <i class="bi bi-lock-fill opacity-50"
+                  :class="isCollapsed ? 'position-absolute top-0 start-100 translate-middle' : 'ms-auto'"></i>
+              </div>
             </li>
 
             <!-- Menu Có Menu con -->
@@ -60,11 +87,28 @@
               <ul class="nav nav-treeview flex-column p-2 pt-1 gap-1" v-show="menuState[item.stateKey] && !isCollapsed"
                 style="background-color: rgba(0,0,0,0.15); border-radius: 0 0 8px 8px;">
                 <li class="nav-item position-relative" v-for="(subItem, subIndex) in item.children" :key="subIndex">
-                  <router-link :to="subItem.path"
+                  
+                  <!-- Badge hiển thị Cấp độ yêu cầu (Sub-menu) -->
+                  <span v-if="getModuleLevel(subItem.moduleCode)"
+                    class="position-absolute badge rounded-pill shadow-sm level-badge-sub"
+                    :class="hasAccess(subItem.moduleCode) ? 'bg-success opacity-75' : 'bg-danger opacity-75'">
+                    Cấp {{ getModuleLevel(subItem.moduleCode) }}
+                  </span>
+
+                  <!-- Trường hợp: CÓ QUYỀN TRUY CẬP (Sub-menu) -->
+                  <router-link v-if="hasAccess(subItem.moduleCode)" :to="subItem.path"
                     class="nav-link text-white-50 py-2 px-3 rounded sub-link d-flex align-items-center">
                     <i class="bi bi-circle-fill fs-xs me-3 opacity-50" style="font-size: 6px;"></i>
                     <p class="m-0 fw-medium text-nowrap">{{ subItem.name }}</p>
                   </router-link>
+
+                  <!-- Trường hợp: KHÔNG CÓ QUYỀN (Sub-menu Khóa) -->
+                  <div v-else
+                    class="nav-link text-white-50 py-2 px-3 rounded sub-link d-flex align-items-center disabled-menu"
+                    @click="showAccessDenied(subItem.name, getModuleLevel(subItem.moduleCode))">
+                    <i class="bi bi-lock-fill fs-xs me-3 opacity-50" style="font-size: 10px;"></i>
+                    <p class="m-0 fw-medium text-nowrap">{{ subItem.name }}</p>
+                  </div>
                 </li>
               </ul>
             </li>
@@ -77,29 +121,47 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue';
+// Đã thêm onUnmounted để dọn dẹp kết nối
+import { ref, reactive, onMounted, onUnmounted, computed } from 'vue';
+import { useRoute } from 'vue-router';
+import Swal from 'sweetalert2';
+import axios from 'axios';
 
 const emit = defineEmits(['toggle-collapse']);
 
+const route = useRoute();
+const isLoading = ref(true);
+const systemModules = ref([]);
 const isCollapsed = ref(false);
 
+// Lấy thông tin user từ LocalStorage
+const userLevel = computed(() => {
+  try {
+    const info = JSON.parse(localStorage.getItem('admin_info') || '{}');
+    return info.role?.level || 999;
+  } catch (e) {
+    return 999;
+  }
+});
+
+// Data Khai báo Map với DB
 const menuItems = ref([
-  { name: 'Tổng quan', path: '/admin/dashboard', icon: 'bi-grid-1x2-fill' },
-  { name: 'Phân Quyền', path: '/admin/roles', icon: 'bi-shield-fill-check' },
-  { name: 'Quản trị viên', path: '/admin/admins', icon: 'bi-person-badge-fill' },
+  { name: 'Tổng quan', path: '/admin/dashboard', icon: 'bi-grid-1x2-fill', moduleCode: 'admin_dashboard' },
+  { name: 'Phân Quyền', path: '/admin/roles', icon: 'bi-shield-fill-check', moduleCode: 'admin_roles' },
+  { name: 'Quản trị viên', path: '/admin/admins', icon: 'bi-person-badge-fill', moduleCode: 'admin_staff' },
   {
     name: 'Sản phẩm', icon: 'bi-box-seam', stateKey: 'products',
     children: [
-      { name: 'Danh mục', path: '/admin/categories' },
-      { name: 'Thương hiệu', path: '/admin/brands' },
-      { name: 'Sản phẩm & Biến thể', path: '/admin/products' }
+      { name: 'Danh mục', path: '/admin/categories', moduleCode: 'admin_categories' },
+      { name: 'Thương hiệu', path: '/admin/brands', moduleCode: 'admin_brands' },
+      { name: 'Sản phẩm & Biến thể', path: '/admin/products', moduleCode: 'admin_products' }
     ]
   },
   {
     name: 'Đơn hàng', icon: 'bi-receipt-cutoff', stateKey: 'orders',
     children: [
-      { name: 'Danh sách đơn', path: '/admin/orders' },
-      { name: 'Hoàn trả', path: '/admin/returns' }
+      { name: 'Danh sách đơn', path: '/admin/orders', moduleCode: 'admin_orders' },
+      { name: 'Hoàn trả', path: '/admin/returns', moduleCode: 'admin_orders' }
     ]
   }
 ]);
@@ -128,50 +190,138 @@ const handleDropdownClick = (item) => {
     menuState[item.stateKey] = !menuState[item.stateKey];
   }
 };
+
+// ================= LOGIC PHÂN QUYỀN =================
+const getHeaders = () => ({
+  'Accept': 'application/json',
+  'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
+});
+
+const fetchSidebarData = async () => {
+  try {
+    const res = await axios.get('http://127.0.0.1:8000/api/v1/admin/modules', { headers: getHeaders() });
+    systemModules.value = res.data.data || [];
+  } catch (err) {
+    console.error("Lỗi tải dữ liệu cấu hình phân quyền Sidebar", err);
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const getModuleLevel = (code) => {
+  if (!code) return null;
+  const mod = systemModules.value.find(m => m.module_code === code);
+  return mod ? mod.required_level : null;
+};
+
+const hasAccess = (code) => {
+  if (!code) return true;
+  const requiredLevel = getModuleLevel(code);
+  if (!requiredLevel) return false; // Nếu không tìm thấy cấu hình DB -> Khóa an toàn
+  return userLevel.value <= requiredLevel; // Số Level càng NHỎ quyền càng LỚN
+};
+
+const showAccessDenied = (menuName, reqLevel) => {
+  Swal.fire({
+    toast: true, position: 'top-end', icon: 'error',
+    title: 'Truy cập bị từ chối!',
+    text: `Tính năng "${menuName}" yêu cầu Cấp ${reqLevel}. Bạn đang ở Cấp ${userLevel.value}.`,
+    showConfirmButton: false, timer: 4000, timerProgressBar: true,
+  });
+};
+
+// ================= LẮNG NGHE REAL-TIME =================
+const setupRealtime = () => {
+  if (window.Echo) {
+    // Lắng nghe kênh 'admin.modules'
+    window.Echo.private('admin.modules')
+      .listen('.ModuleEvent', () => {
+        // Chỉ cần gọi lại API là Sidebar tự cập nhật lại badge Cấp độ
+        fetchSidebarData();
+      });
+  }
+};
+
+onMounted(() => {
+  fetchSidebarData();
+  setupRealtime(); // Kích hoạt Real-time
+  
+  // Tự động bung menu con nếu đang ở URL đó
+  const currentPath = route.path;
+  menuItems.value.forEach(item => {
+    if (item.children) {
+      const isChildActive = item.children.some(subItem => {
+        return currentPath === subItem.path || currentPath.startsWith(subItem.path + '/');
+      });
+      if (isChildActive) {
+        menuState[item.stateKey] = true;
+      }
+    }
+  });
+});
+
+// Nhớ ngắt kết nối khi chuyển Layout (dọn dẹp bộ nhớ)
+onUnmounted(() => {
+  if (window.Echo) {
+    window.Echo.leave('admin.modules');
+  }
+});
 </script>
 
 <style scoped>
 /* Scrollbar custom cho Sidebar */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
-}
-.custom-scrollbar::-webkit-scrollbar-track {
-  background-color: transparent;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.15);
-  border-radius: 10px;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(255, 255, 255, 0.3);
-}
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background-color: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.15); border-radius: 10px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: rgba(255, 255, 255, 0.3); }
 
-.nav-link {
-  transition: all 0.2s ease;
-  overflow: hidden;
-}
+.nav-link { transition: all 0.2s ease; overflow: hidden; }
+.shadow-sm-hover:hover { background-color: rgba(255, 255, 255, 0.08); transform: translateX(3px); }
+.group-active-bg { background-color: rgba(0, 0, 0, 0.2) !important; }
 
-.shadow-sm-hover:hover {
-  background-color: rgba(255, 255, 255, 0.08);
-  transform: translateX(3px);
-}
-
-.group-active-bg {
+/* Trạng thái Khóa (Disabled) */
+.disabled-menu {
   background-color: rgba(0, 0, 0, 0.2) !important;
+  color: #6c757d !important;
+  opacity: 0.6;
+  cursor: not-allowed;
+  filter: grayscale(100%);
+}
+.disabled-menu:hover {
+  background-color: rgba(0, 0, 0, 0.3) !important;
+  color: #dc3545 !important; /* Hiện đỏ khi cố click */
 }
 
-.sub-link {
-  transition: all 0.2s ease;
+/* Badge Cấp độ (Main menu) */
+.level-badge {
+  top: 6px;
+  right: 8px;
+  font-size: 0.65rem;
+  padding: 3px 6px;
+  z-index: 2;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
-.sub-link:hover {
+
+/* Badge Cấp độ (Sub menu) */
+.level-badge-sub {
+  top: 8px;
+  right: 12px;
+  font-size: 0.6rem;
+  padding: 2px 5px;
+  z-index: 2;
+}
+
+/* Các Sub-link */
+.sub-link { transition: all 0.2s ease; }
+.sub-link:hover:not(.disabled-menu) {
   background-color: rgba(84, 119, 146, 0.1) !important; 
   color: var(--color-c-light) !important;
   transform: translateX(3px);
 }
-.sub-link:hover i {
-  color: var(--color-c-light) !important;
-}
+.sub-link:hover:not(.disabled-menu) i { color: var(--color-c-light) !important; }
 
+/* Trạng thái Active */
 .active-group {
   background-color: var(--color-c-hover) !important;
   color: #fff !important;
@@ -191,20 +341,10 @@ const handleDropdownClick = (item) => {
   box-shadow: none;
   font-weight: 600;
 }
-.sub-link.router-link-active i {
-  color: var(--color-c-light) !important;
-  opacity: 1 !important;
-}
+.sub-link.router-link-active i { color: var(--color-c-light) !important; opacity: 1 !important; }
 
-.transition-icon {
-  transition: transform 0.3s ease;
-  font-size: 12px;
-  opacity: 0.8;
-}
-.rotate-180 {
-  transform: rotate(-90deg);
-}
-.transition-all {
-  transition: all 0.3s ease;
-}
+.transition-icon { transition: transform 0.3s ease; font-size: 12px; opacity: 0.8; }
+.rotate-180 { transform: rotate(-90deg); }
+.transition-all { transition: all 0.3s ease; }
+.text-urban { color: var(--color-c-light) !important; }
 </style>

@@ -1,122 +1,117 @@
+<!-- File: frontend/src/pages/admin/category/Index.vue -->
 <template>
   <div class="category-index-wrapper pb-5 mb-5">
     
     <div v-if="isFirstLoad" class="d-flex flex-column justify-content-center align-items-center w-100" style="min-height: 70vh;">
-      <h1 class="logo-shimmer mb-3">ThinkHub</h1>
-      <p class="text-muted fw-semibold small text-uppercase tracking-widest" style="letter-spacing: 2px;">Đang tải danh mục...</p>
+      <h1 class="logo-shimmer mb-3">ZYRO</h1>
+      <p class="text-muted dark:text-gray-400 fw-semibold small text-uppercase tracking-widest" style="letter-spacing: 2px;">Đang tải danh mục...</p>
     </div>
 
     <div class="container-fluid py-4" v-else>
-      <!-- Header -->
+      <!-- HEADER -->
       <div class="row mb-4 align-items-center">
-        <div class="col-md-6">
-          <h3 class="fw-bold text-dark mb-0">Danh Mục Sản Phẩm</h3>
+        <div class="col-md-6 col-12 mb-3 mb-md-0">
+          <h3 class="fw-bold text-dark dark:text-white mb-0">Danh Mục Sản Phẩm</h3>
         </div>
-        <div class="col-md-6 text-md-end mt-3 mt-md-0 d-flex justify-content-md-end align-items-center gap-3 flex-wrap">
-          <div class="border rounded px-3 py-1 bg-white shadow-sm text-muted small" v-if="currentPageLevel">
+        <div class="col-md-6 col-12 text-md-end d-flex justify-content-md-end align-items-center gap-3 flex-wrap">
+          <div class="border rounded px-3 py-1.5 bg-white dark:bg-[#1a2533] dark:border-gray-700 shadow-sm text-muted dark:text-gray-300 small" v-if="currentPageLevel">
             <i class="bi bi-shield-check text-success me-1"></i>
             Trang yêu cầu: <span class="badge" :class="getLevelColor(currentPageLevel)">Cấp {{ currentPageLevel }}</span>
           </div>
 
-          <router-link :to="{ name: 'admin-category-create' }" class="btn btn-brand btn-brand-solid px-4 py-2 fw-bold shadow-sm" v-if="!isReorderMode">
+          <router-link :to="{ name: 'admin-categories-create' }" class="btn btn-urban px-4 py-2 fw-bold shadow-sm text-white rounded-pill transition-all" v-if="!isReorderMode">
             <i class="bi bi-plus-circle-fill me-1"></i> Thêm Danh Mục
           </router-link>
         </div>
       </div>
 
-      <!-- TABS ĐÃ FIX RESPONSIVE: Thêm flex-wrap và gap để tự động rớt dòng mượt mà -->
+      <!-- TABS PHÂN LOẠI -->
       <div class="mb-4" :class="{'opacity-50 pe-none': isReorderMode}">
-        <ul class="nav nav-underline border-bottom mb-2 pb-1" style="flex-wrap: wrap !important; gap: 8px;">
-          <li class="nav-item">
+        <ul class="nav nav-underline border-bottom dark:border-gray-700 mb-2 pb-1 d-flex flex-wrap" style="gap: 8px;">
+          <li class="nav-item text-nowrap">
             <a class="nav-link py-2 px-3 d-flex align-items-center custom-tab" href="#" :class="{ 'active-tab': activeTab === 'all' }" @click.prevent="switchTab('all')">
               <i class="bi bi-grid-fill me-2"></i> Tất cả
               <span class="badge ms-2 rounded-pill tab-badge" :class="{'active-badge': activeTab === 'all'}">{{ categories.filter(c => !c.deleted_at).length }}</span>
             </a>
           </li>
-          <li class="nav-item">
+          <li class="nav-item text-nowrap">
             <a class="nav-link py-2 px-3 d-flex align-items-center custom-tab" href="#" :class="{ 'active-tab': activeTab === 'active' }" @click.prevent="switchTab('active')">
               <i class="bi bi-eye-fill me-2 text-success"></i> Hiển thị
               <span class="badge ms-2 rounded-pill tab-badge" :class="{'active-badge': activeTab === 'active'}">{{ categories.filter(c => c.status === 'active' && !c.deleted_at).length }}</span>
             </a>
           </li>
-          <li class="nav-item">
+          <li class="nav-item text-nowrap">
             <a class="nav-link py-2 px-3 d-flex align-items-center custom-tab" href="#" :class="{ 'active-tab': activeTab === 'hidden' }" @click.prevent="switchTab('hidden')">
-              <i class="bi bi-eye-slash-fill me-2 text-warning"></i> Ẩn
+              <i class="bi bi-eye-slash-fill me-2 text-warning"></i> Đang ẩn
               <span class="badge ms-2 rounded-pill tab-badge" :class="{'active-badge': activeTab === 'hidden'}">{{ categories.filter(c => c.status === 'hidden' && !c.deleted_at).length }}</span>
             </a>
           </li>
-          <li class="nav-item ms-auto">
+          <li class="nav-item text-nowrap">
             <a class="nav-link py-2 px-3 d-flex align-items-center custom-tab text-danger" href="#" :class="{ 'active-tab': activeTab === 'deleted' }" @click.prevent="switchTab('deleted')">
-              <i class="bi bi-trash3-fill me-2 text-danger"></i> Đã xóa
+              <i class="bi bi-trash3-fill me-2 text-danger"></i> Thùng rác
               <span class="badge ms-2 rounded-pill tab-badge" :class="{'active-badge': activeTab === 'deleted'}">{{ categories.filter(c => c.deleted_at).length }}</span>
             </a>
           </li>
         </ul>
       </div>
 
-      <!-- Bảng Dữ liệu -->
-      <div class="card border-0 shadow-sm rounded-4 mb-4" :class="{'border-warning border-2': isReorderMode}">
-        <div class="card-header bg-white border-bottom-0 pt-4 pb-2 px-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
-          <h6 class="fw-bold mb-0 text-dark">
-            <i class="bi" :class="isReorderMode ? 'bi-arrows-move text-warning' : 'bi-list-ul'"></i> 
-            {{ isReorderMode ? 'Kéo thả dòng để thay đổi thứ tự ưu tiên' : 'Danh sách hiển thị' }}
+      <!-- BẢNG DỮ LIỆU & TOOLBAR -->
+      <div class="card border-0 shadow-sm rounded-4 mb-4 dark:bg-[#1a2533] transition-all" :class="{'border border-warning border-2': isReorderMode}">
+        <div class="card-header bg-white dark:bg-[#1a2533] border-bottom-0 pt-4 pb-2 px-4 d-flex justify-content-between align-items-center flex-wrap gap-3 rounded-top-4">
+          <h6 class="fw-bold mb-0 text-dark dark:text-white d-flex align-items-center">
+            <i class="bi me-2" :class="isReorderMode ? 'bi-arrows-move text-warning fs-5' : 'bi-list-ul'"></i> 
+            {{ isReorderMode ? 'Kéo thả hoặc nhấn nút để thay đổi thứ tự ưu tiên' : 'Danh sách hiển thị' }}
+            <span v-if="isLoading && !isFirstLoad" class="spinner-border spinner-border-sm text-urban ms-3" role="status"></span>
           </h6>
           
-          <!-- THANH CÔNG CỤ ĐÃ FIX RESPONSIVE: Thêm flex-wrap -->
           <div class="d-flex align-items-center flex-wrap gap-2">
-            
-            <template v-if="activeTab === 'active' && !searchQuery">
-              <button class="btn btn-sm px-3 py-2 fw-bold shadow-sm transition-all" 
-                      :class="isReorderMode ? 'btn-warning text-dark' : 'btn-light border text-dark'"
+            <template v-if="!searchQuery">
+              <button class="btn btn-sm px-3 py-2 fw-bold shadow-sm transition-all d-flex align-items-center" 
+                      :class="isReorderMode ? 'btn-warning text-dark' : 'btn-light dark:bg-[#2b3035] dark:border-gray-600 dark:text-gray-200 border text-dark'"
                       @click="toggleReorderMode">
-                <i class="bi" :class="isReorderMode ? 'bi-x-circle' : 'bi-arrows-move'"></i> 
+                <i class="bi me-1" :class="isReorderMode ? 'bi-x-circle' : 'bi-arrows-move'"></i> 
                 {{ isReorderMode ? 'Hủy Sắp Xếp' : 'Sắp xếp thứ tự' }}
               </button>
             </template>
 
-            <!-- Nút Lưu Thứ Tự xuất hiện khi bật Reorder Mode -->
-            <button v-if="isReorderMode" class="btn btn-sm btn-warning text-dark fw-bold px-4 shadow-sm py-2" @click="saveReorder" :disabled="isSavingOrder">
+            <!-- Nút Lưu Thứ Tự -->
+            <button v-if="isReorderMode" class="btn btn-sm btn-urban text-white fw-bold px-4 shadow-sm py-2 d-flex align-items-center" @click="saveReorder" :disabled="isSavingOrder">
               <span v-if="isSavingOrder" class="spinner-border spinner-border-sm me-2"></span>
               <i class="bi bi-floppy-fill me-1" v-else></i> LƯU THỨ TỰ
             </button>
 
-            <!-- Search box (Ẩn khi đang reorder) -->
+            <!-- Ô Tìm kiếm (Ẩn khi đang Reorder) -->
             <div class="search-box position-relative" style="width: 280px; max-width: 100%;" v-show="!isReorderMode">
-              <input type="text" class="form-control form-control-sm rounded-pill pe-5 shadow-sm bg-light border-0 py-2" v-model="searchQuery" @input="currentPage = 1" placeholder="Tìm tên danh mục...">
+              <input type="text" class="form-control rounded-pill pe-5 shadow-sm bg-light dark:bg-[#212529] dark:text-gray-200 border-0 py-2" v-model="searchQuery" @input="currentPage = 1" placeholder="Tìm tên, slug danh mục...">
               <i class="bi bi-search position-absolute top-50 end-0 translate-middle-y me-3 text-muted"></i>
             </div>
           </div>
         </div>
         
         <div class="card-body p-0 mt-2">
-          <div class="table-responsive">
+          <!-- GIAO DIỆN PC: TABLE KÉO THẢ -->
+          <div class="table-responsive d-none d-lg-block">
             <table class="table table-hover align-middle mb-0" :class="{'table-reorder': isReorderMode}" style="table-layout: fixed; width: 100%; min-width: 1000px;">
-              <thead class="bg-light">
+              <thead class="bg-light dark:bg-[#212529]">
                 <tr>
-                  <th v-if="isReorderMode" class="py-3 px-4 text-secondary border-0" style="width: 50px;"></th>
-                  <th class="py-3 px-4 text-secondary border-0 text-center" style="width: 80px;">Thứ tự</th>
-                  <th class="py-3 px-4 text-secondary border-0" style="width: 25%;">Danh mục</th>
-                  <th class="py-3 px-4 text-secondary border-0" style="width: 15%;">Cấp độ</th>
-                  <th class="py-3 px-4 text-secondary border-0" style="width: 20%;">Thuộc tính (Schema)</th>
-                  <th class="py-3 px-4 text-secondary border-0 text-center" style="width: 20%;">Trạng thái</th>
-                  <th class="py-3 px-4 text-secondary text-center border-0" style="width: 20%;" v-if="!isReorderMode">Thao tác</th>
+                  <th v-if="isReorderMode" class="py-3 px-4 text-secondary dark:text-gray-400 border-0" style="width: 50px;"></th>
+                  <th class="py-3 px-4 text-secondary dark:text-gray-400 border-0 text-center" style="width: 80px;">Thứ tự</th>
+                  <th class="py-3 px-4 text-secondary dark:text-gray-400 border-0" style="width: 30%;">Danh mục</th>
+                  <th class="py-3 px-4 text-secondary dark:text-gray-400 border-0" style="width: 15%;">Cấp độ</th>
+                  <th class="py-3 px-4 text-secondary dark:text-gray-400 border-0" style="width: 20%;">Thuộc tính (Schema)</th>
+                  <th class="py-3 px-4 text-secondary dark:text-gray-400 border-0 text-center" style="width: 15%;">Trạng thái</th>
+                  <th class="py-3 px-4 text-secondary dark:text-gray-400 text-center border-0" style="width: 18%;">{{ isReorderMode ? 'Điều hướng' : 'Thao tác' }}</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr v-if="isLoading">
-                  <td :colspan="isReorderMode ? 6 : 7" class="text-center py-5 text-muted">
-                    <div class="spinner-border spinner-border-sm text-brand mb-2" role="status"></div>
-                    <div class="small fw-semibold">Đang tải dữ liệu...</div>
-                  </td>
-                </tr>
-                <tr v-else-if="displayCategories.length === 0">
-                  <td :colspan="isReorderMode ? 6 : 7" class="text-center py-5 text-muted">
+              <tbody class="dark:border-gray-700">
+                <tr v-if="displayCategories.length === 0">
+                  <td :colspan="isReorderMode ? 7 : 7" class="text-center py-5 text-muted">
                     <i class="bi bi-inbox fs-1 d-block mb-2 opacity-25"></i>Không có dữ liệu.
                   </td>
                 </tr>
                 <!-- NATIVE HTML5 DRAG & DROP -->
                 <tr v-else v-for="(cat, index) in displayCategories" :key="cat.id" 
-                    :class="{'bg-light opacity-75': cat.deleted_at || cat.status === 'hidden', 'drag-item': isReorderMode, 'dragging': draggedIndex === index, 'drag-over': dragOverIndex === index}"
+                    :class="{'bg-light opacity-75 dark:bg-[#121416]': cat.deleted_at || cat.status === 'hidden', 'drag-item': isReorderMode, 'dragging': draggedIndex === index, 'drag-over': dragOverIndex === index}"
                     :draggable="isReorderMode"
                     @dragstart="onDragStart(index, $event)"
                     @dragover.prevent="onDragOver(index)"
@@ -129,28 +124,28 @@
                     <i class="bi bi-grip-vertical fs-5 text-warning"></i>
                   </td>
                   
-                  <td class="px-4 fw-bold text-center" :class="isReorderMode ? 'text-warning' : 'text-muted'">
-                    {{ isReorderMode ? index + 1 : (cat.sort_order ? cat.sort_order : '-') }}
+                  <td class="px-4 fw-bold text-center" :class="isReorderMode ? 'text-warning' : 'text-muted dark:text-gray-400'">
+                    {{ isReorderMode ? index + 1 : (cat.sort_order ?? '-') }}
                   </td>
 
                   <td class="px-4 py-3">
                     <div class="d-flex align-items-center">
-                      <img :src="getImageUrl(cat.thumbnail)" @error="handleImageError" class="rounded-3 object-fit-cover me-3 border shadow-sm pe-none" style="width: 45px; height: 45px;">
+                      <img :src="getImageUrl(cat.thumbnail)" @error="handleImageError" class="rounded-3 object-fit-cover me-3 border shadow-sm pe-none dark:border-gray-600" style="width: 45px; height: 45px;">
                       <div class="overflow-hidden">
-                        <h6 class="mb-0 fw-bold text-dark text-truncate" :title="cat.name">{{ cat.name }}</h6>
-                        <small class="text-muted d-block mt-1 text-truncate"><i class="bi bi-link-45deg"></i> {{ cat.slug }}</small>
+                        <h6 class="mb-0 fw-bold text-dark dark:text-gray-200 text-truncate" :title="cat.name">{{ cat.name }}</h6>
+                        <small class="text-muted dark:text-gray-400 d-block mt-1 text-truncate font-monospace"><i class="bi bi-link-45deg"></i> {{ cat.slug }}</small>
                       </div>
                     </div>
                   </td>
                   <td class="px-4">
-                    <span v-if="!cat.parent_id" class="badge bg-primary bg-opacity-10 text-primary border border-primary">Danh mục Gốc</span>
-                    <div v-else class="text-muted small text-truncate" :title="cat.parent?.name">Thuộc: <span class="fw-bold text-dark">{{ cat.parent?.name || '---' }}</span></div>
+                    <span v-if="!cat.parent_id" class="badge badge-urban-soft">Danh mục Gốc</span>
+                    <div v-else class="text-muted dark:text-gray-400 small text-truncate" :title="cat.parent?.name">Thuộc: <span class="fw-bold text-dark dark:text-gray-200">{{ cat.parent?.name || '---' }}</span></div>
                   </td>
                   <td class="px-4">
                     <div class="d-flex flex-wrap gap-1" style="max-width: 200px;">
-                      <span v-if="!cat.attributes_schema || cat.attributes_schema.length === 0" class="text-muted small fst-italic">Không có</span>
-                      <span v-else v-for="(attr, i) in (cat.attributes_schema.slice(0, 3))" :key="i" class="badge bg-light text-secondary border">{{ attr }}</span>
-                      <span v-if="cat.attributes_schema && cat.attributes_schema.length > 3" class="badge bg-light text-secondary border">...</span>
+                      <span v-if="!cat.attributes_schema || cat.attributes_schema.length === 0" class="text-muted dark:text-gray-500 small fst-italic">Không cấu hình</span>
+                      <span v-else v-for="(attr, i) in (cat.attributes_schema.slice(0, 2))" :key="i" class="badge bg-light dark:bg-[#2b3035] text-secondary dark:text-gray-300 border dark:border-gray-600">{{ attr }}</span>
+                      <span v-if="cat.attributes_schema && cat.attributes_schema.length > 2" class="badge bg-light dark:bg-[#2b3035] text-secondary dark:text-gray-300 border dark:border-gray-600">...</span>
                     </div>
                   </td>
 
@@ -158,8 +153,8 @@
                   <td class="px-4 text-center">
                     <span v-if="cat.deleted_at" class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary"><i class="bi bi-trash3-fill"></i> Đã xóa</span>
                     <div v-else class="d-flex align-items-center justify-content-center gap-1">
-                      <select class="form-select form-select-sm border shadow-sm fw-semibold flex-shrink-0" 
-                              style="width: 110px; font-size: 0.8rem;"
+                      <select class="form-select form-select-sm border shadow-sm fw-semibold flex-shrink-0 dark:bg-[#212529] dark:text-gray-200" 
+                              style="width: 110px; font-size: 0.75rem;"
                               :class="getStatusSelectClass(cat.localStatus || cat.status)"
                               v-model="cat.localStatus"
                               @change="checkStatusChange(cat)"
@@ -168,97 +163,176 @@
                         <option value="hidden">Đang ẩn</option>
                       </select>
                       
-                      <!-- Khung cố định chống nhảy -->
-                      <div class="d-flex align-items-center justify-content-start flex-shrink-0" style="min-width: 55px; height: 28px;">
-                        <div v-if="cat.isUpdatingStatus" class="spinner-border text-brand ms-1" style="width: 1.1rem; height: 1.1rem; border-width: 0.15em;" role="status"></div>
+                      <div class="d-flex align-items-center" style="min-width: 50px;">
+                        <div v-if="cat.isUpdatingStatus" class="spinner-border text-urban ms-1" style="width: 1rem; height: 1rem; border-width: 0.15em;" role="status"></div>
                         <template v-else-if="cat.isStatusChanged">
-                          <button @click="saveCategoryStatus(cat)" class="btn btn-sm btn-success rounded-circle shadow-sm d-flex align-items-center justify-content-center ms-1" style="width: 24px; height: 24px; padding: 0;" title="Lưu">
-                            <i class="bi bi-check-lg fw-bold" style="font-size: 0.7rem;"></i>
+                          <button @click="saveCategoryStatus(cat)" class="btn btn-sm btn-success rounded-circle p-0 ms-1 d-flex align-items-center justify-content-center shadow-sm" style="width: 22px; height: 22px;" title="Lưu">
+                            <i class="bi bi-check-lg" style="font-size: 0.7rem;"></i>
                           </button>
-                          <button @click="cancelStatusChange(cat)" class="btn btn-sm btn-light rounded-circle shadow-sm text-danger border d-flex align-items-center justify-content-center ms-1" style="width: 24px; height: 24px; padding: 0;" title="Hủy">
-                            <i class="bi bi-x-lg fw-bold" style="font-size: 0.7rem;"></i>
+                          <button @click="cancelStatusChange(cat)" class="btn btn-sm btn-light dark:bg-[#2b3035] text-danger border dark:border-gray-600 rounded-circle p-0 ms-1 d-flex align-items-center justify-content-center shadow-sm" style="width: 22px; height: 22px;" title="Hủy">
+                            <i class="bi bi-x-lg" style="font-size: 0.7rem;"></i>
                           </button>
                         </template>
                       </div>
                     </div>
                   </td>
 
-                  <td class="px-4 text-center" v-if="!isReorderMode">
-                    <button class="btn btn-sm btn-light text-info me-2 shadow-sm border" title="Xem chi tiết" @click="openQuickView(cat)">
-                      <i class="bi bi-eye"></i>
-                    </button>
-                    <template v-if="!cat.deleted_at">
-                      <router-link :to="{ name: 'admin-category-edit', params: { id: cat.id } }" class="btn btn-sm btn-light text-primary me-2 shadow-sm border" title="Chỉnh sửa">
-                        <i class="bi bi-pencil-square"></i>
-                      </router-link>
-                      <button class="btn btn-sm btn-light text-danger shadow-sm border" @click="confirmDelete(cat.id, cat.name)" title="Đưa vào thùng rác">
-                        <i class="bi bi-trash"></i>
+                  <!-- CỘT THAO TÁC / ĐIỀU HƯỚNG -->
+                  <td class="px-4 text-center">
+                    <div class="d-flex justify-content-center gap-1" v-if="!isReorderMode">
+                      <button class="btn btn-sm btn-light dark:bg-[#2b3035] dark:border-gray-600 text-info shadow-sm border" title="Xem chi tiết" @click="openQuickView(cat)">
+                        <i class="bi bi-eye"></i>
                       </button>
-                    </template>
-                    <template v-else>
-                      <button class="btn btn-sm btn-light text-success shadow-sm border" @click="restoreCategory(cat.id)" title="Khôi phục">
-                        <i class="bi bi-arrow-counterclockwise"></i>
-                      </button>
-                    </template>
+                      <template v-if="!cat.deleted_at">
+                        <router-link :to="{ name: 'admin-categories-edit', params: { id: cat.id } }" class="btn btn-sm btn-light dark:bg-[#2b3035] dark:border-gray-600 text-primary shadow-sm border" title="Chỉnh sửa">
+                          <i class="bi bi-pencil-square"></i>
+                        </router-link>
+                        <button class="btn btn-sm btn-light dark:bg-[#2b3035] dark:border-gray-600 text-danger shadow-sm border" @click="confirmDelete(cat.id, cat.name)" title="Đưa vào thùng rác">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </template>
+                      <template v-else>
+                        <button class="btn btn-sm btn-light dark:bg-[#2b3035] dark:border-gray-600 text-success shadow-sm border" @click="restoreCategory(cat.id)" title="Khôi phục">
+                          <i class="bi bi-arrow-counterclockwise"></i> Khôi phục
+                        </button>
+                      </template>
+                    </div>
+
+                    <!-- Nút Điều hướng khi bật chế độ Sắp xếp -->
+                    <div class="d-flex justify-content-center gap-1" v-else>
+                      <button class="btn btn-sm btn-light dark:bg-[#2b3035] dark:border-gray-600 dark:text-gray-300 shadow-sm border px-2" @click="moveToTop(index)" :disabled="index === 0" title="Đẩy lên đầu tiên"><i class="bi bi-chevron-bar-up"></i></button>
+                      <button class="btn btn-sm btn-light dark:bg-[#2b3035] dark:border-gray-600 dark:text-gray-300 shadow-sm border px-2" @click="moveUp(index)" :disabled="index === 0" title="Đẩy lên 1 bậc"><i class="bi bi-chevron-up"></i></button>
+                      <button class="btn btn-sm btn-light dark:bg-[#2b3035] dark:border-gray-600 dark:text-gray-300 shadow-sm border px-2" @click="moveDown(index)" :disabled="index === reorderList.length - 1" title="Đẩy xuống 1 bậc"><i class="bi bi-chevron-down"></i></button>
+                      <button class="btn btn-sm btn-light dark:bg-[#2b3035] dark:border-gray-600 dark:text-gray-300 shadow-sm border px-2" @click="moveToBottom(index)" :disabled="index === reorderList.length - 1" title="Đẩy xuống cuối cùng"><i class="bi bi-chevron-bar-down"></i></button>
+                    </div>
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
+
+          <!-- GIAO DIỆN MOBILE: CARD VIEW THÔNG MINH -->
+          <div class="d-block d-lg-none p-3 bg-light dark:bg-[#121416]">
+            <div v-if="displayCategories.length === 0" class="text-center py-5 text-muted">Không có dữ liệu.</div>
+            
+            <div v-else class="d-flex flex-column gap-3">
+              <!-- Cột thứ tự khi bật kéo thả (Mobile) -->
+              <div v-for="(cat, index) in displayCategories" :key="cat.id" 
+                   class="card border-0 shadow-sm rounded-4 dark:bg-[#212529]" 
+                   :class="{'opacity-75': cat.deleted_at || cat.status === 'hidden', 'border border-warning': isReorderMode && draggedIndex === index}"
+                   :draggable="isReorderMode"
+                   @dragstart="onDragStart(index, $event)"
+                   @dragover.prevent="onDragOver(index)"
+                   @dragenter.prevent="onDragEnter(index)"
+                   @dragleave="onDragLeave(index)"
+                   @drop="onDrop(index)"
+                   @dragend="onDragEnd">
+                <div class="card-body p-3">
+                  <!-- Kéo thả handle trên mobile -->
+                  <div v-if="isReorderMode" class="text-center mb-2 pb-2 border-bottom border-warning border-opacity-50 cursor-move">
+                    <i class="bi bi-grip-horizontal fs-4 text-warning"></i>
+                    <span class="ms-2 fw-bold text-warning">Vị trí #{{ index + 1 }}</span>
+                  </div>
+
+                  <div class="d-flex align-items-center mb-3">
+                    <img :src="getImageUrl(cat.thumbnail)" @error="handleImageError" class="rounded-3 object-fit-cover me-3 border shadow-sm dark:border-gray-600" style="width: 50px; height: 50px;">
+                    <div class="overflow-hidden w-100">
+                      <h6 class="mb-0 fw-bold dark:text-gray-200 text-truncate">{{ cat.name }}</h6>
+                      <small class="text-muted dark:text-gray-400 d-block text-truncate font-monospace mt-1"><i class="bi bi-link-45deg"></i> {{ cat.slug }}</small>
+                    </div>
+                  </div>
+                  
+                  <div class="d-flex justify-content-between align-items-center mb-3 border-top dark:border-gray-700 pt-3 gap-2">
+                     <span v-if="!cat.parent_id" class="badge badge-urban-soft flex-shrink-0">Danh mục Gốc</span>
+                     <span v-else class="text-muted dark:text-gray-400 small text-truncate" style="max-width: 60%;">Thuộc: <strong>{{ cat.parent?.name }}</strong></span>
+                     
+                     <span v-if="cat.deleted_at" class="text-secondary small fw-bold flex-shrink-0"><i class="bi bi-trash3-fill"></i> Đã xóa</span>
+                     <span v-else-if="cat.status === 'active'" class="text-success small fw-bold flex-shrink-0"><i class="bi bi-circle-fill" style="font-size: 0.5rem;"></i> Hiển thị</span>
+                     <span v-else class="text-warning small fw-bold flex-shrink-0"><i class="bi bi-circle-fill" style="font-size: 0.5rem;"></i> Đang ẩn</span>
+                  </div>
+
+                  <div class="d-flex gap-2" v-if="!isReorderMode">
+                    <button class="btn btn-light dark:bg-[#2b3035] dark:border-gray-600 text-info border flex-grow-1 shadow-sm" @click="openQuickView(cat)"><i class="bi bi-eye"></i></button>
+                    <template v-if="!cat.deleted_at">
+                      <router-link :to="{ name: 'admin-categories-edit', params: { id: cat.id } }" class="btn btn-light dark:bg-[#2b3035] dark:border-gray-600 text-primary border flex-grow-1 shadow-sm"><i class="bi bi-pencil-square"></i></router-link>
+                      <button class="btn btn-light dark:bg-[#2b3035] dark:border-gray-600 text-danger border flex-grow-1 shadow-sm" @click="confirmDelete(cat.id, cat.name)"><i class="bi bi-trash"></i></button>
+                    </template>
+                    <template v-else>
+                      <button class="btn btn-light dark:bg-[#2b3035] dark:border-gray-600 text-success border flex-grow-1 fw-bold shadow-sm" @click="restoreCategory(cat.id)"><i class="bi bi-arrow-counterclockwise"></i> Khôi phục</button>
+                    </template>
+                  </div>
+
+                  <!-- Các nút Điều hướng khi bật chế độ Sắp xếp trên Mobile -->
+                  <div class="d-flex gap-2 mt-2 pt-2 border-top dark:border-gray-700" v-else>
+                    <button class="btn btn-light dark:bg-[#2b3035] dark:border-gray-600 dark:text-gray-300 border flex-grow-1 shadow-sm" @click="moveToTop(index)" :disabled="index === 0" title="Lên đầu tiên"><i class="bi bi-chevron-bar-up"></i></button>
+                    <button class="btn btn-light dark:bg-[#2b3035] dark:border-gray-600 dark:text-gray-300 border flex-grow-1 shadow-sm" @click="moveUp(index)" :disabled="index === 0" title="Lên 1 bậc"><i class="bi bi-chevron-up"></i></button>
+                    <button class="btn btn-light dark:bg-[#2b3035] dark:border-gray-600 dark:text-gray-300 border flex-grow-1 shadow-sm" @click="moveDown(index)" :disabled="index === reorderList.length - 1" title="Xuống 1 bậc"><i class="bi bi-chevron-down"></i></button>
+                    <button class="btn btn-light dark:bg-[#2b3035] dark:border-gray-600 dark:text-gray-300 border flex-grow-1 shadow-sm" @click="moveToBottom(index)" :disabled="index === reorderList.length - 1" title="Xuống cuối cùng"><i class="bi bi-chevron-bar-down"></i></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
 
       <!-- Phân trang (Ẩn khi đang sắp xếp) -->
-      <div class="d-flex justify-content-between align-items-center" v-if="totalPages > 1 && !isReorderMode">
-        <span class="text-muted small">Hiển thị {{ (currentPage - 1) * itemsPerPage + 1 }} đến {{ Math.min(currentPage * itemsPerPage, processedCategories.length) }}</span>
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-center p-3 border-top dark:border-gray-700 gap-3" v-if="totalPages > 1 && !isReorderMode">
+        <span class="text-muted dark:text-gray-400 small">Hiển thị {{ (currentPage - 1) * itemsPerPage + 1 }} đến {{ Math.min(currentPage * itemsPerPage, processedCategories.length) }}</span>
         <nav>
-          <ul class="pagination pagination-sm mb-0 shadow-sm">
-            <li class="page-item" :class="{ disabled: currentPage === 1 }"><button class="page-link text-brand" @click="currentPage--"><i class="bi bi-chevron-left"></i></button></li>
-            <li class="page-item" v-for="page in totalPages" :key="page" :class="{ active: currentPage === page }"><button class="page-link" :class="currentPage === page ? 'bg-brand border-brand text-white' : 'text-dark'" @click="currentPage = page">{{ page }}</button></li>
-            <li class="page-item" :class="{ disabled: currentPage === totalPages }"><button class="page-link text-brand" @click="currentPage++"><i class="bi bi-chevron-right"></i></button></li>
+          <ul class="pagination pagination-sm mb-0 shadow-sm flex-wrap justify-content-center">
+            <li class="page-item" :class="{ disabled: currentPage === 1 }"><button class="page-link text-urban dark:bg-[#212529] dark:border-gray-600" @click="currentPage--"><i class="bi bi-chevron-left"></i></button></li>
+            <li class="page-item" v-for="page in totalPages" :key="page" :class="{ active: currentPage === page }">
+              <button class="page-link dark:border-gray-600" :class="currentPage === page ? 'bg-urban border-urban text-white' : 'text-dark dark:text-gray-300 dark:bg-[#212529]'" @click="currentPage = page">{{ page }}</button>
+            </li>
+            <li class="page-item" :class="{ disabled: currentPage === totalPages }"><button class="page-link text-urban dark:bg-[#212529] dark:border-gray-600" @click="currentPage++"><i class="bi bi-chevron-right"></i></button></li>
           </ul>
         </nav>
       </div>
     </div>
 
-    <!-- POPUP QUICK VIEW -->
-    <div class="modal fade" id="quickViewModal" tabindex="-1" aria-hidden="true">
+    <!-- POPUP QUICK VIEW CHUẨN ZYRO -->
+    <div class="modal fade" id="quickViewModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
       <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content rounded-4 border-0 shadow">
+        <div class="modal-content rounded-4 border-0 shadow dark:bg-[#1a2533]">
           <div class="modal-header border-bottom-0 pb-0">
-            <h5 class="fw-bold text-dark">Chi Tiết Danh Mục</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <h5 class="fw-bold text-dark dark:text-white"><i class="bi bi-grid-3x3-gap-fill text-urban me-2"></i>Chi Tiết Danh Mục</h5>
+            <button type="button" class="btn-close dark:filter dark:invert" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body p-4" v-if="selectedCategory">
             <div class="row">
-              <div class="col-md-5 text-center border-end mb-4 mb-md-0">
-                <img :src="getImageUrl(selectedCategory.thumbnail)" @error="handleImageError" class="rounded-4 shadow-sm border border-2 border-light object-fit-cover mb-3" style="width: 100%; max-height: 250px;">
-                <h5 class="fw-bold mb-1">{{ selectedCategory.name }}</h5>
-                <p class="text-muted small mb-3">/{{ selectedCategory.slug }}</p>
-                <span class="badge px-3 py-2 rounded-pill" :class="selectedCategory.status === 'active' ? 'bg-success text-white' : (selectedCategory.status === 'hidden' ? 'bg-warning text-dark' : 'bg-danger text-white')">
-                  {{ selectedCategory.status === 'active' ? 'Đang hiển thị' : 'Đang ẩn' }}
+              <!-- Cột Trái: Ảnh và Trạng thái -->
+              <div class="col-md-5 text-center border-end dark:border-gray-700 mb-4 mb-md-0">
+                <img :src="getImageUrl(selectedCategory.thumbnail)" @error="handleImageError" class="rounded-4 shadow-sm border border-2 border-light dark:border-gray-600 object-fit-cover mb-3" style="width: 100%; max-height: 250px;">
+                <h5 class="fw-bold mb-1 dark:text-white">{{ selectedCategory.name }}</h5>
+                <p class="text-muted dark:text-gray-400 small mb-3 font-monospace">/{{ selectedCategory.slug }}</p>
+                <span class="badge px-3 py-2 rounded-pill" :class="selectedCategory.deleted_at ? 'bg-secondary text-white' : (selectedCategory.status === 'active' ? 'bg-success text-white' : 'bg-warning text-dark')">
+                  {{ selectedCategory.deleted_at ? 'Đã xóa' : (selectedCategory.status === 'active' ? 'Đang hiển thị' : 'Đang ẩn') }}
                 </span>
               </div>
+              
+              <!-- Cột Phải: Thông tin chi tiết -->
               <div class="col-md-7">
-                <div class="bg-light p-3 rounded-4 shadow-sm border border-light-subtle small mb-3">
-                  <div class="mb-2 pb-2 border-bottom">
-                    <span class="text-muted fw-semibold d-block mb-1"><i class="bi bi-diagram-3 text-brand me-1"></i>Cấp độ:</span>
-                    <span v-if="!selectedCategory.parent_id" class="badge bg-primary bg-opacity-10 text-primary border border-primary">Danh mục Gốc</span>
-                    <span v-else class="fw-bold text-dark">Thuộc: {{ selectedCategory.parent?.name || 'Không xác định' }}</span>
+                <div class="bg-light dark:bg-[#212529] p-3 rounded-4 shadow-sm border border-light-subtle dark:border-gray-700 small h-100">
+                  <div class="mb-2 pb-2 border-bottom dark:border-gray-700">
+                    <span class="text-muted dark:text-gray-400 fw-semibold d-block mb-1"><i class="bi bi-diagram-3 text-urban me-1"></i>Cấp độ:</span>
+                    <span v-if="!selectedCategory.parent_id" class="badge badge-urban-soft">Danh mục Gốc</span>
+                    <span v-else class="fw-bold text-dark dark:text-gray-200">Thuộc: {{ selectedCategory.parent?.name || 'Không xác định' }}</span>
                   </div>
-                  <div class="mb-2 pb-2 border-bottom">
-                    <span class="text-muted fw-semibold d-block mb-1"><i class="bi bi-card-text text-brand me-1"></i>Mô tả:</span>
-                    <span class="text-dark">{{ selectedCategory.description || 'Chưa có mô tả.' }}</span>
+                  <div class="mb-2 pb-2 border-bottom dark:border-gray-700">
+                    <span class="text-muted dark:text-gray-400 fw-semibold d-block mb-1"><i class="bi bi-card-text text-urban me-1"></i>Mô tả:</span>
+                    <span class="text-dark dark:text-gray-300">{{ selectedCategory.description || 'Chưa có mô tả.' }}</span>
                   </div>
-                  <div class="mb-2 pb-2 border-bottom">
-                    <span class="text-muted fw-semibold d-block mb-1"><i class="bi bi-sort-numeric-down text-brand me-1"></i>Thứ tự ưu tiên:</span>
-                    <span class="badge bg-dark text-white">{{ selectedCategory.sort_order || '-' }}</span>
+                  <div class="mb-2 pb-2 border-bottom dark:border-gray-700">
+                    <span class="text-muted dark:text-gray-400 fw-semibold d-block mb-1"><i class="bi bi-sort-numeric-down text-urban me-1"></i>Thứ tự ưu tiên:</span>
+                    <span class="badge bg-dark text-white">{{ selectedCategory.sort_order ?? '-' }}</span>
                   </div>
                   <div class="mb-2">
-                    <span class="text-muted fw-semibold d-block mb-2"><i class="bi bi-tags text-brand me-1"></i>Thuộc tính Schema:</span>
+                    <span class="text-muted dark:text-gray-400 fw-semibold d-block mb-2"><i class="bi bi-tags text-urban me-1"></i>Thuộc tính Schema:</span>
                     <div class="d-flex flex-wrap gap-2">
-                      <span v-if="!selectedCategory.attributes_schema || selectedCategory.attributes_schema.length === 0" class="text-muted fst-italic">Không có thuộc tính.</span>
-                      <span v-else v-for="(attr, i) in selectedCategory.attributes_schema" :key="i" class="badge bg-white text-secondary border shadow-sm px-2 py-1">{{ attr }}</span>
+                      <span v-if="!selectedCategory.attributes_schema || selectedCategory.attributes_schema.length === 0" class="text-muted dark:text-gray-500 fst-italic">Không có cấu hình thuộc tính động.</span>
+                      <span v-else v-for="(attr, i) in selectedCategory.attributes_schema" :key="i" class="badge bg-white dark:bg-[#2b3035] text-secondary dark:text-gray-300 border dark:border-gray-600 shadow-sm px-2 py-1">{{ attr }}</span>
                     </div>
                   </div>
                 </div>
@@ -268,28 +342,33 @@
         </div>
       </div>
     </div>
+
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
-import { useRoute } from 'vue-router';
+import { ref, onMounted, onBeforeUnmount, onUnmounted, computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
 import axios from 'axios';
-
-// Import fallback image
-import defaultImage from '../../../assets/images/defaults/placeholder.png'; 
+import defaultImage from '@/assets/images/defaults/placeholder.png'; 
 
 const route = useRoute();
+const router = useRouter();
+
 const categories = ref([]);
 const systemModules = ref([]);
 const currentPageLevel = ref(null);
 const isLoading = ref(true);
 const isFirstLoad = ref(true); 
+const isRefreshing = ref(false);
 const searchQuery = ref('');
 const activeTab = ref('all');
 const currentPage = ref(1);
 const itemsPerPage = 10;
+
+const currentAdmin = JSON.parse(localStorage.getItem('admin_info') || '{}');
+const currentUserId = currentAdmin.id;
 
 const selectedCategory = ref(null);
 let quickViewModalInstance = null;
@@ -301,29 +380,7 @@ const draggedIndex = ref(null);
 const dragOverIndex = ref(null);
 const reorderList = ref([]); 
 
-// AXIOS: Header
 const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
-
-// HÀM BẮT LỖI AXIOS DÙNG CHUNG
-const handleAxiosError = (e, defaultMsg = 'Lỗi hệ thống') => {
-  if (e.response) {
-    if (e.response.status === 401) {
-      Swal.fire('Lỗi xác thực', 'Phiên đăng nhập đã hết hạn!', 'error');
-    } else if (e.response.data && e.response.data.errors) {
-      let errorHtml = '<ul class="text-start text-danger small mt-2" style="max-height: 200px; overflow-y: auto; padding-left: 20px;">';
-      Object.values(e.response.data.errors).flat().forEach(msg => {
-          errorHtml += `<li class="mb-1">${msg}</li>`;
-      });
-      errorHtml += '</ul>';
-      Swal.fire({ title: 'Dữ liệu không hợp lệ', html: errorHtml, icon: 'error', confirmButtonColor: '#dc3545' });
-    } else {
-      Swal.fire('Lỗi', e.response.data.message || defaultMsg, 'error');
-    }
-  } else {
-    Swal.fire('Lỗi', 'Mất kết nối Server', 'error');
-  }
-};
-
 const getImageUrl = (path) => path ? `http://127.0.0.1:8000/storage/${path}` : defaultImage;
 const handleImageError = (e) => { e.target.src = defaultImage; };
 
@@ -336,24 +393,28 @@ const getLevelColor = (level) => {
     case 3: return 'bg-info text-dark border-info';                        
     case 4: return 'bg-primary bg-opacity-10 text-primary border-primary'; 
     case 5: return 'bg-success bg-opacity-10 text-success border-success'; 
-    default: return 'bg-light text-secondary border-secondary'; 
+    default: return 'bg-light dark:bg-gray-700 text-secondary dark:text-gray-300 border-secondary'; 
   }
 };
 
-// AXIOS: FETCH DATA
-const fetchData = async () => {
-  if (!isFirstLoad.value) isLoading.value = true;
+// ======================= API FETCH =======================
+const fetchData = async (isSilent = false) => {
+  if (isReorderMode.value) return;
+
+  if (isSilent) isRefreshing.value = true;
+  else if (!isFirstLoad.value) isLoading.value = true;
+  
   try {
     const [resCategories, resModules] = await Promise.all([
-      axios.get('http://127.0.0.1:8000/api/admin/categories', { headers: getHeaders() }),
-      axios.get('http://127.0.0.1:8000/api/admin/modules', { headers: getHeaders() })
+      axios.get('http://127.0.0.1:8000/api/v1/admin/categories', { headers: getHeaders() }),
+      axios.get('http://127.0.0.1:8000/api/v1/admin/modules', { headers: getHeaders() })
     ]);
 
-    const rawData = Array.isArray(resCategories.data.data) ? resCategories.data.data : (resCategories.data.data?.data || []);
+    const rawData = Array.isArray(resCategories.data.data) ? resCategories.data.data : [];
     
     categories.value = rawData.map(c => ({
       ...c, localStatus: c.status, isStatusChanged: false, isUpdatingStatus: false
-    })).sort((a, b) => a.sort_order - b.sort_order);
+    }));
     
     systemModules.value = resModules.data.data;
     const currentModule = systemModules.value.find(m => m.module_code === (route.meta?.moduleCode || 'admin_categories'));
@@ -364,13 +425,24 @@ const fetchData = async () => {
   } finally { 
     isLoading.value = false;
     isFirstLoad.value = false;
+    isRefreshing.value = false;
   }
 };
 
-// ======================= DRAG AND DROP LOGIC =======================
+// ======================= REAL-TIME SOCKET =======================
+const setupRealtime = () => {
+  if (window.Echo) {
+    window.Echo.private('admin.categories')
+      .listen('.CategoryEvent', () => {
+        fetchData(true); 
+      });
+  }
+};
+
+// ======================= DRAG AND DROP & MANUAL REORDER =======================
 const toggleReorderMode = () => {
   if (activeTab.value !== 'active') {
-    Swal.fire('Lưu ý', 'Chỉ có thể sắp xếp các danh mục đang Hiển thị!', 'info');
+    Swal.fire('Lưu ý', 'Chỉ có thể sắp xếp thứ tự của các danh mục đang ở trạng thái Hiển thị!', 'info');
     return;
   }
   
@@ -381,6 +453,7 @@ const toggleReorderMode = () => {
   }
 };
 
+// Các hàm kéo thả bằng chuột
 const onDragStart = (index, event) => {
   draggedIndex.value = index;
   event.dataTransfer.effectAllowed = 'move';
@@ -404,7 +477,39 @@ const onDragEnd = (event) => {
   dragOverIndex.value = null;
 };
 
-// AXIOS: LƯU SẮP XẾP
+// CÁC HÀM NÚT BẤM (Cho thiết bị Mobile/Tablet)
+const moveUp = (index) => {
+  if (index > 0) {
+    const item = reorderList.value[index];
+    reorderList.value.splice(index, 1);
+    reorderList.value.splice(index - 1, 0, item);
+  }
+};
+
+const moveDown = (index) => {
+  if (index < reorderList.value.length - 1) {
+    const item = reorderList.value[index];
+    reorderList.value.splice(index, 1);
+    reorderList.value.splice(index + 1, 0, item);
+  }
+};
+
+const moveToTop = (index) => {
+  if (index > 0) {
+    const item = reorderList.value[index];
+    reorderList.value.splice(index, 1);
+    reorderList.value.unshift(item);
+  }
+};
+
+const moveToBottom = (index) => {
+  if (index < reorderList.value.length - 1) {
+    const item = reorderList.value[index];
+    reorderList.value.splice(index, 1);
+    reorderList.value.push(item);
+  }
+};
+
 const saveReorder = async () => {
   isSavingOrder.value = true;
   const payload = reorderList.value.map((cat, index) => ({
@@ -413,12 +518,12 @@ const saveReorder = async () => {
   }));
 
   try {
-    await axios.post('http://127.0.0.1:8000/api/admin/categories/reorder', { categories: payload }, { headers: getHeaders() });
+    await axios.post('http://127.0.0.1:8000/api/v1/admin/categories/reorder', { categories: payload }, { headers: getHeaders() });
     Swal.fire({icon: 'success', title: 'Đã lưu thứ tự!', timer: 1500, showConfirmButton: false});
     isReorderMode.value = false;
-    await fetchData(); 
+    await fetchData(true); 
   } catch (err) {
-    handleAxiosError(err, 'Không thể cập nhật thứ tự');
+    Swal.fire('Lỗi', 'Không thể cập nhật thứ tự', 'error');
   } finally {
     isSavingOrder.value = false;
   }
@@ -436,24 +541,21 @@ const getStatusSelectClass = (status) => {
 const checkStatusChange = (cat) => { cat.isStatusChanged = (cat.localStatus !== cat.status); };
 const cancelStatusChange = (cat) => { cat.localStatus = cat.status; cat.isStatusChanged = false; };
 
-// AXIOS: CẬP NHẬT TRẠNG THÁI NHANH
 const saveCategoryStatus = async (cat) => {
   cat.isUpdatingStatus = true;
   const formData = new FormData();
   formData.append('_method', 'PUT'); 
   formData.append('name', cat.name);
-  formData.append('slug', cat.slug);
   formData.append('status', cat.localStatus); 
 
   try {
-    await axios.post(`http://127.0.0.1:8000/api/admin/categories/${cat.id}`, formData, { headers: getHeaders() });
+    await axios.post(`http://127.0.0.1:8000/api/v1/admin/categories/${cat.id}`, formData, { headers: getHeaders() });
     cat.status = cat.localStatus; 
     cat.isStatusChanged = false;
     Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Cập nhật trạng thái thành công', showConfirmButton: false, timer: 1500 });
-    fetchData(); 
   } catch (error) { 
     cancelStatusChange(cat); 
-    handleAxiosError(error, 'Không thể cập nhật trạng thái');
+    Swal.fire('Lỗi', 'Không thể cập nhật trạng thái', 'error');
   } finally { 
     cat.isUpdatingStatus = false; 
   }
@@ -464,6 +566,13 @@ const switchTab = (tabId) => {
   currentPage.value = 1; 
   isReorderMode.value = false; 
 };
+
+onBeforeUnmount(() => {
+  if (quickViewModalInstance) quickViewModalInstance.hide();
+  document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+  document.body.className = '';
+  document.body.style = '';
+});
 
 const openQuickView = (cat) => {
   selectedCategory.value = cat;
@@ -493,58 +602,84 @@ const displayCategories = computed(() => {
   return processedCategories.value.slice(start, start + itemsPerPage);
 });
 
-// AXIOS: ĐƯA VÀO THÙNG RÁC
 const confirmDelete = (id, name) => {
   Swal.fire({ title: 'Xóa danh mục?', text: `Danh mục "${name}" sẽ bị đưa vào thùng rác!`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Đồng ý xóa' }).then(async (result) => {
     if (result.isConfirmed) {
       isLoading.value = true;
       try {
-        await axios.delete(`http://127.0.0.1:8000/api/admin/categories/${id}`, { headers: getHeaders() });
+        await axios.delete(`http://127.0.0.1:8000/api/v1/admin/categories/${id}`, { headers: getHeaders() });
         Swal.fire({icon: 'success', title: 'Đã xóa', timer: 1500, showConfirmButton: false});
-        fetchData();
       } catch(e) {
         isLoading.value = false;
-        handleAxiosError(e, 'Không thể xóa');
+        Swal.fire('Lỗi', e.response?.data?.message || 'Không thể xóa', 'error');
       }
     }
   });
 };
 
-// AXIOS: KHÔI PHỤC DANH MỤC
 const restoreCategory = (id) => {
-  Swal.fire({ title: 'Khôi phục danh mục?', icon: 'info', showCancelButton: true, confirmButtonColor: '#009981', confirmButtonText: 'Khôi phục' }).then(async (result) => {
+  Swal.fire({ title: 'Khôi phục danh mục?', icon: 'info', showCancelButton: true, confirmButtonColor: 'var(--color-c-hover, #547792)', confirmButtonText: 'Khôi phục' }).then(async (result) => {
     if (result.isConfirmed) {
       isLoading.value = true;
       try {
-        await axios.post(`http://127.0.0.1:8000/api/admin/categories/${id}/restore`, {}, { headers: getHeaders() });
+        await axios.post(`http://127.0.0.1:8000/api/v1/admin/categories/${id}/restore`, {}, { headers: getHeaders() });
         Swal.fire({icon: 'success', title: 'Đã khôi phục', timer: 1500, showConfirmButton: false});
-        fetchData();
       } catch(e) {
         isLoading.value = false;
-        handleAxiosError(e, 'Không thể khôi phục');
+        Swal.fire('Lỗi', e.response?.data?.message || 'Không thể khôi phục', 'error');
       }
     }
   });
 };
 
-onMounted(() => fetchData());
+onMounted(() => {
+  fetchData();
+  setupRealtime();
+});
+
+onUnmounted(() => {
+  if (window.Echo) window.Echo.leave('admin.categories');
+});
 </script>
 
 <style scoped>
-.logo-shimmer { font-size: 3.5rem; font-weight: 900; letter-spacing: -1.5px; background: linear-gradient(120deg, #009981 30%, #4dffdf 50%, #009981 70%); background-size: 200% auto; color: transparent; -webkit-background-clip: text; background-clip: text; animation: shine 1.5s linear infinite; }
+.text-urban { color: var(--color-c-hover, #547792) !important; }
+.bg-urban { background-color: var(--color-c-hover, #547792) !important; }
+.border-urban { border-color: var(--color-c-hover, #547792) !important; }
+.btn-urban { background-color: var(--color-c-hover, #547792); color: white; border: none; transition: 0.2s; }
+.btn-urban:hover { background-color: var(--color-c-dark, #213448); color: white; }
+
+.logo-shimmer { font-size: 3.5rem; font-weight: 900; letter-spacing: -1.5px; background: linear-gradient(120deg, var(--color-c-dark) 30%, var(--color-c-light) 50%, var(--color-c-dark) 70%); background-size: 200% auto; color: transparent; -webkit-background-clip: text; background-clip: text; animation: shine 1.5s linear infinite; }
 @keyframes shine { to { background-position: 200% center; } }
+
 .custom-tab { font-weight: 600 !important; color: #6c757d; border-bottom: 2px solid transparent !important; margin-bottom: -1px; transition: color 0.2s ease; }
-.custom-tab:hover { color: #009981; }
-.custom-tab.active-tab { color: #009981 !important; border-bottom: 2px solid #009981 !important; }
+.custom-tab:hover, .custom-tab.active-tab { color: var(--color-c-hover, #547792) !important; }
+.custom-tab.active-tab { border-bottom-color: var(--color-c-hover, #547792) !important; }
+
 .tab-badge { font-size: 0.75rem; font-weight: 600; background-color: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; transition: all 0.2s ease; }
-.active-badge { background-color: #e6f5f2 !important; color: #009981 !important; border-color: #009981 !important; }
-.bg-brand { background-color: #009981 !important; } .text-brand { color: #009981 !important; } .border-brand { border-color: #009981 !important; }
-.btn-brand-solid { background-color: #009981 !important; color: white !important; transition: all 0.2s ease; border: none; }
-.btn-brand-solid:hover { background-color: #007a67 !important; color: white !important; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+.active-badge { background-color: rgba(84, 119, 146, 0.1) !important; color: var(--color-c-hover, #547792) !important; border-color: var(--color-c-hover, #547792) !important; }
+
+html.dark .tab-badge { background-color: #2b3035; color: #adb5bd; border-color: #495057; }
+html.dark .active-badge { background-color: rgba(255, 255, 255, 0.1) !important; color: #fff !important; border-color: #fff !important; }
+
+.badge-urban-soft {
+  background-color: rgba(84, 119, 146, 0.1) !important;
+  color: var(--color-c-hover, #547792) !important;
+  border: 1px solid var(--color-c-hover, #547792) !important;
+}
+html.dark .badge-urban-soft {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
 .cursor-move { cursor: grab; }
 .cursor-move:active { cursor: grabbing; }
 .drag-item { transition: transform 0.2s ease, box-shadow 0.2s ease; }
 .drag-over { border-top: 3px solid #ffc107 !important; background-color: #fff9e6 !important; }
+html.dark .drag-over { background-color: rgba(255, 193, 7, 0.1) !important; }
 .dragging { opacity: 0.5; background-color: #f8f9fa; }
+html.dark .dragging { background-color: #121416; }
+
 .transition-all { transition: all 0.3s ease; }
 </style>
