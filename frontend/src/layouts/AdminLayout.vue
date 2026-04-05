@@ -4,18 +4,14 @@ import Sidebar from '../components/admin/Sidebar.vue';
 import Header from '../components/admin/Header.vue';
 import Footer from '../components/admin/Footer.vue';
 
-// Biến lưu trữ trạng thái thu/mở của Sidebar
 const isSidebarCollapsed = ref(false);
 </script>
 
 <template>
-  <!-- Gắn class động 'sidebar-collapsed' vào thẻ cha ngoài cùng -->
   <div class="admin-layout-wrapper d-flex" :class="{ 'sidebar-collapsed': isSidebarCollapsed }" style="min-height: 100vh;">
     
-    <!-- Lắng nghe sự kiện toggle-collapse từ Sidebar -->
     <Sidebar @toggle-collapse="isSidebarCollapsed = $event" />
 
-    <!-- Dùng margin-left để đẩy content sang phải khi Sidebar bị Fixed -->
     <div class="content-wrapper flex-grow-1 d-flex flex-column"
          :style="{ 
             marginLeft: isSidebarCollapsed ? '80px' : '260px',
@@ -41,7 +37,6 @@ const isSidebarCollapsed = ref(false);
   </div>
 </template>
 
-<!-- STYLE SCOPED: Chỉ áp dụng cho Layout này -->
 <style scoped>
 .admin-layout-wrapper {
   background-color: var(--bs-body-bg); 
@@ -49,9 +44,6 @@ const isSidebarCollapsed = ref(false);
   position: relative;
 }
 
-/* =======================================================
-   1. GIAO DIỆN DESKTOP (Mặc định)
-======================================================== */
 .content-wrapper {
   min-height: 100vh;
   margin-left: 260px;

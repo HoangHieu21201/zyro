@@ -17,12 +17,19 @@ class Brand extends Model
         'slug',
         'logo',
         'description',
-        'status',
-        'sort_order', 
+        'sort_order',
+        'status'
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'sort_order' => 'integer',
+        ];
+    }
 
     public function products()
     {
-        return $this->hasMany(Product::class, 'brand_id');
+        return $this->hasMany(Product::class);
     }
 }

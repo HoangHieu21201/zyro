@@ -3,19 +3,18 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Model
 {
-    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'users';
 
     protected $fillable = [
-        'fullName',
+        'tier_id',
+        'full_name',
         'email',
         'phone',
         'password',
@@ -23,39 +22,30 @@ class User extends Authenticatable
         'status',
         'birthday',
         'gender',
+        'height_cm',
+        'weight_kg',
         'google_id',
         'facebook_id',
-        'email_verified_at',
-        'tier_id',
         'accumulated_spent',
         'pending_spent',
         'accumulated_orders',
-    ];
-
-    protected $hidden = [
-        'password',
         'remember_token',
+        'email_verified_at'
     ];
 
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'tier_id' => 'integer',
+            'birthday' => 'date',
+            'height_cm' => 'integer',
+            'weight_kg' => 'decimal:2',
             'accumulated_spent' => 'decimal:2',
             'pending_spent' => 'decimal:2',
             'accumulated_orders' => 'integer',
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
         ];
-    }
-
-    public function addresses()
-    {
-        return $this->hasMany(UserAddress::class, 'user_id', 'id');
-    }
-
-    public function defaultAddress()
-    {
-        return $this->hasOne(UserAddress::class, 'user_id', 'id')->where('is_default', 1);
     }
 
     public function tier()
@@ -63,18 +53,8 @@ class User extends Authenticatable
         return $this->belongsTo(MembershipTier::class, 'tier_id');
     }
 
-    public function serviceUsages()
+    public function addresses()
     {
-        return $this->hasMany(TierServiceUsage::class, 'user_id');
-    }
-
-    public function tierHistories()
-    {
-        return $this->hasMany(TierHistory::class, 'user_id');
-    }
-
-    public function reviews()
-    {
-        return $this->hasMany(Review::class);
+        return $this->hasMany(UserAddress::class);
     }
 }

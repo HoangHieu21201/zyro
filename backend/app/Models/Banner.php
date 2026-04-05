@@ -4,37 +4,33 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Banner extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     protected $table = 'banners';
 
     protected $fillable = [
-        'brand_id',
         'title',
         'image_desktop',
         'image_mobile',
         'target_url',
         'position',
         'sort_order',
-        'start_date',
-        'end_date',
+        'start_time',
+        'end_time',
         'status',
-        'click_count',
+        'click_count'
     ];
 
-    protected $casts = [
-        'start_date' => 'datetime',
-        'end_date' => 'datetime',
-        'sort_order' => 'integer',
-        'click_count' => 'integer',
-    ];
-
-    public function brand()
+    protected function casts(): array
     {
-        return $this->belongsTo(Brand::class, 'brand_id');
+        return [
+            'sort_order' => 'integer',
+            'start_time' => 'datetime',
+            'end_time' => 'datetime',
+            'click_count' => 'integer',
+        ];
     }
 }

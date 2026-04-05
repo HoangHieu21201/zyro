@@ -9,26 +9,32 @@ class Review extends Model
 {
     use HasFactory;
 
-    // Trỏ tới bảng reviews tổng quát (chứa cả Product và Combo)
     protected $table = 'reviews';
 
     protected $fillable = [
         'product_id',
-        'combo_id', // Bổ sung combo_id
         'user_id',
         'order_id',
         'rating',
         'comment',
         'images',
-        'status',
-        'admin_reply'
+        'fit_feedback',
+        'reviewer_height',
+        'reviewer_weight',
+        'admin_reply',
+        'status'
     ];
 
-    // Ép kiểu mảng JSON cho cột images tự động
     protected function casts(): array
     {
         return [
+            'product_id' => 'integer',
+            'user_id' => 'integer',
+            'order_id' => 'integer',
+            'rating' => 'integer',
             'images' => 'array',
+            'reviewer_height' => 'integer',
+            'reviewer_weight' => 'decimal:2',
         ];
     }
 
@@ -36,17 +42,10 @@ class Review extends Model
     {
         return $this->belongsTo(Product::class);
     }
-
-    public function combo()
-    {
-        return $this->belongsTo(Combo::class);
-    }
-
     public function user()
     {
         return $this->belongsTo(User::class);
     }
-
     public function order()
     {
         return $this->belongsTo(Order::class);

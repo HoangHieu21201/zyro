@@ -15,49 +15,49 @@ class Order extends Model
     protected $fillable = [
         'order_code',
         'user_id',
-        'customer_name',
-        'customer_phone',
-        'customer_address',
-        'customer_email',
-        'order_note',
+        'shipping_info',
         'sub_total',
         'discount_amount',
         'shipping_fee',
         'total_amount',
-        'coupon_id',
-        'coupon_code',
+        'refunded_amount',
+        'voucher_id',
         'payment_method',
         'payment_status',
-        'status'
+        'transaction_id',
+        'payment_details',
+        'shipping_provider',
+        'tracking_number',
+        'shipping_status',
+        'status',
+        'order_note'
     ];
 
     protected function casts(): array
     {
         return [
+            'user_id' => 'integer',
+            'shipping_info' => 'array',
             'sub_total' => 'decimal:2',
             'discount_amount' => 'decimal:2',
             'shipping_fee' => 'decimal:2',
             'total_amount' => 'decimal:2',
+            'refunded_amount' => 'decimal:2',
+            'voucher_id' => 'integer',
+            'payment_details' => 'array',
         ];
     }
 
     public function items()
     {
-        return $this->hasMany(OrderItem::class, 'order_id');
+        return $this->hasMany(OrderItem::class);
     }
-
     public function histories()
     {
-        return $this->hasMany(OrderStatusHistory::class, 'order_id')->orderBy('created_at', 'desc');
+        return $this->hasMany(OrderStatusHistory::class);
     }
-
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id');
-    }
-
-    public function reviews()
-    {
-        return $this->hasMany(Review::class);
+        return $this->belongsTo(User::class);
     }
 }

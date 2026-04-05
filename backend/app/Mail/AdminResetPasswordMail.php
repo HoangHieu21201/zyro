@@ -3,35 +3,31 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Content;
-use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
 class AdminResetPasswordMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $admin;
-    public $token;
+    public $otp;
 
-    public function __construct($admin, $token)
+    /**
+     * Khởi tạo instance của mailable.
+     * @param string $otp
+     */
+    public function __construct($otp)
     {
-        $this->admin = $admin;
-        $this->token = $token;
+        $this->otp = $otp;
     }
 
-    public function envelope(): Envelope
+    /**
+     * Build the message.
+     */
+    public function build()
     {
-        return new Envelope(
-            subject: '[MyShop] Yêu cầu đặt lại mật khẩu quản trị viên',
-        );
-    }
-
-    public function content(): Content
-    {
-        return new Content(
-            view: 'emails.admin_reset_password',
-        );
+        return $this->subject('Mã xác nhận đặt lại mật khẩu (OTP) - Zyro Admin')
+                    ->view('emails.admin.reset_password');
     }
 }

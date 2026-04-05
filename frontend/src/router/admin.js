@@ -24,7 +24,7 @@ const admin = [
     component: () => import('../layouts/AdminLayout.vue'),
     children: [
       {
-        path: '',
+        path: '/admin/dashboard',
         name: 'admin-dashboard',
         component: () => import('../pages/admin/index.vue'),
       },

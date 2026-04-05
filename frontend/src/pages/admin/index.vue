@@ -1,6 +1,6 @@
 <template>
     <div class="admin-dashboard">
-        <h1 class="text-center my-5">Chào mừng đến với Trang Quản Trị ThinkHub!</h1>
+        <h1 class="text-center my-5">Trang Quản Trị</h1>
         <div class="text-center">
         
         </div>

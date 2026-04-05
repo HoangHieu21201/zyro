@@ -4,35 +4,38 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
-use Illuminate\Database\Eloquent\SoftDeletes; 
-use App\Models\Role;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Laravel\Sanctum\HasApiTokens; 
 
-class Admin extends Authenticatable
+class Admin extends Authenticatable 
 {
-    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
+    use HasApiTokens, HasFactory, SoftDeletes; 
+
+    protected $table = 'admins';
 
     protected $fillable = [
+        'role_id',
         'fullname',
         'email',
         'password',
-        'role_id',
         'phone',
         'avatar_url',
         'status',
-        'address'
+        'address',
+        'email_verified_at'
     ];
-
-    protected $hidden = ['password'];
 
     protected function casts(): array
     {
-        return ['password' => 'hashed'];
+        return [
+            'role_id' => 'integer',
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
     }
 
     public function role()
     {
-        return $this->belongsTo(Role::class, 'role_id', 'id');
+        return $this->belongsTo(Role::class);
     }
 }

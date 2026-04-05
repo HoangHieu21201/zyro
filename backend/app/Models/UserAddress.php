@@ -23,9 +23,16 @@ class UserAddress extends Model
         'is_default'
     ];
 
-    // Địa chỉ này thuộc về User nào
+    protected function casts(): array
+    {
+        return [
+            'user_id' => 'integer',
+            'is_default' => 'boolean',
+        ];
+    }
+
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id', 'id');
+        return $this->belongsTo(User::class);
     }
 }

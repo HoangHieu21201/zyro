@@ -2,29 +2,40 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes; 
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ProductVariant extends Model
 {
-    use SoftDeletes;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'product_variants';
-    
+
     protected $fillable = [
-        'product_id', 
-        'sku', 
-        'price', 
-        'promotional_price', 
-        'stock_quantity', 
-        'image_url', 
+        'product_id',
+        'sku',
+        'cost_price',
+        'price',
+        'promotional_price',
+        'stock_quantity',
+        'reserved_stock',
+        'image_url',
         'is_default'
     ];
 
-    protected $casts = [
-        'price' => 'decimal:2', 
-        'promotional_price' => 'decimal:2'
-    ];
+    protected function casts(): array
+    {
+        return [
+            'product_id' => 'integer',
+            'cost_price' => 'decimal:2',
+            'price' => 'decimal:2',
+            'promotional_price' => 'decimal:2',
+            'stock_quantity' => 'integer',
+            'reserved_stock' => 'integer',
+            'is_default' => 'boolean',
+        ];
+    }
 
     public function product()
     {

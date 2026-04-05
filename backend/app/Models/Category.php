@@ -17,17 +17,19 @@ class Category extends Model
         'name',
         'slug',
         'description',
-        'sort_order',
         'thumbnail',
+        'size_guide_image',
+        'sort_order',
         'attributes_schema',
-        'status',
+        'status'
     ];
 
     protected function casts(): array
     {
         return [
-            'attributes_schema' => 'array',
+            'parent_id' => 'integer',
             'sort_order' => 'integer',
+            'attributes_schema' => 'array',
         ];
     }
 
@@ -43,6 +45,6 @@ class Category extends Model
 
     public function products()
     {
-        return $this->hasMany(Product::class, 'category_id');
+        return $this->hasMany(Product::class);
     }
 }

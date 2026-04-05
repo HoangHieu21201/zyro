@@ -1,126 +1,147 @@
 <template>
-  <div class="auth-page d-flex justify-content-center align-items-center bg-light min-vh-100 py-5">
-    <div class="auth-box shadow-lg rounded-4 overflow-hidden bg-white row g-0" style="max-width: 500px; width: 90%;">
-      <div class="col-12 p-5">
-        <div class="text-center mb-4">
-          <i class="bi bi-key-fill text-brand" style="font-size: 3.5rem;"></i>
-          <h3 class="fw-bold mt-2 text-dark">Đặt lại mật khẩu</h3>
-          <p class="text-muted small">Vui lòng nhập mật khẩu mới cho tài khoản của bạn.</p>
+  <div class="min-h-screen flex items-center justify-center bg-c-effect px-4 py-10">
+    <div class="max-w-md w-full bg-white rounded-lg shadow-xl p-8 transition-all duration-500">
+      
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-c-effect text-c-dark mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <h1 class="text-2xl font-bold tracking-widest text-c-dark uppercase mb-2">Đổi Mật Khẩu Mới</h1>
+        <p class="text-sm text-gray-500">
+          Tài khoản: <span class="font-bold text-c-dark">{{ email }}</span>
+        </p>
+      </div>
+
+      <div v-if="errorMessage" class="p-3 mb-5 bg-red-50 text-red-600 text-sm rounded border border-red-200">
+        {{ errorMessage }}
+      </div>
+      <div v-if="successMessage" class="p-3 mb-5 bg-green-50 text-green-700 text-sm rounded border border-green-200">
+        {{ successMessage }}
+      </div>
+
+      <!-- FORM NHẬP PASS MỚI -->
+      <form @submit.prevent="handleResetPassword" class="space-y-5" autocomplete="off">
+        
+        <div>
+          <label class="block text-sm font-bold text-c-dark mb-1">Mật khẩu mới</label>
+          <div class="relative">
+            <input 
+              v-model="form.password" 
+              :type="showPassword ? 'text' : 'password'" 
+              required 
+              minlength="8" 
+              autocomplete="new-password"
+              class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:border-c-dark focus:ring-1 focus:ring-c-dark transition-colors pr-10 bg-gray-50 focus:bg-white"
+              placeholder="Nhập ít nhất 8 ký tự"
+            >
+            <button type="button" @click="showPassword = !showPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-c-dark focus:outline-none">
+              <svg v-if="!showPassword" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg v-else xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>
+            </button>
+          </div>
         </div>
 
-        <form @submit.prevent="handleResetPassword">
-          <!-- Hiển thị email dạng readonly để user biết đang đổi cho tài khoản nào -->
-          <div class="mb-3">
-            <label class="form-label fw-semibold text-muted small">Email tài khoản</label>
-            <input type="email" class="form-control bg-light text-muted" :value="email" readonly disabled>
-          </div>
-
-          <div class="form-floating mb-3 position-relative">
-            <input :type="showPassword ? 'text' : 'password'" class="form-control pe-5" id="password" v-model="form.password" placeholder="Password" required minlength="8">
-            <label for="password">Mật khẩu mới</label>
-            <button type="button" class="btn border-0 position-absolute top-50 end-0 translate-middle-y text-muted me-1" @click="showPassword = !showPassword">
-              <i class="bi" :class="showPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+        <div>
+          <label class="block text-sm font-bold text-c-dark mb-1">Xác nhận Mật khẩu mới</label>
+          <div class="relative">
+            <input 
+              v-model="form.password_confirmation" 
+              :type="showPasswordConfirm ? 'text' : 'password'" 
+              required 
+              minlength="8" 
+              autocomplete="new-password"
+              class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:border-c-dark focus:ring-1 focus:ring-c-dark transition-colors pr-10 bg-gray-50 focus:bg-white"
+              placeholder="Nhập lại mật khẩu mới"
+            >
+            <button type="button" @click="showPasswordConfirm = !showPasswordConfirm" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-c-dark focus:outline-none">
+              <svg v-if="!showPasswordConfirm" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg v-else xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>
             </button>
           </div>
+        </div>
 
-          <div class="form-floating mb-4 position-relative">
-            <input :type="showConfirmPassword ? 'text' : 'password'" class="form-control pe-5" id="password_confirmation" v-model="form.password_confirmation" placeholder="Confirm Password" required minlength="8">
-            <label for="password_confirmation">Xác nhận mật khẩu mới</label>
-            <button type="button" class="btn border-0 position-absolute top-50 end-0 translate-middle-y text-muted me-1" @click="showConfirmPassword = !showConfirmPassword">
-              <i class="bi" :class="showConfirmPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
-            </button>
-          </div>
+        <button 
+          type="submit" 
+          :disabled="isLoading"
+          class="w-full mt-6 bg-c-dark text-white font-bold py-3 px-4 rounded hover:bg-c-hover transition-colors flex justify-center items-center uppercase tracking-wider text-sm disabled:opacity-70 disabled:cursor-not-allowed"
+        >
+          <svg v-if="isLoading" class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+          {{ isLoading ? 'Đang cập nhật...' : 'Cập Nhật Mật Khẩu' }}
+        </button>
 
-          <button type="submit" class="btn btn-brand w-100 py-2 fw-bold text-white shadow-sm mb-3" :disabled="isLoading">
-            <span v-if="isLoading" class="spinner-border spinner-border-sm me-2"></span>
-            {{ isLoading ? 'ĐANG XỬ LÝ...' : 'XÁC NHẬN ĐỔI MẬT KHẨU' }}
-          </button>
-        </form>
-      </div>
+      </form>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
+import axios from 'axios';
 import { useRoute, useRouter } from 'vue-router';
-import Swal from 'sweetalert2';
 
 const route = useRoute();
 const router = useRouter();
 
 const email = ref('');
 const token = ref('');
-const isLoading = ref(false);
 
-const showPassword = ref(false);
-const showConfirmPassword = ref(false);
+onMounted(() => {
+  if (!route.query.email || !route.query.token) {
+    router.push('/admin/login');
+  } else {
+    email.value = route.query.email;
+    token.value = route.query.token;
+  }
+});
 
-const form = ref({
+const form = reactive({
   password: '',
   password_confirmation: ''
 });
 
-onMounted(() => {
-  token.value = route.query.token || '';
-  email.value = route.query.email || '';
+const showPassword = ref(false);
+const showPasswordConfirm = ref(false);
 
-  if (!token.value || !email.value) {
-    Swal.fire('Lỗi', 'Đường dẫn đặt lại mật khẩu không hợp lệ!', 'error').then(() => {
-      router.push({ name: 'admin-login' });
-    });
-  }
-});
+const isLoading = ref(false);
+const errorMessage = ref('');
+const successMessage = ref('');
 
 const handleResetPassword = async () => {
-  if (form.value.password !== form.value.password_confirmation) {
-    Swal.fire('Lỗi', 'Mật khẩu xác nhận không khớp!', 'warning');
+  if (form.password !== form.password_confirmation) {
+    errorMessage.value = 'Mật khẩu xác nhận không trùng khớp!';
     return;
   }
 
   isLoading.value = true;
+  errorMessage.value = '';
+  successMessage.value = '';
+
   try {
-    const response = await fetch('http://127.0.0.1:8000/api/admin/reset-password', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({
-        token: token.value,
-        email: email.value,
-        password: form.value.password,
-        password_confirmation: form.value.password_confirmation
-      })
-    });
+    const payload = {
+      email: email.value,
+      token: token.value,
+      password: form.password,
+      password_confirmation: form.password_confirmation
+    };
 
-    const data = await response.json();
+    // ĐÃ KÍCH HOẠT API
+    const response = await axios.post('http://127.0.0.1:8000/api/v1/admin/reset-password', payload);
 
-    if (response.ok) {
-      Swal.fire({
-        icon: 'success',
-        title: 'Thành công!',
-        text: 'Mật khẩu đã được đặt lại thành công. Vui lòng đăng nhập bằng mật khẩu mới.',
-        confirmButtonColor: '#009981'
-      }).then(() => {
-        router.push({ name: 'admin-login' });
-      });
-    } else {
-      Swal.fire({
-        icon: 'error',
-        title: 'Thất bại',
-        text: data.message || 'Token đã hết hạn hoặc không hợp lệ!',
-        confirmButtonColor: '#009981'
-      });
-    }
+    successMessage.value = response.data.message || 'Đổi mật khẩu thành công! Đang chuyển về Đăng nhập...';
+    
+    setTimeout(() => {
+      router.push('/admin/login');
+    }, 2000);
+
   } catch (error) {
-    Swal.fire({ icon: error, title: 'Lỗi', text: 'Không thể kết nối máy chủ!', confirmButtonColor: '#009981' });
+    if (error.response && error.response.status === 422) {
+      const errors = error.response.data.errors;
+      errorMessage.value = Object.values(errors).flat().join(' ');
+    } else {
+      errorMessage.value = error.response?.data?.message || 'Có lỗi xảy ra, mã xác nhận có thể không đúng hoặc đã hết hạn.';
+    }
   } finally {
     isLoading.value = false;
   }
 };
 </script>
-
-<style scoped>
-.text-brand { color: #009981; }
-.btn-brand { background-color: #009981; border-radius: 8px; border: none; transition: 0.2s; }
-.btn-brand:hover { background-color: #007a67; }
-.form-control:focus { border-color: #009981; box-shadow: 0 0 0 0.25rem rgba(0, 153, 129, 0.25); }
-</style>

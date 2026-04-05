@@ -15,8 +15,19 @@ class Role extends Model
     protected $fillable = [
         'value',
         'label',
-        'badgeClass',
-        'level', 
+        'badge_class',
+        'level'
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'level' => 'integer',
+        ];
+    }
+
+    public function admins()
+    {
+        return $this->hasMany(Admin::class);
+    }
 }

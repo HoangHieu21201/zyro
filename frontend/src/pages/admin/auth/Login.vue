@@ -1,163 +1,127 @@
 <template>
-  <div class="auth-page d-flex justify-content-center align-items-center bg-light min-vh-100 py-5">
-    <div class="auth-box shadow-lg rounded-4 overflow-hidden bg-white row g-0">
-
-      <!-- Cột trái: Banner -->
-      <div
-        class="col-md-6 d-none d-md-flex flex-column justify-content-center align-items-center text-white p-5 brand-banner">
-        <i class="bi bi-box-seam-fill brand-icon"></i>
-        <h2 class="fw-bold mt-3 text-center">MyShop Admin</h2>
-        <p class="text-center mt-2 opacity-75">Hệ thống quản trị và vận hành cửa hàng toàn diện.</p>
+  <div class="min-h-screen flex items-center justify-center bg-c-effect px-4">
+    <div class="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
+      
+      <!-- Logo & Tiêu đề -->
+      <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold tracking-widest text-c-dark uppercase mb-2">ZYRO.</h1>
+        <p class="text-sm text-c-hover font-medium uppercase tracking-wider">Quản Trị Hệ Thống</p>
       </div>
 
-      <!-- Cột phải: Form -->
-      <div class="col-md-6 p-5">
-        <div class="text-center mb-4 d-md-none">
-          <i class="bi bi-box-seam-fill text-brand mobile-icon"></i>
-          <h3 class="fw-bold mt-2 text-brand">MyShop Admin</h3>
+      <!-- Form Đăng Nhập -->
+      <form @submit.prevent="handleLogin" class="space-y-6" autocomplete="off">
+        
+        <!-- Hiển thị lỗi chung -->
+        <div v-if="errorMessage" class="p-3 bg-red-50 text-red-600 text-sm rounded border border-red-200">
+          {{ errorMessage }}
         </div>
 
-        <h4 class="fw-bold mb-1 text-dark">Đăng nhập</h4>
-        <p class="text-muted mb-4 small">Vui lòng điền thông tin để truy cập hệ thống</p>
+        <div>
+          <label class="block text-sm font-bold text-c-dark mb-2">Địa chỉ Email</label>
+          <input 
+            v-model="form.email" 
+            type="email" 
+            required
+            autocomplete="off"
+            class="w-full px-4 py-3 rounded border border-gray-300 focus:outline-none focus:border-c-hover focus:ring-1 focus:ring-c-hover transition-colors"
+            placeholder="admin@zyro.com"
+          >
+        </div>
 
-        <form @submit.prevent="handleLogin">
-          <div class="form-floating mb-3">
-            <input type="email" class="form-control" id="email" v-model="form.email" placeholder="name@example.com"
-              required>
-            <label for="email">Địa chỉ Email</label>
-          </div>
-
-          <div class="form-floating mb-3 position-relative">
-            <input :type="showPassword ? 'text' : 'password'" class="form-control pe-5" id="password"
-              v-model="form.password" placeholder="Password" required>
-            <label for="password">Mật khẩu</label>
-            <button type="button" class="btn border-0 position-absolute top-50 end-0 translate-middle-y text-muted me-1"
-              @click="showPassword = !showPassword">
-              <i class="bi" :class="showPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+        <div>
+          <label class="block text-sm font-bold text-c-dark mb-2">Mật khẩu</label>
+          <div class="relative">
+            <input 
+              v-model="form.password" 
+              :type="showPassword ? 'text' : 'password'" 
+              required
+              autocomplete="new-password"
+              class="w-full px-4 py-3 rounded border border-gray-300 focus:outline-none focus:border-c-hover focus:ring-1 focus:ring-c-hover transition-colors pr-12"
+              placeholder="••••••••"
+            >
+            <button 
+              type="button" 
+              @click="showPassword = !showPassword"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-c-dark transition-colors focus:outline-none"
+            >
+              <svg v-if="!showPassword" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg v-else xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>
             </button>
           </div>
+        </div>
 
-          <div class="d-flex justify-content-between align-items-center mb-4 small">
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="rememberMe" v-model="form.remember">
-              <label class="form-check-label text-muted" for="rememberMe">Ghi nhớ tôi</label>
-            </div>
+        <div class="flex items-center justify-between">
+          <label class="flex items-center text-sm text-gray-600 cursor-pointer">
+            <input type="checkbox" class="mr-2 rounded text-c-dark focus:ring-c-dark">
+            Ghi nhớ tôi
+          </label>
+          <!-- Đã sửa thành router-link để chuyển trang Quên mật khẩu -->
+          <router-link to="/admin/forgot-password" class="text-sm text-c-hover hover:text-c-dark font-medium transition-colors">
+            Quên mật khẩu?
+          </router-link>
+        </div>
 
-            <!-- ĐÃ SỬA: Thay thẻ <a> thành <router-link> trỏ về route quên mật khẩu -->
-            <router-link :to="{ name: 'admin-forgot-password' }" class="text-decoration-none fw-semibold text-brand">
-              Quên mật khẩu?
-            </router-link>
-          </div>
+        <button 
+          type="submit" 
+          :disabled="isLoading"
+          class="w-full bg-c-dark text-white font-bold py-3 px-4 rounded hover:bg-c-hover transition-colors flex justify-center items-center uppercase tracking-wider text-sm disabled:opacity-70 disabled:cursor-not-allowed"
+        >
+          <svg v-if="isLoading" class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          {{ isLoading ? 'Đang xử lý...' : 'Đăng Nhập' }}
+        </button>
 
-          <button type="submit" class="btn btn-brand w-100 py-2 fw-bold text-white shadow-sm mb-3"
-            :disabled="isLoading">
-            <span v-if="isLoading" class="spinner-border spinner-border-sm me-2"></span>
-            {{ isLoading ? 'ĐANG XỬ LÝ...' : 'ĐĂNG NHẬP' }}
-          </button>
-
-          <div class="text-center small text-muted">
-            Chưa có tài khoản?
-            <router-link :to="{ name: 'admin-register' }" class="text-decoration-none fw-semibold text-brand">Đăng ký
-              ngay</router-link>
-          </div>
-        </form>
-      </div>
-
+        <div class="text-center mt-4 pt-4 border-t border-gray-100">
+          <p class="text-sm text-gray-600">
+            Chưa có tài khoản? 
+            <router-link to="/admin/register" class="text-c-dark font-bold hover:underline">Khởi tạo ngay</router-link>
+          </p>
+        </div>
+      </form>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, reactive } from 'vue';
+import axios from 'axios';
 import { useRouter } from 'vue-router';
-import Swal from 'sweetalert2';
 
 const router = useRouter();
-const form = ref({ email: '', password: '', remember: false });
-const showPassword = ref(false);
+
+const form = reactive({
+  email: '',
+  password: ''
+});
+
 const isLoading = ref(false);
+const errorMessage = ref('');
+const showPassword = ref(false);
 
 const handleLogin = async () => {
   isLoading.value = true;
+  errorMessage.value = '';
+
   try {
-    const response = await fetch('http://127.0.0.1:8000/api/admin/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({ email: form.value.email, password: form.value.password })
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-      localStorage.setItem('admin_token', data.token);
-      localStorage.setItem('admin_role', data.admin.role_id);
-
-      if (data.admin.role && data.admin.role.level) {
-        localStorage.setItem('admin_level', data.admin.role.level);
-      }
-
-      localStorage.setItem('admin_info', JSON.stringify(data.admin));
-
-      Swal.fire({
-        icon: 'success',
-        title: 'Thành công!',
-        text: 'Đăng nhập hệ thống thành công.',
-        confirmButtonColor: '#009981',
-        timer: 1500,
-        showConfirmButton: false
-      }).then(() => router.push({ name: 'admin-dashboard' }));
-    } else {
-      Swal.fire({
-        icon: 'error',
-        title: 'Thất bại',
-        text: data.message || 'Thông tin đăng nhập không chính xác!',
-        confirmButtonColor: '#009981'
-      });
+    const response = await axios.post('http://127.0.0.1:8000/api/v1/admin/login', form);
+    
+    if (response.data.success) {
+      localStorage.setItem('admin_token', response.data.token);
+      localStorage.setItem('admin_info', JSON.stringify(response.data.admin));
+      router.push('/admin/dashboard');
     }
   } catch (error) {
-    Swal.fire({ icon: 'error', title: 'Lỗi', text: 'Không thể kết nối máy chủ!', confirmButtonColor: '#009981' });
+    if (error.response && error.response.status === 500) {
+      errorMessage.value = 'Lỗi 500: Server Backend đang bị lỗi (crash).';
+    } else if (error.response && error.response.data && error.response.data.message) {
+      errorMessage.value = error.response.data.message;
+    } else {
+      errorMessage.value = 'Không thể kết nối tới máy chủ. Vui lòng đảm bảo Backend đang chạy.';
+    }
   } finally {
     isLoading.value = false;
   }
 };
 </script>
-
-<style scoped>
-.auth-box {
-  width: 900px;
-  max-width: 95%;
-  min-height: 500px;
-}
-
-.brand-banner {
-  background: linear-gradient(135deg, #009981 0%, #00cba9 100%);
-}
-
-.brand-icon {
-  font-size: 5rem;
-}
-
-.mobile-icon {
-  font-size: 3rem;
-}
-
-.text-brand {
-  color: #009981;
-}
-
-.btn-brand {
-  background-color: #009981;
-  border-radius: 8px;
-  border: none;
-  transition: 0.2s;
-}
-
-.btn-brand:hover {
-  background-color: #007a67;
-}
-
-.form-control:focus {
-  border-color: #009981;
-  box-shadow: 0 0 0 0.25rem rgba(0, 153, 129, 0.25);
-}
-</style>

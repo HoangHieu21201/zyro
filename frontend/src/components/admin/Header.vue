@@ -1,45 +1,53 @@
 <template>
   <!-- Thêm class động để tự động đổi màu nền Header khi bật Dark Mode -->
   <nav class="app-header navbar navbar-expand shadow-sm px-3 py-2 border-bottom transition-all"
-       :class="isDarkMode ? 'bg-dark border-secondary' : 'bg-white'">
+    :class="isDarkMode ? 'bg-dark border-secondary' : 'bg-white'">
     <div class="container-fluid">
 
       <ul class="navbar-nav ms-auto align-items-center">
         <!-- NÚT TOGGLE DARK MODE (MỚI THÊM) -->
         <li class="nav-item me-3" v-if="isLoggedIn">
-          <button @click="toggleTheme" 
-                  class="btn rounded-circle shadow-sm d-flex align-items-center justify-content-center p-0 theme-toggle-btn"
-                  :class="isDarkMode ? 'btn-secondary border-secondary' : 'btn-light border-light'"
-                  style="width: 36px; height: 36px; transition: all 0.3s;"
-                  :title="isDarkMode ? 'Chuyển sang nền sáng' : 'Chuyển sang nền tối'">
-            <i class="bi" :class="isDarkMode ? 'bi-moon-stars-fill text-light fs-6' : 'bi-sun-fill text-warning fs-5'"></i>
+          <button @click="toggleTheme"
+            class="btn rounded-circle shadow-sm d-flex align-items-center justify-content-center p-0 theme-toggle-btn"
+            :class="isDarkMode ? 'btn-secondary border-secondary' : 'btn-light border-light'"
+            style="width: 36px; height: 36px; transition: all 0.3s;"
+            :title="isDarkMode ? 'Chuyển sang nền sáng' : 'Chuyển sang nền tối'">
+            <i class="bi"
+              :class="isDarkMode ? 'bi-moon-stars-fill text-light fs-6' : 'bi-sun-fill text-warning fs-5'"></i>
           </button>
         </li>
 
         <!-- Trường hợp 1: Đã đăng nhập - Hiển thị Menu User -->
         <li v-if="isLoggedIn" class="nav-item dropdown user-menu-container" ref="userMenuContainer">
-          <a href="#" @click.prevent="toggleUserMenu" class="nav-link d-flex align-items-center dropdown-toggle text-decoration-none"
-             :class="isDarkMode ? 'text-light' : 'text-dark'">
+          <a href="#" @click.prevent="toggleUserMenu"
+            class="nav-link d-flex align-items-center dropdown-toggle text-decoration-none"
+            :class="isDarkMode ? 'text-light' : 'text-dark'">
             <img :src="adminUser.avatar" class="user-image rounded-circle shadow-sm me-2" alt="User Image">
-            <span class="d-none d-md-inline fw-semibold text-truncate" style="max-width: 150px;">{{ adminUser.name }}</span>
+            <span class="d-none d-md-inline fw-semibold text-truncate" style="max-width: 150px;">{{ adminUser.name
+              }}</span>
           </a>
-          
-          <ul class="dropdown-menu dropdown-menu-end shadow border mt-2 transition-all" 
-              :class="[{ 'show': isUserMenuActive }, isDarkMode ? 'bg-dark border-secondary' : 'bg-white border-0']">
+
+          <ul class="dropdown-menu dropdown-menu-end shadow border mt-2 transition-all"
+            :class="[{ 'show': isUserMenuActive }, isDarkMode ? 'bg-dark border-secondary' : 'bg-white border-0']">
             <li class="user-header-modern text-white text-center p-3 rounded-top">
-              <img :src="adminUser.avatar" class="rounded-circle shadow mb-2" style="width: 60px; height: 60px; object-fit: cover;" alt="User Image">
+              <img :src="adminUser.avatar" class="rounded-circle d-block mx-auto mt-2 mb-2 shadow"
+                style="width: 60px; height: 60px; object-fit: cover;" alt="User Image">
               <p class="mb-0 fw-bold">{{ adminUser.name }}</p>
               <small class="text-light opacity-75">{{ adminUser.roleName }}</small>
             </li>
-            
+
             <li class="mt-2">
-              <router-link :to="{ name: 'admin-profile' }" class="dropdown-item py-2" :class="isDarkMode ? 'text-light hover-dark' : ''">
+              <router-link :to="{ name: 'admin-profile' }" class="dropdown-item py-2"
+                :class="isDarkMode ? 'text-light hover-dark' : ''">
                 <i class="bi bi-person me-2"></i> Hồ sơ cá nhân
               </router-link>
             </li>
-            <li><hr class="dropdown-divider" :class="isDarkMode ? 'border-secondary' : ''"></li>
             <li>
-              <a href="#" @click.prevent="handleLogout" class="dropdown-item py-2 fw-bold" :class="isDarkMode ? 'text-danger hover-dark' : 'text-danger'">
+              <hr class="dropdown-divider" :class="isDarkMode ? 'border-secondary' : ''">
+            </li>
+            <li>
+              <a href="#" @click.prevent="handleLogout" class="dropdown-item py-2 fw-bold"
+                :class="isDarkMode ? 'text-danger hover-dark' : 'text-danger'">
                 <i class="bi bi-box-arrow-right me-2"></i> Đăng xuất
               </a>
             </li>
@@ -106,7 +114,7 @@ const isLoggedIn = computed(() => {
 const getAdminData = () => {
   const savedInfo = localStorage.getItem('admin_info');
   const roleId = localStorage.getItem('admin_role');
-  
+
   if (savedInfo) {
     const admin = JSON.parse(savedInfo);
     return {
@@ -115,7 +123,7 @@ const getAdminData = () => {
       avatar: admin.avatar_url ? `http://127.0.0.1:8000/storage/${admin.avatar_url}` : defaultAvatar
     };
   }
-  
+
   return {
     name: 'Guest',
     roleName: 'Chưa xác định',
@@ -216,8 +224,8 @@ onUnmounted(() => {
   border-radius: 12px;
   animation: slideInUp 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
   transform-origin: top right;
-  right: 0 !important; 
-  display: none; 
+  right: 0 !important;
+  display: none;
 }
 
 .dropdown-menu.show {
@@ -225,8 +233,8 @@ onUnmounted(() => {
 }
 
 .user-header-modern {
-  background: linear-gradient(135deg, #009981 0%, #007a67 100%);
-  margin-top: -8px; 
+  background: var(--color-c-dark) !important;
+  margin-top: -8px;
 }
 
 .dropdown-item {
@@ -239,14 +247,20 @@ onUnmounted(() => {
   color: #009981;
 }
 
-/* Tùy chỉnh hover cho dropdown khi ở Dark Mode */
 .hover-dark:hover {
   background-color: #343a40 !important;
   color: #00ebc4 !important;
 }
 
 @keyframes slideInUp {
-  from { opacity: 0; transform: translateY(10px) scale(0.95); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 </style>

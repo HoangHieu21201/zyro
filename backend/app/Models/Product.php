@@ -13,7 +13,6 @@ class Product extends Model
     protected $table = 'products';
 
     protected $fillable = [
-        'shop_id',
         'category_id',
         'brand_id',
         'name',
@@ -22,53 +21,49 @@ class Product extends Model
         'promotional_price',
         'description',
         'thumbnail_image',
-        'review_count',
-        'rating_avg',
+        'gender',
+        'fit_type',
+        'size_guide_url',
+        'care_instructions',
         'specifications',
         'is_featured',
-        'status'
+        'status',
+        'view_count',
+        'sales_count',
+        'review_count',
+        'rating_avg'
     ];
 
     protected function casts(): array
     {
         return [
-            'specifications' => 'array',
+            'category_id' => 'integer',
+            'brand_id' => 'integer',
             'base_price' => 'decimal:2',
-            'promotional_price' => 'decimal:2'
+            'promotional_price' => 'decimal:2',
+            'specifications' => 'array',
+            'is_featured' => 'boolean',
+            'view_count' => 'integer',
+            'sales_count' => 'integer',
+            'review_count' => 'integer',
+            'rating_avg' => 'decimal:2',
         ];
     }
 
     public function category()
     {
-        return $this->belongsTo(Category::class, 'category_id');
+        return $this->belongsTo(Category::class);
     }
-
     public function brand()
     {
-        return $this->belongsTo(Brand::class, 'brand_id');
+        return $this->belongsTo(Brand::class);
     }
-
     public function variants()
     {
-        return $this->hasMany(ProductVariant::class, 'product_id');
+        return $this->hasMany(ProductVariant::class);
     }
-
-    public function reviews()
+    public function images()
     {
-        return $this->hasMany(Review::class);
-    }
-
-    public function scopeAvailableForConfig($query)
-    {
-        return $query->where('status', 'published')
-            ->whereHas('category', function ($q) {
-                $q->where('status', 'active');
-            })
-            ->where(function ($q) {
-                $q->whereNull('brand_id')
-                    ->orWhereHas('brand', function ($subQ) {
-                        $subQ->where('status', 'active');
-                    });
-            });
+        return $this->hasMany(ProductImage::class);
     }
 }
