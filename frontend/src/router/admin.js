@@ -159,6 +159,25 @@ const admin = [
         component: () => import('../pages/admin/product/Edit.vue'),
         meta: { moduleCode: 'admin_products' },
       },
+      // lookbook
+      {
+        path: 'lookbooks',
+        name: 'admin-lookbooks',
+        component: () => import('../pages/admin/lookbook/Index.vue'),
+        meta: { moduleCode: 'admin_lookbooks' },
+      },
+      {
+        path: 'lookbooks/create',
+        name: 'admin-lookbooks-create',
+        component: () => import('../pages/admin/lookbook/Create.vue'),
+        meta: { moduleCode: 'admin_lookbooks' },
+      },
+      {
+        path: 'lookbooks/:id/edit',
+        name: 'admin-lookbooks-edit',
+        component: () => import('../pages/admin/lookbook/Edit.vue'),
+        meta: { moduleCode: 'admin_lookbooks' },
+      },
 
 
       // --------------------------------------

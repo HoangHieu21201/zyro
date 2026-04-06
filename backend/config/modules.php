@@ -51,4 +51,9 @@ return [
         'module_code' => 'admin_products',
         'default_level' => 3
     ],
+    [
+        'module_name' => 'Quản lý Lookbook',
+        'module_code' => 'admin_lookbooks',
+        'default_level' => 3
+    ],
 ];

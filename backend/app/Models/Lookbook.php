@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Lookbook extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'lookbooks';
 
@@ -15,6 +16,7 @@ class Lookbook extends Model
         'name',
         'slug',
         'description',
+        'gender', 
         'main_image',
         'total_price_estimate',
         'status'

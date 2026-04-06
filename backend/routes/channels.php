@@ -47,4 +47,8 @@ Broadcast::channel('admin.products', function ($user) {
     return $user !== null;
 }, ['guards' => ['sanctum']]);
 
+// Bảo vệ kênh 'admin.lookbooks'
+Broadcast::channel('admin.lookbooks', function ($user) {
+    return $user !== null; 
+}, ['guards' => ['sanctum']]);
 

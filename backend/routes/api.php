@@ -97,6 +97,13 @@ Route::prefix('v1/admin')->group(function () {
             Route::apiResource('attributes', \App\Http\Controllers\Api\Admin\AttributeController::class)->except(['show']);
             Route::post('attribute-values', [\App\Http\Controllers\Api\Admin\AttributeValueController::class, 'store']);
         });
+
+        // Quản lý Lookbooks
+        Route::middleware(['check.module:admin_lookbooks'])->group(function () {
+            Route::post('lookbooks/{id}/restore', [\App\Http\Controllers\Api\Admin\LookbookController::class, 'restore']);
+            Route::patch('lookbooks/{id}/status', [\App\Http\Controllers\Api\Admin\LookbookController::class, 'updateStatus']);
+            Route::apiResource('lookbooks', \App\Http\Controllers\Api\Admin\LookbookController::class);
+        });
     });
 });
 

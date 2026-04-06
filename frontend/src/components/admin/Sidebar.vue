@@ -146,10 +146,10 @@ const menuItems = ref([
   { name: 'Phân Quyền', path: '/admin/roles', icon: 'bi-shield-fill-check', moduleCode: 'admin_roles' },
   {
     name: 'Tài khoản', icon: 'bi-person-circle', stateKey: 'accounts',
-   children: [
+    children: [
       { name: 'Nội bộ', path: '/admin/admins', moduleCode: 'admin_staff' },
       { name: 'Khách hàng', path: '/admin/users', moduleCode: 'admin_users' },
-      { name: 'Hạng thành viên', path: '/admin/tiers', moduleCode: 'admin_tiers' } 
+      { name: 'Hạng thành viên', path: '/admin/tiers', moduleCode: 'admin_tiers' }
     ]
   },
   {
@@ -157,7 +157,8 @@ const menuItems = ref([
     children: [
       { name: 'Danh mục', path: '/admin/categories', moduleCode: 'admin_categories' },
       { name: 'Thương hiệu', path: '/admin/brands', moduleCode: 'admin_brands' },
-      { name: 'Sản phẩm & Biến thể', path: '/admin/products', moduleCode: 'admin_products' }
+      { name: 'SP & Biến thể', path: '/admin/products', moduleCode: 'admin_products' },
+      { name: 'Lookbook', path: '/admin/lookbooks', moduleCode: 'admin_lookbooks' }
     ]
   },
   {
