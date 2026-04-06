@@ -1,412 +1,418 @@
+<!-- File: frontend/src/pages/admin/product/Create.vue -->
 <template>
-    <div class="product-create-wrapper pb-5 mb-5">
-        <div class="container-fluid py-4" v-if="!isPageLoading">
+  <div class="product-create-wrapper pb-5 mb-5">
+    <div class="container-fluid py-4" v-if="!isPageLoading">
 
-            <div class="row mb-4 align-items-center">
-                <div class="col-md-6 d-flex align-items-center">
-                    <router-link :to="{ name: 'admin-products' }"
-                        class="btn btn-light shadow-sm me-3 rounded-circle d-flex align-items-center justify-content-center"
-                        style="width: 40px; height: 40px;">
-                        <i class="bi bi-arrow-left fw-bold"></i>
-                    </router-link>
-                    <div class="d-flex flex-column">
-                        <h3 class="fw-bold text-dark mb-0">Thêm Sản phẩm Trang sức</h3>
-                        <p class="text-muted small mb-0 mt-1">Khởi tạo sản phẩm gốc và các biến thể phân loại</p>
-                    </div>
-                </div>
-            </div>
+      <div class="row mb-4 align-items-center">
+        <div class="col-md-8 d-flex align-items-center">
+          <router-link :to="{ name: 'admin-products' }" class="btn btn-light dark:bg-[#2b3035] dark:border-gray-600 dark:text-gray-200 shadow-sm me-3 rounded-circle d-flex align-items-center justify-content-center hover-urban transition-all" style="width: 40px; height: 40px;">
+            <i class="bi bi-arrow-left fw-bold"></i>
+          </router-link>
+          <div class="d-flex flex-column">
+            <h3 class="fw-bold text-dark dark:text-white mb-0">Thêm Sản phẩm Mới</h3>
+            <p class="text-muted dark:text-gray-400 small mb-0 mt-1">Khởi tạo sản phẩm gốc và các biến thể phân loại (3 Bước)</p>
+          </div>
+        </div>
+      </div>
 
-            <div class="card border-0 shadow-sm rounded-4 mb-4">
-                <div class="card-header bg-white pt-4 pb-0 border-bottom-0">
-                    <ul class="nav nav-underline custom-scrollbar-x flex-nowrap">
-                        <li class="nav-item">
-                            <a class="nav-link py-3 px-4 fw-bold custom-tab"
-                                :class="{ 'active-tab': currentStep === 1 }" href="#" @click.prevent="currentStep = 1">
-                                <span class="step-circle me-2">1</span> Thông tin cơ bản
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link py-3 px-4 fw-bold custom-tab"
-                                :class="{ 'active-tab': currentStep === 2, 'disabled text-muted': !canProceedToStep2 }"
-                                href="#" @click.prevent="proceedIfValid">
-                                <span class="step-circle me-2">2</span> Phân loại & Biến thể (Kho)
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-
-                <div class="card-body p-4 p-md-5">
-                    <form @submit.prevent="submitProduct" id="productForm">
-
-                        <div v-show="currentStep === 1" class="row g-4">
-                            <div class="col-lg-8">
-                                <div class="p-4 bg-light rounded-4 border h-100">
-                                    <h6 class="fw-bold mb-4 text-dark form-section-title"><i
-                                            class="bi bi-card-text me-2"></i>Dữ liệu cơ sở</h6>
-                                    <div class="row g-3">
-                                        <div class="col-md-12">
-                                            <label class="form-label fw-bold">Tên sản phẩm <span
-                                                    class="text-danger">*</span></label>
-                                            <input type="text" class="form-control form-control-lg" v-model="form.name"
-                                                @input="generateSlug" required
-                                                placeholder="VD: Nhẫn đính hôn Kim Cương tự nhiên">
-                                        </div>
-                                        <div class="col-md-12">
-                                            <label class="form-label fw-bold">Đường dẫn (Slug)</label>
-                                            <input type="text" class="form-control bg-light text-muted font-monospace"
-                                                v-model="form.slug" readonly>
-                                        </div>
-
-                                        <div class="col-md-4">
-                                            <label class="form-label fw-bold">Danh mục <span
-                                                    class="text-danger">*</span></label>
-                                            <select class="form-select border-brand fw-semibold text-brand"
-                                                v-model="form.category_id" required>
-                                                <option value="" disabled>-- Chọn danh mục --</option>
-                                                <option v-if="categories.length === 0" value="" disabled
-                                                    class="text-danger">
-                                                    ⚠️ Trống! Cần tạo Danh mục.
-                                                </option>
-                                                <option v-else v-for="cat in categories" :key="cat.id" :value="cat.id">
-                                                    {{ cat.name }}
-                                                </option>
-                                            </select>
-                                        </div>
-
-                                        <div class="col-md-4">
-                                            <label class="form-label fw-bold">Thương hiệu</label>
-                                            <select class="form-select fw-semibold" v-model="form.brand_id">
-                                                <option value="">-- Không có (No Brand) --</option>
-                                                <option v-for="brand in brands" :key="brand.id" :value="brand.id">
-                                                    {{ brand.name }}
-                                                </option>
-                                            </select>
-                                        </div>
-
-                                        <div class="col-md-4">
-                                            <label class="form-label fw-bold">Giá tham khảo <span
-                                                    class="text-danger">*</span></label>
-                                            <div class="input-group">
-                                                <input type="number" class="form-control"
-                                                    v-model.number="form.base_price" required min="0">
-                                                <span class="input-group-text bg-light">VNĐ</span>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-12 mt-3">
-                                            <div
-                                                class="alert alert-info small border-0 bg-info bg-opacity-10 text-muted m-0">
-                                                <i class="bi bi-info-circle me-1 text-info"></i>
-                                                Sản phẩm mặc định sẽ ở trạng thái <strong>Nháp (Draft)</strong>. Bạn cần
-                                                cấu hình biến thể ở Bước 2 để xuất bản.
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-lg-4">
-                                <div class="p-4 bg-light rounded-4 border text-center h-100">
-                                    <h6 class="fw-bold mb-3 text-start form-section-title"><i
-                                            class="bi bi-image me-2"></i>Ảnh Đại Diện <span class="text-danger">*</span>
-                                    </h6>
-                                    <div class="mb-3 position-relative border rounded-4 overflow-hidden bg-white"
-                                        style="height: 250px;">
-                                        <img v-if="thumbnailPreview" :src="thumbnailPreview"
-                                            class="w-100 h-100 object-fit-contain p-2">
-                                        <div v-else
-                                            class="d-flex flex-column justify-content-center align-items-center h-100 text-muted">
-                                            <i class="bi bi-camera fs-1 mb-2 opacity-50"></i>
-                                            <span class="small fw-semibold text-danger">Bắt buộc tải ảnh</span>
-                                        </div>
-                                    </div>
-                                    <input type="file" class="d-none" id="thumbUpload" accept="image/*"
-                                        @change="handleThumbUpload">
-                                    <label for="thumbUpload"
-                                        class="btn btn-outline-brand rounded-pill w-100 fw-semibold"><i
-                                            class="bi bi-upload me-1"></i> Chọn ảnh chính</label>
-                                </div>
-                            </div>
-
-                            <div class="col-12 text-end border-top pt-4 mt-4">
-                                <button type="button"
-                                    class="btn btn-brand px-5 fw-bold text-white rounded-pill shadow-sm py-2"
-                                    @click="proceedToStep2" :disabled="!canProceedToStep2 || isProcessingSchema">
-                                    <span v-if="isProcessingSchema"
-                                        class="spinner-border spinner-border-sm me-2"></span>
-                                    {{ isProcessingSchema ? 'Đang cấu hình lưới...' : 'Chuyển sang Bộ tạo Biến thể' }}
-                                    <i class="bi bi-arrow-right ms-1"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div v-show="currentStep === 2">
-
-                            <div class="card border shadow-sm rounded-3 overflow-hidden mb-4">
-                                <div
-                                    class="card-header bg-white border-bottom p-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
-                                    <h6 class="fw-bold mb-0 text-brand d-flex align-items-center">
-                                        <i class="bi bi-grid-3x3-gap-fill me-2"></i> CẤU HÌNH LƯỚI SẢN PHẨM
-                                    </h6>
-
-                                    <div class="attr-toolbar d-flex align-items-center gap-2">
-                                        <div class="input-group input-group-sm">
-                                            <select class="form-select border-secondary fw-bold text-secondary"
-                                                v-model="selectedAttrToAdd" style="min-width: 150px;">
-                                                <option value="">+ Chọn thuộc tính</option>
-                                                <template v-if="systemAttributes.length > 0">
-                                                    <option v-for="attr in systemAttributes" :key="attr.id"
-                                                        :value="attr.id"
-                                                        :disabled="activeAttributes.includes(attr.id.toString())">
-                                                        {{ attr.name }}
-                                                    </option>
-                                                </template>
-                                            </select>
-                                            <button type="button" class="btn btn-success px-3 fw-bold"
-                                                title="Thêm cột vào bảng" @click="addAttributeColumn">
-                                                <i class="bi bi-plus-lg"></i>
-                                            </button>
-                                        </div>
-
-                                        <div class="vr mx-1 text-secondary opacity-25"></div>
-
-                                        <button type="button" class="btn btn-sm btn-outline-primary border-0 fw-bold"
-                                            @click="openModal('createAttrModal')">
-                                            <i class="bi bi-plus-circle me-1"></i> Thuộc tính mới
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary border-0 fw-bold"
-                                            @click="openModal('manageAttrModal')">
-                                            <i class="bi bi-gear-fill me-1"></i> Quản lý
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="card-body p-0">
-                                    <div class="table-responsive" style="min-height: 350px;">
-                                        <table class="table table-bordered mb-0 variant-table w-100">
-                                            <thead>
-                                                <tr>
-                                                    <th style="width: 70px;">Ảnh</th>
-                                                    <th style="min-width: 150px;">SKU <span class="fw-light text-muted"
-                                                            style="font-size: 0.75em">(Tự
-                                                            sinh)</span></th>
-
-                                                    <th v-for="attrId in activeAttributes" :key="attrId"
-                                                        style="min-width: 130px;"
-                                                        class="bg-light text-dark position-relative">
-                                                        {{ getAttributeName(attrId) }}
-                                                        <i class="bi bi-x-circle-fill text-danger position-absolute top-50 end-0 translate-middle-y me-2 cursor-pointer opacity-50 hover-opacity-100"
-                                                            title="Gỡ cột" @click="removeAttributeColumn(attrId)"></i>
-                                                    </th>
-
-                                                    <th style="width: 150px;" class="bg-light-brand text-dark">Giá bán
-                                                        (VNĐ) <span class="text-danger">*</span></th>
-                                                    <th style="width: 140px;">Khuyến mãi</th>
-                                                    <th style="width: 100px;">Kho <span class="text-danger">*</span>
-                                                    </th>
-                                                    <th style="width: 50px;"></th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr v-if="variants.length === 0">
-                                                    <td :colspan="6 + activeAttributes.length" class="text-center py-5">
-                                                        <div class="text-muted"><i
-                                                                class="bi bi-inbox fs-1 opacity-25 d-block mb-2"></i>Chưa
-                                                            có dòng
-                                                            biến thể nào. Hãy thêm dòng mới.</div>
-                                                    </td>
-                                                </tr>
-
-                                                <tr v-else v-for="(v, index) in variants" :key="index"
-                                                    class="variant-row" :class="{ 'row-error': v.hasDuplicateError }">
-                                                    <td class="text-center position-relative">
-                                                        <label class="cursor-pointer d-block m-0">
-                                                            <img :src="v.preview || 'https://placehold.co/40x40?text=+'"
-                                                                class="img-preview-sm"
-                                                                onerror="this.src='https://placehold.co/40x40?text=+'">
-                                                            <input type="file" class="d-none" accept="image/*"
-                                                                @change="handleVariantImage(index, $event)">
-                                                        </label>
-                                                    </td>
-
-                                                    <td>
-                                                        <input type="text"
-                                                            class="form-control form-control-sm font-monospace"
-                                                            v-model="v.sku" placeholder="Tự động" required>
-                                                    </td>
-
-                                                    <td v-for="attrId in activeAttributes" :key="attrId">
-                                                        <select class="form-select form-select-sm attr-select"
-                                                            v-model="v.attributes[attrId]"
-                                                            :class="{ 'is-invalid': v.attrError }"
-                                                            @change="handleAttributeChange($event, attrId, index)">
-                                                            <option value="">-- Chọn --</option>
-                                                            <option v-for="val in getAttributeValues(attrId)"
-                                                                :key="val.id" :value="val.id">{{ val.value
-                                                                }}</option>
-                                                            <option value="NEW" class="text-success fw-bold">+ Tạo
-                                                                mới...</option>
-                                                        </select>
-                                                    </td>
-
-                                                    <td>
-                                                        <input type="number"
-                                                            class="form-control form-control-sm text-end fw-bold text-brand"
-                                                            :class="{ 'is-invalid': v.priceError }" v-model="v.price"
-                                                            min="0" required @input="validateRow(index)">
-                                                    </td>
-                                                    <td>
-                                                        <input type="number"
-                                                            class="form-control form-control-sm text-end"
-                                                            :class="{ 'is-invalid': v.saleError }"
-                                                            v-model="v.promotional_price" min="0"
-                                                            @input="validateRow(index)">
-                                                    </td>
-                                                    <td>
-                                                        <input type="number"
-                                                            class="form-control form-control-sm text-center"
-                                                            v-model="v.stock_quantity" min="0" required>
-                                                    </td>
-                                                    <td class="text-center">
-                                                        <button type="button"
-                                                            class="btn btn-sm text-secondary border-0 hover-danger"
-                                                            @click="removeVariantRow(index)">
-                                                            <i class="bi bi-x-lg fs-6"></i>
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-
-                                <div
-                                    class="card-footer bg-white py-3 d-flex justify-content-between align-items-center sticky-bottom shadow-sm">
-                                    <button type="button" class="btn btn-light border text-brand fw-bold px-3 btn-sm"
-                                        @click="addVariantRow">
-                                        <i class="bi bi-plus-circle-dotted me-2"></i>Thêm dòng biến thể
-                                    </button>
-
-                                    <div class="d-flex align-items-center gap-3">
-                                        <div class="form-check form-switch m-0">
-                                            <input class="form-check-input" type="checkbox" id="publishSwitch"
-                                                v-model="form.isPublished">
-                                            <label class="form-check-label fw-semibold" for="publishSwitch">Xuất bản
-                                                ngay</label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="d-flex justify-content-between pt-2">
-                                <button type="button" class="btn btn-light px-4 border fw-semibold"
-                                    @click="currentStep = 1"><i class="bi bi-arrow-left me-1"></i> Trở lại Bước
-                                    1</button>
-                                <button type="submit" class="btn btn-brand text-white px-5 py-2 fw-bold shadow"
-                                    :disabled="isSaving || variants.length === 0">
-                                    <span v-if="isSaving" class="spinner-border spinner-border-sm me-2"></span> HOÀN TẤT
-                                    LƯU
-                                </button>
-                            </div>
-
-                        </div>
-                    </form>
-                </div>
-            </div>
+      <div class="card border-0 shadow-sm rounded-4 mb-4 dark:bg-[#1a2533]">
+        <div class="card-header bg-white dark:bg-[#1a2533] pt-4 pb-0 border-bottom-0 rounded-top-4">
+          <ul class="nav nav-underline custom-scrollbar-x flex-nowrap border-bottom dark:border-gray-700">
+            <li class="nav-item">
+              <a class="nav-link py-3 px-4 fw-bold custom-tab" :class="{ 'active-tab': currentStep === 1 }" href="#" @click.prevent="currentStep = 1">
+                <span class="step-circle me-2">1</span> Thông tin cơ bản
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link py-3 px-4 fw-bold custom-tab" :class="{ 'active-tab': currentStep === 2, 'disabled opacity-50 pe-none': !canProceedToStep2 }" href="#" @click.prevent="proceedIfValid(2)">
+                <span class="step-circle me-2">2</span> Biến thể & Kho
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link py-3 px-4 fw-bold custom-tab" :class="{ 'active-tab': currentStep === 3, 'disabled opacity-50 pe-none': variants.length === 0 }" href="#" @click.prevent="proceedIfValid(3)">
+                <span class="step-circle me-2">3</span> Thư viện ảnh
+              </a>
+            </li>
+          </ul>
         </div>
 
-        <div v-else class="d-flex flex-column justify-content-center align-items-center w-100"
-            style="min-height: 70vh;">
-            <h1 class="logo-shimmer mb-3">ThinkHub</h1>
-            <p class="text-muted small tracking-widest text-uppercase">Chuẩn bị không gian làm việc...</p>
-        </div>
+        <div class="card-body p-4 p-md-5">
+          <form @submit.prevent="submitProduct" id="productForm" autocomplete="off">
 
-
-        <div class="modal fade" id="createAttrModal" tabindex="-1">
-            <div class="modal-dialog modal-sm modal-dialog-centered">
-                <div class="modal-content border-0 shadow">
-                    <div class="modal-header py-2 bg-primary text-white">
-                        <h6 class="modal-title fw-bold">Tạo thuộc tính mới</h6>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            <!-- BƯỚC 1: THÔNG TIN CƠ BẢN -->
+            <div v-show="currentStep === 1" class="row g-4 animation-fade-in">
+              <div class="col-lg-8">
+                <div class="p-4 bg-light dark:bg-[#212529] rounded-4 border dark:border-gray-700 h-100">
+                  <h6 class="fw-bold mb-4 text-urban text-uppercase"><i class="bi bi-card-text me-2"></i>Dữ liệu cơ sở</h6>
+                  
+                  <div class="row g-3">
+                    <div class="col-md-12">
+                      <label class="form-label fw-bold text-dark dark:text-gray-200">Tên sản phẩm <span class="text-danger">*</span></label>
+                      <input type="text" class="form-control form-control-lg bg-white dark:bg-[#1a2533] dark:text-white border-secondary-subtle dark:border-gray-600 shadow-sm-hover" 
+                             v-model="form.name" @input="generateSlug" required placeholder="VD: Áo thun nam Cotton Basic">
                     </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Tên thuộc tính</label>
-                            <input type="text" class="form-control" v-model="newAttrForm.name"
-                                placeholder="VD: Chất liệu" @keydown.enter.prevent="submitCreateAttribute">
+                    <div class="col-md-12">
+                      <label class="form-label fw-bold text-dark dark:text-gray-200">Đường dẫn (Slug)</label>
+                      <input type="text" class="form-control bg-light-subtle dark:bg-[#2b3035] text-muted dark:text-gray-400 font-monospace border-secondary-subtle dark:border-gray-600" 
+                             v-model="form.slug" readonly>
+                    </div>
+
+                    <div class="col-md-6">
+                      <label class="form-label fw-bold text-dark dark:text-gray-200">Danh mục <span class="text-danger">*</span></label>
+                      <select class="form-select border-urban fw-semibold text-urban bg-white dark:bg-[#1a2533] shadow-sm-hover" v-model="form.category_id" required>
+                        <option value="" disabled>-- Chọn danh mục --</option>
+                        <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+                      </select>
+                      <small v-if="categories.length === 0" class="text-danger d-block mt-1">Hệ thống chưa có danh mục nào đang hoạt động!</small>
+                    </div>
+
+                    <div class="col-md-6">
+                      <label class="form-label fw-bold text-dark dark:text-gray-200">Thương hiệu</label>
+                      <select class="form-select fw-semibold bg-white dark:bg-[#1a2533] dark:text-white border-secondary-subtle dark:border-gray-600 shadow-sm-hover" v-model="form.brand_id">
+                        <option value="">-- Không có (No Brand) --</option>
+                        <option v-for="brand in brands" :key="brand.id" :value="brand.id">{{ brand.name }}</option>
+                      </select>
+                    </div>
+
+                    <div class="col-md-4">
+                      <label class="form-label fw-bold text-dark dark:text-gray-200">Giới tính (Gender)</label>
+                      <select class="form-select bg-white dark:bg-[#1a2533] dark:text-white border-secondary-subtle dark:border-gray-600" v-model="form.gender">
+                        <option value="Unisex">Unisex</option>
+                        <option value="Men">Nam</option>
+                        <option value="Women">Nữ</option>
+                        <option value="Kids">Trẻ em</option>
+                      </select>
+                    </div>
+
+                    <div class="col-md-4">
+                      <label class="form-label fw-bold text-dark dark:text-gray-200">Kiểu dáng (Fit Type)</label>
+                      <input type="text" class="form-control bg-white dark:bg-[#1a2533] dark:text-white border-secondary-subtle dark:border-gray-600" v-model="form.fit_type" placeholder="VD: Oversize...">
+                    </div>
+
+                    <div class="col-md-4">
+                      <label class="form-label fw-bold text-dark dark:text-gray-200">Giá cơ sở tham khảo <span class="text-danger">*</span></label>
+                      <div class="input-group shadow-sm-hover">
+                        <input type="number" class="form-control border-secondary-subtle dark:border-gray-600 bg-white dark:bg-[#1a2533] dark:text-white fw-bold" v-model.number="form.base_price" required min="0">
+                        <span class="input-group-text bg-light dark:bg-[#2b3035] dark:text-gray-400 border-secondary-subtle dark:border-gray-600">VNĐ</span>
+                      </div>
+                      <small class="text-danger fw-bold mt-1 d-block" v-if="form.base_price > 0">{{ formatCurrency(form.base_price) }}</small>
+                    </div>
+
+                    <!-- ĐÃ FIX: Thiết kế lại nút Bật/Tắt Featured sang trọng, không bị lỗi chữ -->
+                    <div class="col-12 mt-3">
+                      <div class="p-3 border border-secondary-subtle dark:border-gray-600 rounded-3 bg-white dark:bg-[#1a2533] d-flex align-items-center justify-content-between shadow-sm">
+                        <div>
+                          <h6 class="fw-bold text-dark dark:text-white mb-1">Sản phẩm Nổi bật (Featured)</h6>
+                          <p class="text-muted small mb-0">Ưu tiên hiển thị trên trang chủ và danh sách.</p>
                         </div>
-                        <button type="button" class="btn btn-primary w-100 btn-sm fw-bold"
-                            @click="submitCreateAttribute" :disabled="!newAttrForm.name">Lưu ngay</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="modal fade" id="createValueModal" tabindex="-1">
-            <div class="modal-dialog modal-sm modal-dialog-centered">
-                <div class="modal-content border-0 shadow">
-                    <div class="modal-header py-2 bg-success text-white">
-                        <h6 class="modal-title fw-bold">Thêm giá trị mới</h6>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Giá trị cho: <span class="text-success">{{
-                                currentOperatingAttr ? currentOperatingAttr.name : '' }}</span></label>
-                            <input type="text" class="form-control" v-model="newValueForm.value"
-                                placeholder="VD: Xanh ngọc" @keydown.enter.prevent="submitCreateValue"
-                                ref="newValueInputRef">
+                        <div class="form-check form-switch fs-4 m-0">
+                          <input class="form-check-input cursor-pointer" type="checkbox" id="featureSwitchEdit" v-model="form.is_featured">
                         </div>
-                        <button type="button" class="btn btn-success w-100 btn-sm fw-bold" @click="submitCreateValue"
-                            :disabled="!newValueForm.value">Lưu giá trị</button>
+                      </div>
                     </div>
+                  </div>
                 </div>
-            </div>
-        </div>
+              </div>
 
-        <div class="modal fade" id="manageAttrModal" tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content border-0 shadow">
-                    <div class="modal-header py-2 bg-secondary text-white">
-                        <h6 class="modal-title fw-bold">Quản lý Thuộc tính hệ thống</h6>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+              <div class="col-lg-4">
+                <div class="p-4 bg-light dark:bg-[#212529] rounded-4 border dark:border-gray-700 text-center h-100">
+                  <h6 class="fw-bold mb-4 text-start text-urban text-uppercase"><i class="bi bi-image me-2"></i>Ảnh & Chi Tiết <span class="text-danger">*</span></h6>
+                  
+                  <div class="mb-3 position-relative border border-dashed dark:border-gray-600 rounded-4 overflow-hidden bg-white dark:bg-[#1a2533]" style="height: 200px;">
+                    <img v-if="thumbnailPreview" :src="thumbnailPreview" class="w-100 h-100 object-fit-contain p-2">
+                    <div v-else class="d-flex flex-column justify-content-center align-items-center h-100 text-muted dark:text-gray-500">
+                      <i class="bi bi-image fs-1 mb-2 opacity-50"></i>
+                      <span class="small fw-semibold">Bắt buộc tải ảnh nền</span>
                     </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Chọn thuộc tính cần sửa:</label>
-                            <select class="form-select" v-model="selectedAttrToManage">
-                                <option value="">-- Chọn thuộc tính --</option>
-                                <template v-if="systemAttributes.length > 0">
-                                    <option v-for="attr in systemAttributes" :key="attr.id" :value="attr.id">{{
-                                        attr.name }}</option>
-                                </template>
+                  </div>
+                  <input type="file" class="d-none" id="thumbUpload" accept="image/*" @change="handleThumbUpload">
+                  <label for="thumbUpload" class="btn btn-outline-urban rounded-pill w-100 fw-semibold shadow-sm cursor-pointer"><i class="bi bi-upload me-1"></i> Chọn ảnh chính</label>
+                  
+                  <div class="text-start mt-4">
+                    <label class="form-label fw-bold text-dark dark:text-gray-200">Mô tả ngắn</label>
+                    <textarea class="form-control bg-white dark:bg-[#1a2533] dark:text-white border-secondary-subtle dark:border-gray-600 mb-3" rows="3" v-model="form.description"></textarea>
+
+                    <label class="form-label fw-bold text-dark dark:text-gray-200">Hướng dẫn bảo quản</label>
+                    <textarea class="form-control bg-white dark:bg-[#1a2533] dark:text-white border-secondary-subtle dark:border-gray-600" rows="2" v-model="form.care_instructions" placeholder="VD: Giặt tay, không dùng thuốc tẩy..."></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-12 text-end border-top dark:border-gray-700 pt-4 mt-4">
+                <button type="button" class="btn btn-urban px-5 fw-bold text-white rounded-pill shadow py-2" @click="proceedToStep2" :disabled="!canProceedToStep2 || isProcessingSchema">
+                  <span v-if="isProcessingSchema" class="spinner-border spinner-border-sm me-2"></span>
+                  {{ isProcessingSchema ? 'Đang phân tích lưới...' : 'Tiếp tục: Cấu hình Biến thể' }} <i class="bi bi-arrow-right ms-1"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- BƯỚC 2: CẤU HÌNH BIẾN THỂ -->
+            <div v-show="currentStep === 2" class="animation-fade-in">
+              <div class="card border border-secondary-subtle dark:border-gray-700 shadow-sm rounded-4 overflow-hidden mb-4">
+                <div class="card-header bg-white dark:bg-[#212529] border-bottom dark:border-gray-700 p-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
+                  <h6 class="fw-bold mb-0 text-urban d-flex align-items-center">
+                    <i class="bi bi-grid-3x3-gap-fill me-2"></i> LƯỚI QUẢN LÝ KHO & GIÁ
+                  </h6>
+
+                  <div class="d-flex align-items-center gap-2">
+                    <div class="input-group input-group-sm shadow-sm">
+                      <select class="form-select border-secondary-subtle dark:border-gray-600 dark:bg-[#1a2533] dark:text-white fw-bold text-secondary" v-model="selectedAttrToAdd" style="min-width: 150px;">
+                        <option value="">+ Chọn thuộc tính</option>
+                        <template v-if="systemAttributes.length > 0">
+                          <option v-for="attr in systemAttributes" :key="attr.id" :value="attr.id" :disabled="activeAttributes.includes(attr.id.toString())">
+                            {{ attr.name }}
+                          </option>
+                        </template>
+                      </select>
+                      <button type="button" class="btn btn-success px-3 fw-bold" title="Thêm cột vào bảng" @click="addAttributeColumn"><i class="bi bi-plus-lg"></i></button>
+                    </div>
+
+                    <div class="vr mx-1 text-secondary opacity-25"></div>
+
+                    <button type="button" class="btn btn-sm btn-outline-primary border-0 fw-bold" @click="openModal('createAttrModal')">
+                      <i class="bi bi-tag-fill me-1"></i> Tạo mới
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary dark:text-gray-400 dark:border-gray-600 border-0 fw-bold" @click="openModal('manageAttrModal')">
+                      <i class="bi bi-gear-fill me-1"></i> Quản lý
+                    </button>
+                  </div>
+                </div>
+
+                <div class="card-body p-0 bg-white dark:bg-[#1a2533]">
+                  <div class="table-responsive custom-scrollbar-x" style="min-height: 350px;">
+                    <table class="table table-bordered mb-0 variant-table w-100 dark:border-gray-700">
+                      <thead class="bg-light dark:bg-[#2b3035]">
+                        <tr>
+                          <th style="width: 60px;" class="dark:text-gray-300">Ảnh</th>
+                          <th style="min-width: 130px;" class="dark:text-gray-300">Mã SKU</th>
+                          
+                          <th v-for="attrId in activeAttributes" :key="attrId" style="min-width: 140px; background-color: var(--color-c-hover) !important; color: white !important;" class="align-middle position-relative border-urban">
+                            {{ getAttributeName(attrId) }}
+                            <button type="button" class="btn-close btn-close-white position-absolute top-50 end-0 translate-middle-y me-2" style="font-size: 0.6rem;" @click="removeAttributeColumn(attrId)"></button>
+                          </th>
+                          
+                          <th style="width: 140px;" class="bg-secondary bg-opacity-10 text-dark dark:text-gray-300">Giá vốn (Nhập) <span class="text-danger">*</span></th>
+                          <th style="width: 140px;" class="bg-warning bg-opacity-10 text-dark dark:text-gray-300">Giá bán ra <span class="text-danger">*</span></th>
+                          <th style="width: 140px;" class="dark:text-gray-300">Giá Khuyến mãi</th>
+                          <th style="width: 100px;" class="dark:text-gray-300">Tồn kho <span class="text-danger">*</span></th>
+                          <th style="width: 50px;"></th>
+                        </tr>
+                      </thead>
+                      <tbody class="dark:border-gray-700">
+                        <tr v-if="variants.length === 0">
+                          <td :colspan="7 + activeAttributes.length" class="text-center py-5 dark:bg-[#1a2533] text-muted">Chưa có dòng biến thể nào. Nhấn "Thêm dòng biến thể" phía dưới.</td>
+                        </tr>
+
+                        <tr v-else v-for="(v, index) in variants" :key="index" class="variant-row dark:bg-[#1a2533]" :class="{ 'row-error': v.hasDuplicateError }">
+                          <td class="text-center position-relative align-middle">
+                            <label class="cursor-pointer d-block m-0">
+                              <img :src="v.preview || 'https://placehold.co/40x40/213448/FFFFFF?text=UP'" class="img-preview-sm dark:border-gray-600">
+                              <input type="file" class="d-none" accept="image/*" @change="handleVariantImage(index, $event)">
+                            </label>
+                          </td>
+
+                          <td class="align-middle">
+                            <input type="text" class="form-control form-control-sm font-monospace bg-light dark:bg-[#2b3035] dark:text-white dark:border-gray-600" v-model="v.sku" placeholder="Tự sinh" required>
+                          </td>
+
+                          <td v-for="attrId in activeAttributes" :key="attrId" class="align-middle">
+                            <select class="form-select form-select-sm border-urban border-opacity-25 dark:bg-[#212529] dark:text-white" v-model="v.attributes[attrId]" :class="{ 'is-invalid border-danger': v.attrError }" @change="handleAttributeChange($event, attrId, index)">
+                              <option value="">-- Chọn --</option>
+                              <option v-for="val in getAttributeValues(attrId)" :key="val.id" :value="val.id">{{ val.value }}</option>
+                              <option value="NEW" class="text-success fw-bold">+ Tạo giá trị mới...</option>
                             </select>
-                        </div>
+                          </td>
 
-                        <div v-if="selectedAttrToManage">
-                            <div class="mb-3">
-                                <label class="form-label small fw-bold">Tên hiển thị mới:</label>
-                                <input type="text" class="form-control" v-model="manageAttrName"
-                                    @keydown.enter.prevent="updateAttribute(selectedAttrToManage)">
-                                <div class="form-text small">Lưu ý: Thay đổi này sẽ cập nhật trên toàn hệ thống.</div>
-                            </div>
-                            <div class="d-flex justify-content-between pt-2 border-top mt-3">
-                                <button type="button" class="btn btn-sm btn-outline-danger px-3"
-                                    @click="deleteAttribute(selectedAttrToManage)">
-                                    <i class="bi bi-trash me-1"></i> Xóa vĩnh viễn
-                                </button>
-                                <button type="button" class="btn btn-sm btn-primary px-3"
-                                    @click="updateAttribute(selectedAttrToManage)" :disabled="!manageAttrName">
-                                    <i class="bi bi-save me-1"></i> Cập nhật
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                          <td class="align-middle">
+                            <input type="number" class="form-control form-control-sm text-end fw-bold dark:bg-[#212529] dark:border-gray-600 dark:text-white" v-model.number="v.cost_price" min="0" required>
+                            <small class="text-danger d-block mt-1 text-end" style="font-size: 0.65rem;">{{ formatCurrency(v.cost_price) }}</small>
+                          </td>
+                          <td class="align-middle">
+                            <input type="number" class="form-control form-control-sm text-end fw-bold text-urban dark:bg-[#212529] dark:border-gray-600" :class="{ 'is-invalid': v.priceError }" v-model.number="v.price" min="0" required @input="validateRow(index)">
+                            <small class="text-danger d-block mt-1 text-end" style="font-size: 0.65rem;">{{ formatCurrency(v.price) }}</small>
+                          </td>
+                          <td class="align-middle">
+                            <input type="number" class="form-control form-control-sm text-end text-danger fw-semibold dark:bg-[#212529] dark:border-gray-600" :class="{ 'is-invalid': v.saleError }" v-model.number="v.promotional_price" min="0" @input="validateRow(index)">
+                            <small class="text-danger d-block mt-1 text-end" style="font-size: 0.65rem;" v-if="v.promotional_price > 0">{{ formatCurrency(v.promotional_price) }}</small>
+                          </td>
+                          <td class="align-middle">
+                            <input type="number" class="form-control form-control-sm text-center fw-bold dark:bg-[#212529] dark:border-gray-600 dark:text-white" v-model.number="v.stock_quantity" min="0" required>
+                          </td>
+                          <td class="text-center align-middle">
+                            <button type="button" class="btn btn-sm text-secondary border-0 hover-danger" @click="removeVariantRow(index)"><i class="bi bi-x-lg fs-6"></i></button>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-            </div>
-        </div>
 
+                <div class="card-footer bg-light dark:bg-[#212529] py-3 d-flex justify-content-between align-items-center border-top dark:border-gray-700">
+                  <button type="button" class="btn btn-outline-urban fw-bold px-3 btn-sm rounded-pill shadow-sm" @click="addVariantRow">
+                    <i class="bi bi-plus-circle-dotted me-2"></i>Thêm dòng biến thể
+                  </button>
+                </div>
+              </div>
+
+              <div class="d-flex justify-content-between pt-2 border-top dark:border-gray-700 mt-4 pt-4">
+                <button type="button" class="btn btn-light dark:bg-[#2b3035] dark:text-gray-300 dark:border-gray-600 px-4 border fw-semibold rounded-pill" @click="currentStep = 1">
+                  <i class="bi bi-arrow-left me-1"></i> Trở lại Bước 1
+                </button>
+                <button type="button" class="btn btn-urban text-white px-5 py-2 fw-bold shadow-sm rounded-pill" @click="proceedToStep3" :disabled="variants.length === 0">
+                  Tiếp tục: Thư viện ảnh <i class="bi bi-arrow-right ms-1"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- BƯỚC 3: THƯ VIỆN ẢNH VÀ XUẤT BẢN -->
+            <!-- ĐÃ THIẾT KẾ LẠI THEO CHUẨN MỚI, KHÔNG CÒN TO ĐÙNG THÔ KỆCH -->
+            <div v-show="currentStep === 3" class="animation-fade-in">
+              <div class="row g-4">
+                <div class="col-lg-8">
+                  <div class="p-4 bg-light dark:bg-[#212529] rounded-4 border dark:border-gray-700 h-100">
+                    <div class="d-flex justify-content-between align-items-center border-bottom dark:border-gray-700 pb-3 mb-4">
+                       <div>
+                         <h6 class="fw-bold mb-1 text-urban text-uppercase"><i class="bi bi-images me-2"></i>Bộ sưu tập (Gallery)</h6>
+                         <p class="text-muted small mb-0">Tải lên tối đa 8 ảnh các góc chụp. Định dạng JPG, PNG, WEBP.</p>
+                       </div>
+                    </div>
+                    
+                    <div class="d-flex flex-wrap gap-3">
+                      <!-- Nút Upload Grid -->
+                      <div class="gallery-upload-box d-flex flex-column justify-content-center align-items-center border border-dashed border-2 rounded-4 text-muted cursor-pointer hover-bg-light dark:border-gray-600 dark:text-gray-400 bg-white dark:bg-[#1a2533]" 
+                           @click="$refs.galleryInput.click()" 
+                           style="width: 120px; height: 120px;">
+                        <i class="bi bi-plus-lg fs-2"></i>
+                        <span class="small fw-semibold mt-1">Thêm ảnh</span>
+                        <input type="file" ref="galleryInput" @change="handleGalleryUpload" class="d-none" accept="image/*" multiple>
+                      </div>
+
+                      <!-- Ảnh đã up -->
+                      <div class="position-relative border rounded-4 overflow-hidden shadow-sm dark:border-gray-600" 
+                           style="width: 120px; height: 120px;" 
+                           v-for="(img, index) in galleryPreviews" :key="index">
+                        <img :src="img.url" class="w-100 h-100 object-fit-cover">
+                        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 rounded-circle p-0 d-flex align-items-center justify-content-center opacity-75 hover-opacity-100" 
+                                style="width: 24px; height: 24px;" 
+                                @click.stop="removeGalleryImage(index)">
+                          <i class="bi bi-x"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-lg-4">
+                   <div class="p-4 bg-white dark:bg-[#212529] rounded-4 border dark:border-gray-700 shadow-sm h-100">
+                     <h6 class="fw-bold text-dark dark:text-white mb-3 border-bottom dark:border-gray-700 pb-3"><i class="bi bi-rocket-takeoff-fill text-urban me-2"></i>Trạng thái & Lưu trữ</h6>
+                     
+                     <div class="p-3 bg-light dark:bg-[#1a2533] border dark:border-gray-600 rounded-3 mb-4">
+                        <div class="form-check form-switch d-flex align-items-center justify-content-between p-0 m-0">
+                           <div>
+                             <label class="form-check-label fw-bold text-dark dark:text-white mb-1" for="publishSwitch" style="user-select: none;">Xuất bản công khai</label>
+                             <div class="text-muted" style="font-size: 0.75rem;">Bật để cho phép mua hàng ngay.</div>
+                           </div>
+                           <input class="form-check-input fs-4 m-0 cursor-pointer" type="checkbox" id="publishSwitch" v-model="form.isPublished">
+                        </div>
+                     </div>
+
+                     <button type="submit" class="btn btn-urban btn-lg text-white w-100 fw-bold shadow-sm rounded-pill d-flex align-items-center justify-content-center" :disabled="isSaving">
+                        <span v-if="isSaving" class="spinner-border spinner-border-sm me-2"></span>
+                        <i class="bi bi-floppy2-fill me-2" v-else></i> LƯU HOÀN TẤT
+                     </button>
+                   </div>
+                </div>
+              </div>
+              
+              <div class="pt-4 mt-4 border-top dark:border-gray-700 text-start">
+                <button type="button" class="btn btn-light dark:bg-[#2b3035] dark:text-gray-300 dark:border-gray-600 px-4 border fw-semibold rounded-pill" @click="currentStep = 2">
+                  <i class="bi bi-arrow-left me-1"></i> Quay lại Lưới biến thể
+                </button>
+              </div>
+            </div>
+
+          </form>
+        </div>
+      </div>
     </div>
+
+    <!-- MODAL TẠO THUỘC TÍNH MỚI (CỘT) -->
+    <div class="modal fade" id="createAttrModal" tabindex="-1">
+      <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content border-0 shadow dark:bg-[#1a2533]">
+          <div class="modal-header py-3 bg-urban text-white">
+            <h6 class="modal-title fw-bold"><i class="bi bi-tag-fill me-2"></i>Tạo thuộc tính (Cột)</h6>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body p-4">
+            <div class="mb-4">
+              <label class="form-label small fw-bold dark:text-gray-200">Tên thuộc tính hệ thống</label>
+              <input type="text" class="form-control bg-light dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-none" v-model="newAttrForm.name" placeholder="VD: Chất liệu, Size..." @keydown.enter.prevent="submitCreateAttribute">
+            </div>
+            <button type="button" class="btn btn-urban w-100 fw-bold rounded-pill shadow-sm" @click="submitCreateAttribute" :disabled="!newAttrForm.name">Lưu Thuộc Tính</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL TẠO GIÁ TRỊ THUỘC TÍNH (VALUE) -->
+    <div class="modal fade" id="createValueModal" tabindex="-1">
+      <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content border-0 shadow dark:bg-[#1a2533]">
+          <div class="modal-header py-3 bg-success text-white">
+            <h6 class="modal-title fw-bold"><i class="bi bi-plus-circle me-2"></i>Thêm giá trị biến thể</h6>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body p-4">
+            <div class="mb-4">
+              <label class="form-label small fw-bold dark:text-gray-200">Giá trị cho <span class="text-success text-uppercase">{{ currentOperatingAttr ? currentOperatingAttr.name : '' }}</span>:</label>
+              <input type="text" class="form-control bg-light dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-none" v-model="newValueForm.value" placeholder="VD: Xanh ngọc, XL..." @keydown.enter.prevent="submitCreateValue" ref="newValueInputRef">
+            </div>
+            <button type="button" class="btn btn-success w-100 fw-bold rounded-pill shadow-sm" @click="submitCreateValue" :disabled="!newValueForm.value">Lưu Giá Trị</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL QUẢN LÝ THUỘC TÍNH -->
+    <div class="modal fade" id="manageAttrModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow dark:bg-[#1a2533]">
+          <div class="modal-header py-3 bg-secondary text-white">
+            <h6 class="modal-title fw-bold"><i class="bi bi-gear-fill me-2"></i>Quản lý Thuộc tính hệ thống</h6>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body p-4">
+            <div class="mb-3">
+              <label class="form-label small fw-bold dark:text-gray-200">Chọn thuộc tính cần sửa:</label>
+              <select class="form-select dark:bg-[#212529] dark:text-white dark:border-gray-700" v-model="selectedAttrToManage">
+                <option value="">-- Chọn thuộc tính --</option>
+                <template v-if="systemAttributes.length > 0">
+                  <option v-for="attr in systemAttributes" :key="attr.id" :value="attr.id">{{ attr.name }}</option>
+                </template>
+              </select>
+            </div>
+
+            <div v-if="selectedAttrToManage" class="mt-4 pt-3 border-top dark:border-gray-700">
+              <div class="mb-3">
+                <label class="form-label small fw-bold dark:text-gray-200">Tên hiển thị mới:</label>
+                <input type="text" class="form-control dark:bg-[#212529] dark:text-white dark:border-gray-700" v-model="manageAttrName" @keydown.enter.prevent="updateAttribute(selectedAttrToManage)">
+              </div>
+              <div class="d-flex justify-content-between pt-2">
+                <button type="button" class="btn btn-sm btn-outline-danger px-3 rounded-pill" @click="deleteAttribute(selectedAttrToManage)">
+                  <i class="bi bi-trash me-1"></i> Xóa
+                </button>
+                <button type="button" class="btn btn-sm btn-primary px-4 fw-bold rounded-pill" @click="updateAttribute(selectedAttrToManage)" :disabled="!manageAttrName">
+                  Cập nhật
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
 </template>
 
 <script setup>
@@ -426,14 +432,18 @@ const systemAttributes = ref([]);
 const brands = ref([]);
 
 const form = ref({
-    category_id: '', brand_id: '', name: '', slug: '', base_price: 0, isPublished: true
+  category_id: '', brand_id: '', name: '', slug: '', base_cost_price: 0, base_price: 0, description: '', care_instructions: '', gender: 'Unisex', fit_type: '', is_featured: false, isPublished: false
 });
+
 const thumbnailFile = ref(null);
 const thumbnailPreview = ref(null);
 
 const activeAttributes = ref([]);
 const selectedAttrToAdd = ref('');
 const variants = ref([]);
+
+const galleryFiles = ref([]);
+const galleryPreviews = ref([]);
 
 let createAttrModalObj = null;
 let createValueModalObj = null;
@@ -449,590 +459,371 @@ const selectedAttrToManage = ref('');
 const manageAttrName = ref('');
 
 const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
+const formatCurrency = (val) => {
+  if (val === null || val === undefined || val === '') return '0 ₫';
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
+};
 
 const canProceedToStep2 = computed(() => {
-    return form.value.name && form.value.category_id && form.value.base_price >= 0 && thumbnailFile.value;
+  return form.value.name && form.value.category_id && form.value.base_price >= 0 && thumbnailFile.value;
 });
 
-const proceedIfValid = () => {
-    if (canProceedToStep2.value) {
-        proceedToStep2();
-    }
+const proceedIfValid = (step) => {
+  if (step === 2 && canProceedToStep2.value) proceedToStep2();
+  if (step === 3 && variants.value.length > 0) proceedToStep3();
 };
 
 const generateSlug = () => {
-    let s = form.value.name.toLowerCase();
-    s = s.replace(/á|à|ả|ạ|ã|ă|ắ|ằ|ẳ|ẵ|ặ|â|ấ|ầ|ẩ|ẫ|ậ/gi, 'a');
-    s = s.replace(/é|è|ẻ|ẽ|ẹ|ê|ế|ề|ể|ễ|ệ/gi, 'e');
-    s = s.replace(/i|í|ì|ỉ|ĩ|ị/gi, 'i');
-    s = s.replace(/ó|ò|ỏ|õ|ọ|ô|ố|ồ|ổ|ỗ|ộ|ơ|ớ|ờ|ở|ỡ|ợ/gi, 'o');
-    s = s.replace(/ú|ù|ủ|ũ|ụ|ư|ứ|ừ|ử|ữ|ự/gi, 'u');
-    s = s.replace(/ý|ỳ|ỷ|ỹ|ỵ/gi, 'y');
-    s = s.replace(/đ/gi, 'd');
-    form.value.slug = s.replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '').replace(/\-\-+/g, '-');
+  let s = form.value.name.toLowerCase();
+  s = s.replace(/á|à|ả|ạ|ã|ă|ắ|ằ|ẳ|ẵ|ặ|â|ấ|ầ|ẩ|ẫ|ậ/gi, 'a');
+  s = s.replace(/é|è|ẻ|ẽ|ẹ|ê|ế|ề|ể|ễ|ệ/gi, 'e');
+  s = s.replace(/i|í|ì|ỉ|ĩ|ị/gi, 'i');
+  s = s.replace(/ó|ò|ỏ|õ|ọ|ô|ố|ồ|ổ|ỗ|ộ|ơ|ớ|ờ|ở|ỡ|ợ/gi, 'o');
+  s = s.replace(/ú|ù|ủ|ũ|ụ|ư|ứ|ừ|ử|ữ|ự/gi, 'u');
+  s = s.replace(/ý|ỳ|ỷ|ỹ|ỵ/gi, 'y');
+  s = s.replace(/đ/gi, 'd');
+  form.value.slug = s.replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '').replace(/\-\-+/g, '-');
 };
 
 const handleThumbUpload = (e) => {
-    const f = e.target.files[0];
-    if (f) {
-        if (f.size > 15 * 1024 * 1024) { Swal.fire('Lỗi', 'Ảnh tối đa 15MB', 'error'); return; }
-        thumbnailFile.value = f;
-        thumbnailPreview.value = URL.createObjectURL(f);
+  const f = e.target.files[0];
+  if (f) {
+    if (f.size > 5 * 1024 * 1024) { Swal.fire('Lỗi', 'Ảnh tối đa 5MB', 'error'); return; }
+    thumbnailFile.value = f;
+    thumbnailPreview.value = URL.createObjectURL(f);
+  }
+};
+
+const handleGalleryUpload = (e) => {
+  const files = Array.from(e.target.files);
+  if (galleryPreviews.value.length + files.length > 8) {
+    Swal.fire('Lỗi', 'Tối đa 8 ảnh trong thư viện', 'warning'); return;
+  }
+  files.forEach(f => {
+    if (f.size <= 5 * 1024 * 1024) {
+      galleryFiles.value.push(f);
+      galleryPreviews.value.push({ url: URL.createObjectURL(f), file: f });
     }
+  });
+  e.target.value = '';
+};
+
+const removeGalleryImage = (index) => {
+  galleryFiles.value.splice(index, 1);
+  galleryPreviews.value.splice(index, 1);
 };
 
 const proceedToStep2 = async () => {
-    isProcessingSchema.value = true;
+  isProcessingSchema.value = true;
+  const selectedCat = categories.value.find(c => c.id === form.value.category_id);
 
-    const selectedCat = categories.value.find(c => c.id === form.value.category_id);
+  if (selectedCat && selectedCat.attributes_schema && selectedCat.attributes_schema.length > 0) {
+    let addedAnyColumn = false;
+    for (const schemaName of selectedCat.attributes_schema) {
+      let existingAttr = systemAttributes.value.find(a => a.name.toLowerCase() === schemaName.toLowerCase());
+      let attrIdToAdd = null;
 
-    if (selectedCat && selectedCat.attributes_schema && selectedCat.attributes_schema.length > 0) {
+      if (existingAttr) {
+        attrIdToAdd = existingAttr.id.toString();
+      } else {
+        try {
+          const res = await axios.post('http://127.0.0.1:8000/api/v1/admin/attributes', { name: schemaName }, { headers: getHeaders() });
+          res.data.data.values = [];
+          systemAttributes.value.push(res.data.data);
+          attrIdToAdd = res.data.data.id.toString();
+        } catch (e) { console.error('Lỗi tạo', e); }
+      }
 
-        let addedAnyColumn = false;
-
-        for (const schemaName of selectedCat.attributes_schema) {
-            let existingAttr = systemAttributes.value.find(a => a.name.toLowerCase() === schemaName.toLowerCase());
-            let attrIdToAdd = null;
-
-            if (existingAttr) {
-                attrIdToAdd = existingAttr.id.toString();
-            } else {
-                try {
-                    const res = await axios.post('http://127.0.0.1:8000/api/admin/attributes',
-                        { name: schemaName },
-                        { headers: getHeaders() }
-                    );
-                    res.data.data.values = [];
-                    systemAttributes.value.push(res.data.data);
-                    attrIdToAdd = res.data.data.id.toString();
-                } catch (e) { console.error('Lỗi tự động tạo thuộc tính', e); }
-            }
-
-            if (attrIdToAdd && !activeAttributes.value.includes(attrIdToAdd)) {
-                activeAttributes.value.push(attrIdToAdd);
-                addedAnyColumn = true;
-            }
-        }
-
-        if (addedAnyColumn && variants.value.length === 0) {
-            Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Hệ thống tự động nạp thuộc tính từ Danh mục', showConfirmButton: false, timer: 3000 });
-        }
+      if (attrIdToAdd && !activeAttributes.value.includes(attrIdToAdd)) {
+        activeAttributes.value.push(attrIdToAdd);
+        addedAnyColumn = true;
+      }
     }
+  }
 
-    if (variants.value.length === 0) {
-        addVariantRow();
-    } else {
-        variants.value.forEach(v => {
-            if (!v.attributes) v.attributes = {};
-            activeAttributes.value.forEach(attrId => {
-                if (v.attributes[attrId] === undefined) {
-                    v.attributes[attrId] = "";
-                }
-            });
-        });
-    }
-
-    isProcessingSchema.value = false;
-    currentStep.value = 2;
+  if (variants.value.length === 0) addVariantRow();
+  else {
+    variants.value.forEach(v => {
+      if (!v.attributes) v.attributes = {};
+      activeAttributes.value.forEach(attrId => {
+        if (v.attributes[attrId] === undefined) v.attributes[attrId] = "";
+      });
+    });
+  }
+  isProcessingSchema.value = false;
+  currentStep.value = 2;
 };
 
-const getAttributeName = (attrId) => {
-    const a = systemAttributes.value.find(x => x.id == attrId);
-    return a ? a.name : 'Unknown';
+const proceedToStep3 = () => {
+  validateDuplicates();
+  let hasHardError = false;
+  variants.value.forEach((v, i) => {
+    validateRow(i);
+    if (v.priceError || v.saleError || v.attrError || v.hasDuplicateError) hasHardError = true;
+  });
+  if (hasHardError) {
+    Swal.fire('Lỗi Biến thể', 'Vui lòng kiểm tra các dòng bị bôi đỏ (Chưa chọn thuộc tính, sai giá, trùng lặp).', 'error'); return;
+  }
+  currentStep.value = 3;
 };
-const getAttributeValues = (attrId) => {
-    const a = systemAttributes.value.find(x => x.id == attrId);
-    return a ? (a.values || []) : [];
-};
+
+const getAttributeName = (attrId) => { const a = systemAttributes.value.find(x => x.id == attrId); return a ? a.name : 'Unknown'; };
+const getAttributeValues = (attrId) => { const a = systemAttributes.value.find(x => x.id == attrId); return a ? (a.values || []) : []; };
 
 const addAttributeColumn = () => {
-    if (!selectedAttrToAdd.value) return;
-    if (!activeAttributes.value.includes(selectedAttrToAdd.value.toString())) {
-        activeAttributes.value.push(selectedAttrToAdd.value.toString());
-
-        variants.value.forEach(v => {
-            if (!v.attributes) v.attributes = {};
-            v.attributes[selectedAttrToAdd.value.toString()] = "";
-        });
-    }
-    selectedAttrToAdd.value = '';
+  if (!selectedAttrToAdd.value) return;
+  if (!activeAttributes.value.includes(selectedAttrToAdd.value.toString())) {
+    activeAttributes.value.push(selectedAttrToAdd.value.toString());
+    variants.value.forEach(v => { if (!v.attributes) v.attributes = {}; v.attributes[selectedAttrToAdd.value.toString()] = ""; });
+  }
+  selectedAttrToAdd.value = '';
 };
 
 const removeAttributeColumn = (attrId) => {
-    Swal.fire({ title: 'Gỡ cột?', text: "Dữ liệu ở cột này của tất cả biến thể sẽ bị xóa. Tiếp tục?", icon: 'warning', showCancelButton: true }).then((result) => {
-        if (result.isConfirmed) {
-            activeAttributes.value = activeAttributes.value.filter(id => id != attrId);
-            variants.value.forEach(v => {
-                delete v.attributes[attrId];
-            });
-            validateDuplicates();
-        }
-    });
+  Swal.fire({ title: 'Gỡ cột?', text: "Các giá trị đang chọn ở cột này sẽ bị xóa. Tiếp tục?", icon: 'warning', showCancelButton: true }).then((result) => {
+    if (result.isConfirmed) {
+      activeAttributes.value = activeAttributes.value.filter(id => id != attrId);
+      variants.value.forEach(v => { delete v.attributes[attrId]; });
+      validateDuplicates();
+    }
+  });
 };
 
 const addVariantRow = () => {
-    // ĐÃ FIX: Sinh ngẫu nhiên 4 số chống trùng lặp (Fix lỗi 1062)
-    const randomCode = Math.floor(1000 + Math.random() * 9000);
-    const prefix = form.value.slug ? form.value.slug.substring(0, 4).toUpperCase().replace(/-/g, '') : 'SKU';
-    const newSku = `${prefix}${randomCode}-V${variants.value.length + 1}`;
-
-    let rowAttrs = {};
-    activeAttributes.value.forEach(id => rowAttrs[id] = "");
-
-    variants.value.push({
-        sku: newSku, price: form.value.base_price, promotional_price: 0, stock_quantity: 10,
-        imageFile: null, preview: null, attributes: rowAttrs,
-        hasDuplicateError: false, attrError: false, priceError: false, saleError: false
-    });
+  const randomCode = Math.floor(1000 + Math.random() * 9000);
+  const prefix = form.value.slug ? form.value.slug.substring(0, 4).toUpperCase().replace(/-/g, '') : 'SKU';
+  const newSku = `${prefix}${randomCode}-V${variants.value.length + 1}`;
+  let rowAttrs = {}; activeAttributes.value.forEach(id => rowAttrs[id] = "");
+  variants.value.push({ sku: newSku, cost_price: form.value.base_cost_price, price: form.value.base_price, promotional_price: 0, stock_quantity: 10, imageFile: null, preview: null, attributes: rowAttrs, hasDuplicateError: false, attrError: false, priceError: false, saleError: false });
 };
 
 const removeVariantRow = (index) => {
-    if (variants.value.length <= 1) {
-        Swal.fire('Lưu ý', 'Sản phẩm phải có ít nhất 1 biến thể!', 'warning'); return;
-    }
-    variants.value.splice(index, 1);
-    validateDuplicates();
+  if (variants.value.length <= 1) { Swal.fire('Lưu ý', 'Sản phẩm phải có ít nhất 1 biến thể!', 'warning'); return; }
+  variants.value.splice(index, 1); validateDuplicates();
 };
 
 const handleVariantImage = (index, e) => {
-    const f = e.target.files[0];
-    if (f) {
-        variants.value[index].imageFile = f;
-        variants.value[index].preview = URL.createObjectURL(f);
-    }
+  const f = e.target.files[0];
+  if (f) { variants.value[index].imageFile = f; variants.value[index].preview = URL.createObjectURL(f); }
 };
 
 const openModal = (id) => {
-    const m = new window.bootstrap.Modal(document.getElementById(id));
-    if (id === 'createAttrModal') createAttrModalObj = m;
-    if (id === 'createValueModal') createValueModalObj = m;
-    if (id === 'manageAttrModal') manageAttrModalObj = m;
-    m.show();
+  const m = new window.bootstrap.Modal(document.getElementById(id));
+  if (id === 'createAttrModal') createAttrModalObj = m;
+  if (id === 'createValueModal') createValueModalObj = m;
+  if (id === 'manageAttrModal') manageAttrModalObj = m;
+  m.show();
 };
-
-const hideModals = () => {
-    if (createAttrModalObj) createAttrModalObj.hide();
-    if (createValueModalObj) createValueModalObj.hide();
-    if (manageAttrModalObj) manageAttrModalObj.hide();
+const hideModals = () => { 
+  if (createAttrModalObj) createAttrModalObj.hide(); 
+  if (createValueModalObj) createValueModalObj.hide(); 
+  if (manageAttrModalObj) manageAttrModalObj.hide();
 };
 
 const submitCreateAttribute = async () => {
-    if (!newAttrForm.value.name) return;
-    try {
-        const res = await axios.post('http://127.0.0.1:8000/api/admin/attributes',
-            { name: newAttrForm.value.name },
-            { headers: getHeaders() }
-        );
-        res.data.data.values = [];
-        systemAttributes.value.push(res.data.data);
-        hideModals();
-        newAttrForm.value.name = '';
-        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã thêm thuộc tính', showConfirmButton: false, timer: 2000 });
-    } catch (e) {
-        if (e.response) Swal.fire('Lỗi', e.response.data.message || 'Lỗi thêm thuộc tính', 'error');
-    }
+  if (!newAttrForm.value.name) return;
+  try {
+    const res = await axios.post('http://127.0.0.1:8000/api/v1/admin/attributes', { name: newAttrForm.value.name }, { headers: getHeaders() });
+    res.data.data.values = [];
+    systemAttributes.value.push(res.data.data);
+    hideModals(); newAttrForm.value.name = '';
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã thêm thuộc tính', showConfirmButton: false, timer: 2000 });
+  } catch (e) { if (e.response) Swal.fire('Lỗi', e.response.data.message || 'Lỗi thêm thuộc tính', 'error'); }
 };
 
 const handleAttributeChange = (event, attrId, rowIndex) => {
-    const val = event.target.value;
-    if (val === 'NEW') {
-        currentOperatingAttr.value = systemAttributes.value.find(x => x.id == attrId);
-        currentOperatingRowIndex.value = rowIndex;
-        newValueForm.value.value = '';
-        variants.value[rowIndex].attributes[attrId] = '';
-        openModal('createValueModal');
-        nextTick(() => { if (newValueInputRef.value) newValueInputRef.value.focus(); });
-    } else {
-        validateDuplicates();
-    }
+  const val = event.target.value;
+  if (val === 'NEW') {
+    currentOperatingAttr.value = systemAttributes.value.find(x => x.id == attrId);
+    currentOperatingRowIndex.value = rowIndex; newValueForm.value.value = '';
+    variants.value[rowIndex].attributes[attrId] = '';
+    openModal('createValueModal');
+    nextTick(() => { if (newValueInputRef.value) newValueInputRef.value.focus(); });
+  } else validateDuplicates();
 };
 
 const submitCreateValue = async () => {
-    if (!newValueForm.value.value || !currentOperatingAttr.value) return;
-    try {
-        const payload = { attribute_id: currentOperatingAttr.value.id, value: newValueForm.value.value };
-        const res = await axios.post('http://127.0.0.1:8000/api/admin/attribute-values', payload, { headers: getHeaders() });
-
-        const attrObj = systemAttributes.value.find(x => x.id == currentOperatingAttr.value.id);
-        if (attrObj) {
-            if (!attrObj.values) attrObj.values = [];
-            attrObj.values.push(res.data.data);
-        }
-        if (currentOperatingRowIndex.value !== null) {
-            variants.value[currentOperatingRowIndex.value].attributes[attrObj.id] = res.data.data.id;
-        }
-        hideModals();
-        validateDuplicates();
-        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã thêm giá trị', showConfirmButton: false, timer: 2000 });
-    } catch (e) {
-        if (e.response) Swal.fire('Lỗi', e.response.data.message || 'Lỗi thêm giá trị', 'error');
-    }
+  if (!newValueForm.value.value || !currentOperatingAttr.value) return;
+  try {
+    const payload = { attribute_id: currentOperatingAttr.value.id, value: newValueForm.value.value };
+    const res = await axios.post('http://127.0.0.1:8000/api/v1/admin/attribute-values', payload, { headers: getHeaders() });
+    const attrObj = systemAttributes.value.find(x => x.id == currentOperatingAttr.value.id);
+    if (attrObj) { if (!attrObj.values) attrObj.values = []; attrObj.values.push(res.data.data); }
+    if (currentOperatingRowIndex.value !== null) variants.value[currentOperatingRowIndex.value].attributes[attrObj.id] = res.data.data.id;
+    hideModals(); validateDuplicates();
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã thêm giá trị', showConfirmButton: false, timer: 2000 });
+  } catch (e) { if (e.response) Swal.fire('Lỗi', e.response.data.message || 'Lỗi thêm giá trị', 'error'); }
 };
 
 watch(selectedAttrToManage, (newId) => {
     if (newId) {
         const attr = systemAttributes.value.find(a => a.id === parseInt(newId));
         if (attr) manageAttrName.value = attr.name;
-    } else {
-        manageAttrName.value = '';
-    }
+    } else { manageAttrName.value = ''; }
 });
 
 const updateAttribute = async (id) => {
     if (!manageAttrName.value || !id) return;
     try {
-        await axios.put(`http://127.0.0.1:8000/api/admin/attributes/${id}`,
-            { name: manageAttrName.value },
-            { headers: getHeaders() }
-        );
+        await axios.put(`http://127.0.0.1:8000/api/v1/admin/attributes/${id}`, { name: manageAttrName.value }, { headers: getHeaders() });
         const attr = systemAttributes.value.find(a => a.id === parseInt(id));
         if (attr) attr.name = manageAttrName.value;
         Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Cập nhật thành công', showConfirmButton: false, timer: 2000 });
-    } catch (e) {
-        if (e.response) Swal.fire('Lỗi', e.response.data.message || 'Lỗi cập nhật', 'error');
-    }
+    } catch (e) { if (e.response) Swal.fire('Lỗi', e.response.data.message || 'Lỗi cập nhật', 'error'); }
 };
 
 const deleteAttribute = async (id) => {
     if (!id) return;
-    Swal.fire({ title: 'Xóa thuộc tính?', text: "Thuộc tính này và các giá trị của nó sẽ bị xóa!", icon: 'warning', showCancelButton: true }).then(async (result) => {
+    Swal.fire({ title: 'Xóa thuộc tính?', icon: 'warning', showCancelButton: true }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                await axios.delete(`http://127.0.0.1:8000/api/admin/attributes/${id}`, { headers: getHeaders() });
+                await axios.delete(`http://127.0.0.1:8000/api/v1/admin/attributes/${id}`, { headers: getHeaders() });
                 systemAttributes.value = systemAttributes.value.filter(a => a.id !== parseInt(id));
                 selectedAttrToManage.value = '';
                 if (manageAttrModalObj) manageAttrModalObj.hide();
-
-                if (activeAttributes.value.includes(id.toString())) {
-                    removeAttributeColumn(id.toString());
-                }
-                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã xóa', showConfirmButton: false, timer: 2000 });
-            } catch (e) {
-                if (e.response) Swal.fire('Lỗi', e.response.data.message || 'Không thể xóa', 'error');
-            }
+                if (activeAttributes.value.includes(id.toString())) removeAttributeColumn(id.toString());
+            } catch (e) { if (e.response) Swal.fire('Lỗi', e.response.data.message || 'Không thể xóa', 'error'); }
         }
     });
 };
 
 const validateRow = (index) => {
-    const v = variants.value[index];
-    v.priceError = v.price < 0 || v.price === '';
-    v.saleError = parseFloat(v.promotional_price) > parseFloat(v.price);
+  const v = variants.value[index];
+  v.priceError = v.price <= 0 || v.price === '';
+  v.saleError = parseFloat(v.promotional_price) > parseFloat(v.price);
 };
 
 const validateDuplicates = () => {
-    if (activeAttributes.value.length === 0) return;
-    const seen = new Set();
-    let hasDuplicate = false;
-
-    variants.value.forEach((v, i) => {
-        v.attrError = false;
-        v.hasDuplicateError = false;
-
-        let isFullSelected = true;
-        let sigArray = [];
-
-        activeAttributes.value.forEach(attrId => {
-            const val = v.attributes[attrId];
-            if (!val) isFullSelected = false;
-            sigArray.push(val);
-        });
-
-        if (!isFullSelected) {
-            v.attrError = true;
-        } else {
-            const signature = sigArray.join('-');
-            if (seen.has(signature)) {
-                v.hasDuplicateError = true;
-                hasDuplicate = true;
-                const firstDupIdx = variants.value.findIndex(x => {
-                    let sArray = [];
-                    activeAttributes.value.forEach(a => sArray.push(x.attributes[a]));
-                    return sArray.join('-') === signature;
-                });
-                if (firstDupIdx !== -1) variants.value[firstDupIdx].hasDuplicateError = true;
-            } else {
-                seen.add(signature);
-            }
-        }
-    });
-
-    if (hasDuplicate) Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Phát hiện Biến thể trùng lặp!', showConfirmButton: false, timer: 3000 });
-    return hasDuplicate;
+  if (activeAttributes.value.length === 0) return false;
+  const seen = new Set(); let hasDuplicate = false;
+  variants.value.forEach((v, i) => {
+    v.attrError = false; v.hasDuplicateError = false;
+    let isFullSelected = true; let sigArray = [];
+    activeAttributes.value.forEach(attrId => { const val = v.attributes[attrId]; if (!val) isFullSelected = false; sigArray.push(val); });
+    if (!isFullSelected) v.attrError = true;
+    else {
+      const signature = sigArray.join('-');
+      if (seen.has(signature)) {
+        v.hasDuplicateError = true; hasDuplicate = true;
+        const firstDupIdx = variants.value.findIndex(x => { let sArray = []; activeAttributes.value.forEach(a => sArray.push(x.attributes[a])); return sArray.join('-') === signature; });
+        if (firstDupIdx !== -1) variants.value[firstDupIdx].hasDuplicateError = true;
+      } else seen.add(signature);
+    }
+  });
+  if (hasDuplicate) Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Có biến thể trùng lặp cấu hình!', showConfirmButton: false, timer: 3000 });
+  return hasDuplicate;
 };
 
 const submitProduct = async () => {
-    validateDuplicates();
-    let hasHardError = false;
+  isSaving.value = true;
+  try {
+    const formData = new FormData();
+    formData.append('category_id', form.value.category_id);
+    if (form.value.brand_id) formData.append('brand_id', form.value.brand_id);
+    formData.append('name', form.value.name);
+    formData.append('slug', form.value.slug);
+    formData.append('base_price', form.value.base_price);
+    formData.append('description', form.value.description);
+    formData.append('care_instructions', form.value.care_instructions);
+    formData.append('gender', form.value.gender);
+    formData.append('fit_type', form.value.fit_type);
+    formData.append('is_featured', form.value.is_featured ? 1 : 0);
+    formData.append('status', form.value.isPublished ? 'published' : 'draft');
+    formData.append('thumbnail_image', thumbnailFile.value);
 
-    variants.value.forEach((v, i) => {
-        validateRow(i);
-        if (v.priceError || v.saleError || v.attrError || v.hasDuplicateError) hasHardError = true;
+    const variantsPayload = variants.value.map(v => ({
+      sku: v.sku, cost_price: v.cost_price || 0, price: v.price, promotional_price: v.promotional_price || null, stock_quantity: v.stock_quantity, attributes: v.attributes
+    }));
+    formData.append('variants_data', JSON.stringify(variantsPayload));
+
+    variants.value.forEach((v, index) => {
+      if (v.imageFile) formData.append(`variant_image_${index}`, v.imageFile);
     });
 
-    if (hasHardError) {
-        Swal.fire('Lỗi Dữ liệu', 'Vui lòng kiểm tra các dòng bị bôi đỏ (Chưa chọn thuộc tính, sai giá, hoặc trùng lặp).', 'error'); return;
+    galleryFiles.value.forEach((f) => {
+      formData.append(`gallery_images[]`, f);
+    });
+
+    const res = await axios.post('http://127.0.0.1:8000/api/v1/admin/products', formData, { headers: getHeaders() });
+    
+    Swal.fire({ icon: 'success', title: 'Tạo thành công', text: res.data.message, timer: 2000, showConfirmButton: false }).then(() => {
+      router.push({ name: 'admin-products' });
+    });
+  } catch (e) {
+    if (e.response && e.response.data && e.response.data.errors) {
+       let errorHtml = '<ul class="text-start text-danger small mt-2" style="max-height: 200px; overflow-y: auto;">';
+       Object.values(e.response.data.errors).flat().forEach(msg => { errorHtml += `<li>${msg}</li>`; });
+       errorHtml += '</ul>';
+       Swal.fire({ title: 'Dữ liệu không hợp lệ', html: errorHtml, icon: 'error' });
+    } else {
+       Swal.fire('Lỗi', e.response?.data?.message || 'Lỗi lưu sản phẩm.', 'error');
     }
-
-    isSaving.value = true;
-    try {
-        const formData = new FormData();
-        formData.append('category_id', form.value.category_id);
-
-        if (form.value.brand_id) {
-            formData.append('brand_id', form.value.brand_id);
-        }
-
-        formData.append('name', form.value.name);
-        formData.append('slug', form.value.slug);
-        formData.append('base_price', form.value.base_price);
-        formData.append('status', form.value.isPublished ? 'published' : 'draft');
-        formData.append('thumbnail_image', thumbnailFile.value);
-
-        const variantsPayload = variants.value.map(v => ({
-            sku: v.sku,
-            price: v.price,
-            promotional_price: v.promotional_price || 0,
-            stock_quantity: v.stock_quantity,
-            attributes: v.attributes
-        }));
-        formData.append('variants_data', JSON.stringify(variantsPayload));
-
-        variants.value.forEach((v, index) => {
-            if (v.imageFile) formData.append(`variant_image_${index}`, v.imageFile);
-        });
-
-        const res = await axios.post('http://127.0.0.1:8000/api/admin/products', formData, {
-            headers: getHeaders()
-        });
-
-        Swal.fire({ icon: 'success', title: 'Hoàn tất Xuất bản', text: res.data.message, timer: 2000, showConfirmButton: false }).then(() => {
-            router.push({ name: 'admin-products' });
-        });
-    } catch (e) {
-        if (e.response) {
-            let errorHtml = '';
-            if (e.response.data.errors) {
-                errorHtml = '<ul class="text-start text-danger small mt-2" style="max-height: 200px; overflow-y: auto; padding-left: 20px;">';
-                Object.values(e.response.data.errors).flat().forEach(msg => {
-                    errorHtml += `<li class="mb-1">${msg}</li>`;
-                });
-                errorHtml += '</ul>';
-            } else {
-                errorHtml = `<p class="text-danger">${e.response.data.message}</p>`;
-            }
-
-            Swal.fire({
-                title: 'Dữ liệu không hợp lệ',
-                html: errorHtml,
-                icon: 'error',
-                confirmButtonColor: '#dc3545'
-            });
-        } else {
-            Swal.fire('Lỗi', 'Mất kết nối Server', 'error');
-        }
-    } finally {
-        isSaving.value = false;
-    }
+  } finally { isSaving.value = false; }
 };
 
 const fetchData = async () => {
-    try {
-        const [catRes, attrRes, brandRes] = await Promise.all([
-            axios.get('http://127.0.0.1:8000/api/admin/categories?status=active', { headers: getHeaders() }),
-            axios.get('http://127.0.0.1:8000/api/admin/attributes', { headers: getHeaders() }),
-            axios.get('http://127.0.0.1:8000/api/admin/brands?status=active', { headers: getHeaders() })
-        ]);
+  try {
+    const [catRes, attrRes, brandRes] = await Promise.all([
+      axios.get('http://127.0.0.1:8000/api/v1/admin/categories', { headers: getHeaders() }),
+      axios.get('http://127.0.0.1:8000/api/v1/admin/attributes', { headers: getHeaders() }),
+      axios.get('http://127.0.0.1:8000/api/v1/admin/brands', { headers: getHeaders() })
+    ]);
+    
+    const allCats = Array.isArray(catRes.data.data) ? catRes.data.data : [];
+    categories.value = allCats.filter(c => c.status === 'active' || c.status === 'published');
+    
+    const allBrands = Array.isArray(brandRes.data.data) ? brandRes.data.data : [];
+    brands.value = allBrands.filter(b => b.status === 'active');
 
-        const catData = catRes.data;
-        categories.value = Array.isArray(catData.data) ? catData.data : (Array.isArray(catData.data?.data) ? catData.data.data : []);
-
-        const attrData = attrRes.data;
-        systemAttributes.value = Array.isArray(attrData.data) ? attrData.data : [];
-
-        const brandData = brandRes.data;
-        brands.value = Array.isArray(brandData.data) ? brandData.data : [];
-
-    } catch (e) {
-        console.error('Lỗi khởi tạo dữ liệu trang Create Product:', e);
-    } finally {
-        isPageLoading.value = false;
-    }
+    systemAttributes.value = Array.isArray(attrRes.data.data) ? attrRes.data.data : [];
+  } catch (e) { console.error('Lỗi tải dữ liệu', e); } finally { isPageLoading.value = false; }
 };
 
 onMounted(() => fetchData());
 </script>
 
 <style scoped>
-.custom-tab {
-    color: #6c757d;
-    border-bottom: 3px solid transparent;
-    transition: all 0.3s;
+.text-urban { color: var(--color-c-hover, #547792) !important; }
+.bg-urban { background-color: var(--color-c-hover, #547792) !important; }
+.border-urban { border-color: var(--color-c-hover, #547792) !important; }
+.btn-urban { background-color: var(--color-c-hover, #547792); color: white; border: none; transition: 0.2s; }
+.btn-urban:hover { background-color: var(--color-c-dark, #213448); color: white; transform: translateY(-2px); }
+.btn-outline-urban { color: var(--color-c-hover, #547792); border-color: var(--color-c-hover, #547792); background: transparent; }
+.btn-outline-urban:hover { background-color: var(--color-c-hover, #547792); color: white; }
+
+.hover-bg-light:hover { background-color: rgba(84, 119, 146, 0.05) !important; }
+html.dark .hover-bg-light:hover { background-color: rgba(255, 255, 255, 0.05) !important; }
+
+/* FIX LỖI BÔI ĐEN */
+.user-select-none { 
+  user-select: none !important; 
+  -webkit-user-select: none !important; 
+  -moz-user-select: none !important; 
 }
 
-.custom-tab:not(.disabled):hover {
-    color: #009981;
-}
+.custom-tab { color: #6c757d; border-bottom: 3px solid transparent; transition: all 0.3s; }
+.custom-tab.active-tab { color: var(--color-c-hover, #547792) !important; border-bottom-color: var(--color-c-hover, #547792); }
 
-.custom-tab.active-tab {
-    color: #009981 !important;
-    border-bottom-color: #009981;
-}
+.step-circle { display: inline-flex; width: 24px; height: 24px; border-radius: 50%; background: #e9ecef; color: #6c757d; align-items: center; justify-content: center; font-size: 0.8rem; }
+.active-tab .step-circle { background: var(--color-c-hover, #547792); color: white; }
 
-.step-circle {
-    display: inline-flex;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: #e9ecef;
-    color: #6c757d;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.8rem;
-}
+.cursor-pointer { cursor: pointer; }
 
-.active-tab .step-circle {
-    background: #009981;
-    color: white;
-}
+/* FIX MÀU CỘT THUỘC TÍNH (Ép inline trong tag class style) */
+.variant-table th { font-size: 0.75rem; text-transform: uppercase; color: #555; vertical-align: middle; text-align: center; border-bottom: 2px solid #e9ecef; white-space: nowrap; padding: 12px; }
+.variant-table td { vertical-align: middle; padding: 8px; }
+html.dark .variant-table th { border-bottom-color: #373b3e; }
 
-.form-section-title {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: #6c757d;
-    text-transform: uppercase;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 0.5rem;
-}
+.img-preview-sm { width: 42px; height: 42px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd; background: #fff; transition: transform 0.2s; cursor: pointer; }
+.img-preview-sm:hover { transform: scale(1.1); border-color: var(--color-c-hover, #547792); }
 
-.bg-brand {
-    background-color: #009981 !important;
-}
+.is-invalid { border-color: #dc3545 !important; }
+.row-error td { background-color: #fff5f5 !important; }
+html.dark .row-error td { background-color: rgba(220, 53, 69, 0.1) !important; }
 
-.text-brand {
-    color: #009981 !important;
-}
-
-.border-brand {
-    border-color: #009981 !important;
-}
-
-.btn-brand {
-    background-color: #009981;
-    color: white;
-    transition: 0.2s;
-}
-
-.btn-brand:hover {
-    background-color: #007a67;
-    color: white;
-}
-
-.btn-outline-brand {
-    color: #009981;
-    border-color: #009981;
-    transition: 0.2s;
-}
-
-.btn-outline-brand:hover {
-    background-color: #009981;
-    color: white;
-}
-
-.cursor-pointer {
-    cursor: pointer;
-}
-
-.hover-opacity-100:hover {
-    opacity: 1 !important;
-}
-
-.hover-danger:hover {
-    color: #dc3545 !important;
-}
-
-.bg-light-brand {
-    background-color: #f2fcfb;
-}
-
-.variant-table th {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    color: #555;
-    vertical-align: middle;
-    text-align: center;
-    border-bottom: 2px solid #e9ecef;
-    white-space: nowrap;
-    padding: 12px;
-}
-
-.variant-table td {
-    vertical-align: middle;
-    padding: 8px;
-}
-
-.img-preview-sm {
-    width: 42px;
-    height: 42px;
-    object-fit: cover;
-    border-radius: 6px;
-    border: 1px solid #ddd;
-    background: #fff;
-    transition: transform 0.2s;
-}
-
-.img-preview-sm:hover {
-    transform: scale(1.1);
-    border-color: #009981;
-}
-
-.is-invalid {
-    border-color: #dc3545 !important;
-    background-color: #fff8f8;
-    animation: shake 0.3s ease-in-out;
-}
-
-.row-error td {
-    background-color: #fff5f5 !important;
-}
-
-@keyframes shake {
-    0% {
-        transform: translateX(0);
-    }
-
-    25% {
-        transform: translateX(-3px);
-    }
-
-    50% {
-        transform: translateX(3px);
-    }
-
-    75% {
-        transform: translateX(-3px);
-    }
-
-    100% {
-        transform: translateX(0);
-    }
-}
-
-.logo-shimmer {
-    font-size: 3.5rem;
-    font-weight: 900;
-    letter-spacing: -1.5px;
-    background: linear-gradient(120deg, #009981 30%, #4dffdf 50%, #009981 70%);
-    background-size: 200% auto;
-    color: transparent;
-    -webkit-background-clip: text;
-    background-clip: text;
-    animation: shine 1.5s linear infinite;
-}
-
-@keyframes shine {
-    to {
-        background-position: 200% center;
-    }
-}
+.aspect-ratio-1 { aspect-ratio: 1 / 1; }
+.animation-fade-in { animation: fadeIn 0.4s ease-in-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.custom-scrollbar-x::-webkit-scrollbar { height: 6px; }
+.custom-scrollbar-x::-webkit-scrollbar-thumb { background: var(--color-c-light, #94B4C1); border-radius: 10px; }
 </style>

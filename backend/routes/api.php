@@ -10,6 +10,13 @@ use App\Http\Controllers\Api\Admin\RoleController;
 use App\Http\Controllers\Api\Admin\AdminProfileController;
 use App\Http\Controllers\Api\Admin\CategoryController;
 use App\Http\Controllers\Api\Admin\ModuleController;
+use App\Http\Controllers\Api\Admin\BrandController;
+use App\Http\Controllers\Api\Admin\UserController;
+use App\Http\Controllers\Api\Admin\UserAddressController;
+use App\Http\Controllers\Api\Admin\MembershipTierController;
+use App\Http\Controllers\Api\Admin\ProductController;
+use App\Http\Controllers\Api\Admin\AttributeController;
+use App\Http\Controllers\Api\Admin\AttributeValueController;
 
 Broadcast::routes(['middleware' => ['auth:sanctum']]);
 
@@ -55,6 +62,40 @@ Route::prefix('v1/admin')->group(function () {
             Route::post('categories/{id}/restore', [CategoryController::class, 'restore']);
             Route::post('categories/reorder', [CategoryController::class, 'reorder']);
             Route::apiResource('categories', CategoryController::class);
+        });
+
+        // 1.5 Thương hiệu (Brands)
+        Route::middleware(['check.module:admin_brands'])->group(function () {
+            Route::post('brands/{id}/restore', [BrandController::class, 'restore']);
+            Route::post('brands/reorder', [BrandController::class, 'reorder']);
+            Route::apiResource('brands', BrandController::class);
+        });
+
+        // 1.6 Khách hàng (Users)
+        Route::middleware(['check.module:admin_users'])->group(function () {
+            Route::post('users/{id}/restore', [UserController::class, 'restore']);
+            Route::apiResource('users', UserController::class);
+
+            Route::post('users/{id}/addresses', [UserAddressController::class, 'store']);
+            Route::put('addresses/{id}', [UserAddressController::class, 'update']);
+            Route::delete('addresses/{id}', [UserAddressController::class, 'destroy']);
+            Route::put('addresses/{id}/default', [UserAddressController::class, 'setDefault']);
+        });
+
+        // 1.7 Hạng thành viên (Membership Tiers)
+        Route::middleware(['check.module:admin_tiers'])->group(function () {
+            Route::post('tiers/{id}/restore', [MembershipTierController::class, 'restore']);
+            Route::apiResource('tiers', MembershipTierController::class);
+        });
+
+        // 1.8 Sản phẩm (Products)
+        Route::middleware(['check.module:admin_products'])->group(function () {
+            Route::post('products/{id}/restore', [\App\Http\Controllers\Api\Admin\ProductController::class, 'restore']);
+            Route::patch('products/{id}/status', [\App\Http\Controllers\Api\Admin\ProductController::class, 'updateStatus']); // ĐÃ THÊM API NÀY
+            Route::apiResource('products', \App\Http\Controllers\Api\Admin\ProductController::class);
+
+            Route::apiResource('attributes', \App\Http\Controllers\Api\Admin\AttributeController::class)->except(['show']);
+            Route::post('attribute-values', [\App\Http\Controllers\Api\Admin\AttributeValueController::class, 'store']);
         });
     });
 });

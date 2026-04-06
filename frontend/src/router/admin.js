@@ -87,68 +87,6 @@ const admin = [
         component: () => import('../pages/admin/category/Edit.vue'),
         meta: { moduleCode: 'admin_categories' },
       },
-
-
-      // --------------------------------------
-
-      {
-        // ROUTE QUẢN LÝ KHÁCH HÀNG (USERS)
-        path: 'users',
-        name: 'admin-users',
-        meta: { moduleCode: 'admin_users' },
-        component: () => import('../pages/admin/account/user/Index.vue'),
-      },
-      {
-        path: 'account/users/create',
-        name: 'admin-user-create',
-        meta: { moduleCode: 'admin_users' },
-        component: () => import('../pages/admin/account/user/Create.vue'),
-      },
-      {
-        path: 'account/users/edit/:id',
-        name: 'admin-user-edit',
-        meta: { moduleCode: 'admin_users' },
-        component: () => import('../pages/admin/account/user/Edit.vue'),
-      },
-      // ROUTE QUẢN LÝ DANH MỤC (CATEGORIES)
-      {
-        path: 'categories',
-        name: 'admin-categories',
-        meta: { moduleCode: 'admin_categories' },
-        component: () => import('../pages/admin/category/Index.vue'),
-      },
-      {
-        path: 'categories/create',
-        name: 'admin-category-create',
-        meta: { moduleCode: 'admin_categories' },
-        component: () => import('../pages/admin/category/Create.vue'),
-      },
-      {
-        path: 'categories/edit/:id',
-        name: 'admin-category-edit',
-        meta: { moduleCode: 'admin_categories' },
-        component: () => import('../pages/admin/category/Edit.vue'),
-      },
-      // ROUTE QUẢN LÝ SẢN PHẨM (PRODUCTS)
-      {
-        path: 'products',
-        name: 'admin-products',
-        component: () => import('../pages/admin/product/Index.vue'),
-        meta: { moduleCode: 'admin_products' },
-      },
-      {
-        path: 'products/create',
-        name: 'admin-products-create',
-        component: () => import('../pages/admin/product/Create.vue'),
-        meta: { moduleCode: 'admin_products' },
-      },
-      {
-        path: 'products/:id/edit',
-        name: 'admin-products-edit',
-        component: () => import('../pages/admin/product/Edit.vue'),
-        meta: { moduleCode: 'admin_products' },
-      },
-      // ROUTE QUẢN LÝ THƯƠNG HIỆU (BRANDS)
       {
         path: 'brands',
         name: 'admin-brands',
@@ -167,6 +105,66 @@ const admin = [
         component: () => import('../pages/admin/brand/Edit.vue'),
         meta: { moduleCode: 'admin_brands' },
       },
+      {
+        path: 'users',
+        name: 'admin-users',
+        component: () => import('../pages/admin/user/Index.vue'),
+        meta: { moduleCode: 'admin_users' },
+      },
+      {
+        path: 'users/create',
+        name: 'admin-users-create',
+        component: () => import('../pages/admin/user/Create.vue'),
+        meta: { moduleCode: 'admin_users' },
+      },
+      {
+        path: 'users/:id/edit',
+        name: 'admin-users-edit',
+        component: () => import('../pages/admin/user/Edit.vue'),
+        meta: { moduleCode: 'admin_users' },
+      },
+      {
+        path: 'tiers',
+        name: 'admin-tiers',
+        component: () => import('../pages/admin/tier/Index.vue'),
+        meta: { moduleCode: 'admin_tiers' },
+      },
+      {
+        path: 'tiers/create',
+        name: 'admin-tiers-create',
+        component: () => import('../pages/admin/tier/Create.vue'),
+        meta: { moduleCode: 'admin_tiers' },
+      },
+      {
+        path: 'tiers/:id/edit',
+        name: 'admin-tiers-edit',
+        component: () => import('../pages/admin/tier/Edit.vue'),
+        meta: { moduleCode: 'admin_tiers' },
+      },
+      {
+        path: 'products',
+        name: 'admin-products',
+        component: () => import('../pages/admin/product/Index.vue'),
+        meta: { moduleCode: 'admin_products' },
+      },
+      {
+        path: 'products/create',
+        name: 'admin-products-create',
+        component: () => import('../pages/admin/product/Create.vue'),
+        meta: { moduleCode: 'admin_products' },
+      },
+      {
+        path: 'products/:id/edit',
+        name: 'admin-products-edit',
+        component: () => import('../pages/admin/product/Edit.vue'),
+        meta: { moduleCode: 'admin_products' },
+      },
+
+
+      // --------------------------------------
+
+
+
 
       // ROUTE QUẢN LÝ BANNER (BANNERS) - THÊM MỚI
       {
@@ -237,25 +235,7 @@ const admin = [
         component: () => import('../pages/admin/coupon/edit.vue'),
       },
 
-      // ROUTE QUẢN LÝ HẠNG THÀNH VIÊN (MEMBERSHIP TIERS)
-      {
-        path: 'tiers',
-        name: 'admin-tiers',
-        component: () => import('../pages/admin/tier/Index.vue'),
-        meta: { moduleCode: 'admin_roles' },
-      },
-      {
-        path: 'tiers/create',
-        name: 'admin-tiers-create',
-        component: () => import('../pages/admin/tier/Create.vue'),
-        meta: { moduleCode: 'admin_roles' },
-      },
-      {
-        path: 'tiers/:id/edit',
-        name: 'admin-tiers-edit',
-        component: () => import('../pages/admin/tier/Edit.vue'),
-        meta: { moduleCode: 'admin_roles' },
-      },
+
       // ROUTE QUẢN LÝ COMBO SẢN PHẨM (PRODUCT COMBOS)
       {
         path: 'combos',
