@@ -167,7 +167,14 @@ const menuItems = ref([
       { name: 'Danh sách đơn', path: '/admin/orders', moduleCode: 'admin_orders' },
       // { name: 'Hoàn trả', path: '/admin/returns', moduleCode: 'admin_orders' }
     ]
-  }
+  },
+  // marketing thẻ cha voucher
+  {
+    name: 'Marketing', icon: 'bi-megaphone-fill', stateKey: 'marketing',
+    children: [
+      { name: 'Voucher', path: '/admin/vouchers', moduleCode: 'admin_vouchers' }
+    ]
+  },
 ]);
 
 const menuState = reactive({

@@ -104,6 +104,12 @@ Route::prefix('v1/admin')->group(function () {
             Route::patch('lookbooks/{id}/status', [\App\Http\Controllers\Api\Admin\LookbookController::class, 'updateStatus']);
             Route::apiResource('lookbooks', \App\Http\Controllers\Api\Admin\LookbookController::class);
         });
+
+        Route::middleware(['check.module:admin_vouchers'])->group(function () {
+            Route::post('vouchers/{id}/restore', [\App\Http\Controllers\Api\Admin\VoucherController::class, 'restore']);
+            Route::patch('vouchers/{id}/status', [\App\Http\Controllers\Api\Admin\VoucherController::class, 'updateStatus']);
+            Route::apiResource('vouchers', \App\Http\Controllers\Api\Admin\VoucherController::class);
+        });
     });
 });
 

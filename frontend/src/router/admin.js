@@ -178,6 +178,25 @@ const admin = [
         component: () => import('../pages/admin/lookbook/Edit.vue'),
         meta: { moduleCode: 'admin_lookbooks' },
       },
+      // voucher
+      {
+        path: 'vouchers',
+        name: 'admin-vouchers',
+        component: () => import('../pages/admin/voucher/Index.vue'),
+        meta: { moduleCode: 'admin_vouchers' },
+      },
+      {
+        path: 'vouchers/create',
+        name: 'admin-vouchers-create',
+        component: () => import('../pages/admin/voucher/Create.vue'),
+        meta: { moduleCode: 'admin_vouchers' },
+      },
+      {
+        path: 'vouchers/:id/edit',
+        name: 'admin-vouchers-edit',
+        component: () => import('../pages/admin/voucher/Edit.vue'),
+        meta: { moduleCode: 'admin_vouchers' },
+      },
 
 
       // --------------------------------------

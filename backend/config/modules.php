@@ -56,4 +56,9 @@ return [
         'module_code' => 'admin_lookbooks',
         'default_level' => 3
     ],
+    [
+        'module_name' => 'Quản lý Khuyến mãi (Vouchers)',
+        'module_code' => 'admin_vouchers',
+        'default_level' => 3 
+    ],
 ];
