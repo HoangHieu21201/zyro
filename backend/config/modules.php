@@ -71,4 +71,9 @@ return [
         'module_code' => 'admin_reviews',
         'default_level' => 4 
     ],
+    [
+        'module_name' => 'Thống kê Yêu thích',
+        'module_code' => 'admin_wishlists',
+        'default_level' => 3 
+    ],
 ];

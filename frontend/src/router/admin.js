@@ -222,7 +222,12 @@ const admin = [
       component: () => import('../pages/admin/review/Index.vue'),
       meta: { moduleCode: 'admin_reviews' },
     },
-    
+    {
+      path: 'wishlists',
+      name: 'admin-wishlists',
+      component: () => import('../pages/admin/wishlist/Index.vue'),
+      meta: { moduleCode: 'admin_wishlists' },
+    },
 
       // --------------------------------------
 

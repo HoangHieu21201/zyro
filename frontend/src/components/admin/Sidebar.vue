@@ -174,7 +174,8 @@ const menuItems = ref([
     children: [
       { name: 'Voucher', path: '/admin/vouchers', moduleCode: 'admin_vouchers' },
       { name: 'Banner', path: '/admin/banners', moduleCode: 'admin_banners' },
-      { name: 'Đánh giá', path: '/admin/reviews', moduleCode: 'admin_reviews' }
+      { name: 'Đánh giá', path: '/admin/reviews', moduleCode: 'admin_reviews' },
+      { name: 'Lượt thích', path: '/admin/wishlists', moduleCode: 'admin_wishlists' }
     ]
   },
 ]);

@@ -117,12 +117,16 @@ Route::prefix('v1/admin')->group(function () {
             Route::patch('banners/{id}/status', [\App\Http\Controllers\Api\Admin\BannerController::class, 'updateStatus']);
             Route::apiResource('banners', \App\Http\Controllers\Api\Admin\BannerController::class);
         });
-        
+
         Route::middleware(['check.module:admin_reviews'])->group(function () {
             Route::post('reviews/{id}/restore', [\App\Http\Controllers\Api\Admin\ReviewController::class, 'restore']);
             Route::patch('reviews/{id}/status', [\App\Http\Controllers\Api\Admin\ReviewController::class, 'updateStatus']);
             Route::post('reviews/{id}/reply', [\App\Http\Controllers\Api\Admin\ReviewController::class, 'reply']);
             Route::apiResource('reviews', \App\Http\Controllers\Api\Admin\ReviewController::class)->except(['store', 'update']); // Admin không tự tạo hay sửa nội dung review khách
+        });
+
+        Route::middleware(['check.module:admin_wishlists'])->group(function () {
+            Route::apiResource('wishlists', \App\Http\Controllers\Api\Admin\WishlistController::class)->only(['index', 'destroy']);
         });
     });
 });

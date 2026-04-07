@@ -66,3 +66,8 @@ Broadcast::channel('admin.banners', function ($user) {
 Broadcast::channel('admin.orders', function ($user) {
     return $user !== null;
 }, ['guards' => ['sanctum']]);
+
+// Bảo vệ kênh 'admin.wishlists'
+Broadcast::channel('admin.wishlists', function ($user) {
+    return $user !== null;
+}, ['guards' => ['sanctum']]);

@@ -11,6 +11,8 @@ class Wishlist extends Model
 
     protected $table = 'wishlists';
 
+    public const UPDATED_AT = null;
+
     protected $fillable = [
         'user_id',
         'product_id'
@@ -28,6 +30,7 @@ class Wishlist extends Model
     {
         return $this->belongsTo(User::class);
     }
+    
     public function product()
     {
         return $this->belongsTo(Product::class);
