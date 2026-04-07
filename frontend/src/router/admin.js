@@ -198,36 +198,48 @@ const admin = [
         meta: { moduleCode: 'admin_vouchers' },
       },
       {
-      path: 'banners',
-      name: 'admin-banners',
-      component: () => import('../pages/admin/banner/Index.vue'),
-      meta: { moduleCode: 'admin_banners' },
-    },
-    {
-      path: 'banners/create',
-      name: 'admin-banners-create',
-      component: () => import('../pages/admin/banner/Create.vue'),
-      meta: { moduleCode: 'admin_banners' },
-    },
-    {
-      path: 'banners/:id/edit',
-      name: 'admin-banners-edit',
-      component: () => import('../pages/admin/banner/Edit.vue'),
-      meta: { moduleCode: 'admin_banners' },
-    },
+        path: 'banners',
+        name: 'admin-banners',
+        component: () => import('../pages/admin/banner/Index.vue'),
+        meta: { moduleCode: 'admin_banners' },
+      },
+      {
+        path: 'banners/create',
+        name: 'admin-banners-create',
+        component: () => import('../pages/admin/banner/Create.vue'),
+        meta: { moduleCode: 'admin_banners' },
+      },
+      {
+        path: 'banners/:id/edit',
+        name: 'admin-banners-edit',
+        component: () => import('../pages/admin/banner/Edit.vue'),
+        meta: { moduleCode: 'admin_banners' },
+      },
 
-    {
-      path: 'reviews',
-      name: 'admin-reviews',
-      component: () => import('../pages/admin/review/Index.vue'),
-      meta: { moduleCode: 'admin_reviews' },
-    },
-    {
-      path: 'wishlists',
-      name: 'admin-wishlists',
-      component: () => import('../pages/admin/wishlist/Index.vue'),
-      meta: { moduleCode: 'admin_wishlists' },
-    },
+      {
+        path: 'reviews',
+        name: 'admin-reviews',
+        component: () => import('../pages/admin/review/Index.vue'),
+        meta: { moduleCode: 'admin_reviews' },
+      },
+      {
+        path: 'wishlists',
+        name: 'admin-wishlists',
+        component: () => import('../pages/admin/wishlist/Index.vue'),
+        meta: { moduleCode: 'admin_wishlists' },
+      },
+      {
+        path: 'returns',
+        name: 'admin-returns',
+        component: () => import('../pages/admin/return/Index.vue'),
+        meta: { moduleCode: 'admin_orders' }, 
+      },
+      {
+        path: 'returns/:id/edit',
+        name: 'admin-returns-edit',
+        component: () => import('../pages/admin/return/Edit.vue'),
+        meta: { moduleCode: 'admin_orders' },
+      },
 
       // --------------------------------------
 
@@ -259,10 +271,11 @@ const admin = [
         component: () => import('../pages/admin/order/Index.vue'),
         meta: { moduleCode: 'admin_orders' },
       },
+      // edit order
       {
-        path: 'orders/returns',
-        name: 'admin-orders-returns',
-        component: () => import('../pages/admin/order/Returns.vue'),
+        path: 'orders/:id',
+        name: 'admin-orders-edit',
+        component: () => import('../pages/admin/order/Edit.vue'),
         meta: { moduleCode: 'admin_orders' },
       },
       {

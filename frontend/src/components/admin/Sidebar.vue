@@ -165,7 +165,7 @@ const menuItems = ref([
     name: 'Đơn hàng', icon: 'bi-receipt-cutoff', stateKey: 'orders',
     children: [
       { name: 'Danh sách đơn', path: '/admin/orders', moduleCode: 'admin_orders' },
-      // { name: 'Hoàn trả', path: '/admin/returns', moduleCode: 'admin_orders' }
+      { name: 'Trả hàng', path: '/admin/returns', moduleCode: 'admin_orders' }
     ]
   },
   // marketing thẻ cha voucher

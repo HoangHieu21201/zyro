@@ -128,6 +128,16 @@ Route::prefix('v1/admin')->group(function () {
         Route::middleware(['check.module:admin_wishlists'])->group(function () {
             Route::apiResource('wishlists', \App\Http\Controllers\Api\Admin\WishlistController::class)->only(['index', 'destroy']);
         });
+
+        Route::middleware(['check.module:admin_orders'])->group(function () {
+            Route::post('orders/{id}/restore', [\App\Http\Controllers\Api\Admin\OrderController::class, 'restore']);
+            Route::patch('orders/{id}/status', [\App\Http\Controllers\Api\Admin\OrderController::class, 'updateStatus']);
+            Route::post('orders/{id}/refund', [\App\Http\Controllers\Api\Admin\OrderController::class, 'processRefund']); // THÊM API XỬ LÝ HOÀN TIỀN
+            Route::apiResource('orders', \App\Http\Controllers\Api\Admin\OrderController::class)->except(['store']);
+        });
+        
+        // API giả lập dữ liệu theo dõi đơn hàng trên bản đồ (Live Map Tracking)
+        Route::get('orders/{id}/simulation', [\App\Http\Controllers\Api\Admin\OrderTrackingController::class, 'getSimulationData']);
     });
 });
 

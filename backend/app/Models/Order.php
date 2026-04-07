@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Order extends Model
 {
@@ -36,28 +38,37 @@ class Order extends Model
     protected function casts(): array
     {
         return [
-            'user_id' => 'integer',
-            'shipping_info' => 'array',
-            'sub_total' => 'decimal:2',
-            'discount_amount' => 'decimal:2',
-            'shipping_fee' => 'decimal:2',
-            'total_amount' => 'decimal:2',
-            'refunded_amount' => 'decimal:2',
-            'voucher_id' => 'integer',
+            'user_id'         => 'integer',
+            'voucher_id'      => 'integer',
+            'shipping_info'   => 'array',
             'payment_details' => 'array',
+            'sub_total'       => 'decimal:2',
+            'discount_amount' => 'decimal:2',
+            'shipping_fee'    => 'decimal:2',
+            'total_amount'    => 'decimal:2',
+            'refunded_amount' => 'decimal:2',
+            'created_at'      => 'datetime',
+            'updated_at'      => 'datetime',
         ];
     }
 
-    public function items()
+    public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
     }
-    public function histories()
+
+    public function histories(): HasMany
     {
-        return $this->hasMany(OrderStatusHistory::class);
+        return $this->hasMany(OrderStatusHistory::class)->orderBy('id', 'desc');
     }
-    public function user()
+
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class)->withTrashed();
+    }
+
+    public function voucher(): BelongsTo
+    {
+        return $this->belongsTo(Voucher::class)->withTrashed();
     }
 }

@@ -71,3 +71,12 @@ Broadcast::channel('admin.orders', function ($user) {
 Broadcast::channel('admin.wishlists', function ($user) {
     return $user !== null;
 }, ['guards' => ['sanctum']]);
+
+// Bảo vệ kênh 'admin.reviews'
+Broadcast::channel('admin.reviews', function ($user) {
+    return $user !== null;
+}, ['guards' => ['sanctum']]);
+
+Broadcast::channel('admin.orders', function ($user) {
+    return $user !== null;
+}, ['guards' => ['sanctum']]);
