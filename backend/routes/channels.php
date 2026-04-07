@@ -49,6 +49,20 @@ Broadcast::channel('admin.products', function ($user) {
 
 // Bảo vệ kênh 'admin.lookbooks'
 Broadcast::channel('admin.lookbooks', function ($user) {
-    return $user !== null; 
+    return $user !== null;
 }, ['guards' => ['sanctum']]);
 
+// Bảo vệ kênh 'admin.vouchers'
+Broadcast::channel('admin.vouchers', function ($user) {
+    return $user !== null;
+}, ['guards' => ['sanctum']]);
+
+// Bảo vệ kênh 'admin.banners'
+Broadcast::channel('admin.banners', function ($user) {
+    return $user !== null;
+}, ['guards' => ['sanctum']]);
+
+// Bảo vệ kênh 'admin.orders'
+Broadcast::channel('admin.orders', function ($user) {
+    return $user !== null;
+}, ['guards' => ['sanctum']]);

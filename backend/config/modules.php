@@ -61,4 +61,14 @@ return [
         'module_code' => 'admin_vouchers',
         'default_level' => 3 
     ],
+    [
+        'module_name' => 'Quản lý Banner (Giao diện)',
+        'module_code' => 'admin_banners',
+        'default_level' => 3 
+    ],
+    [
+        'module_name' => 'Đánh giá sản phẩm',
+        'module_code' => 'admin_reviews',
+        'default_level' => 4 
+    ],
 ];

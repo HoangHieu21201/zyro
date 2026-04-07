@@ -197,32 +197,35 @@ const admin = [
         component: () => import('../pages/admin/voucher/Edit.vue'),
         meta: { moduleCode: 'admin_vouchers' },
       },
+      {
+      path: 'banners',
+      name: 'admin-banners',
+      component: () => import('../pages/admin/banner/Index.vue'),
+      meta: { moduleCode: 'admin_banners' },
+    },
+    {
+      path: 'banners/create',
+      name: 'admin-banners-create',
+      component: () => import('../pages/admin/banner/Create.vue'),
+      meta: { moduleCode: 'admin_banners' },
+    },
+    {
+      path: 'banners/:id/edit',
+      name: 'admin-banners-edit',
+      component: () => import('../pages/admin/banner/Edit.vue'),
+      meta: { moduleCode: 'admin_banners' },
+    },
 
+    {
+      path: 'reviews',
+      name: 'admin-reviews',
+      component: () => import('../pages/admin/review/Index.vue'),
+      meta: { moduleCode: 'admin_reviews' },
+    },
+    
 
       // --------------------------------------
 
-
-
-
-      // ROUTE QUẢN LÝ BANNER (BANNERS) - THÊM MỚI
-      {
-        path: 'banners',
-        name: 'admin-banners',
-        component: () => import('../pages/admin/banner/Index.vue'),
-        meta: { moduleCode: 'admin_banners' },
-      },
-      {
-        path: 'banners/create',
-        name: 'admin-banners-create',
-        component: () => import('../pages/admin/banner/Create.vue'),
-        meta: { moduleCode: 'admin_banners' },
-      },
-      {
-        path: 'banners/:id/edit',
-        name: 'admin-banners-edit',
-        component: () => import('../pages/admin/banner/Edit.vue'),
-        meta: { moduleCode: 'admin_banners' },
-      },
 
       // ROUTE QUẢN LÝ CHÂN DUNG SORA (GALLERY)
       {
@@ -292,13 +295,6 @@ const admin = [
         name: 'admin-combos-edit',
         component: () => import('../pages/admin/combo/Edit.vue'),
         meta: { moduleCode: 'admin_combos' },
-      },
-      // ROUTE QUẢN LÝ ĐÁNH GIÁ (REVIEWS)
-      {
-        path: 'reviews',
-        name: 'admin-reviews',
-        component: () => import('../pages/admin/review/Index.vue'),
-        meta: { moduleCode: 'admin_reviews' },
       },
       // ROUTE QUẢN LÝ KHO HÀNG (INVENTORY)
       {

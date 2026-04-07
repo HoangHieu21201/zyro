@@ -110,6 +110,20 @@ Route::prefix('v1/admin')->group(function () {
             Route::patch('vouchers/{id}/status', [\App\Http\Controllers\Api\Admin\VoucherController::class, 'updateStatus']);
             Route::apiResource('vouchers', \App\Http\Controllers\Api\Admin\VoucherController::class);
         });
+
+        Route::middleware(['check.module:admin_banners'])->group(function () {
+            Route::post('banners/{id}/restore', [\App\Http\Controllers\Api\Admin\BannerController::class, 'restore']);
+            Route::post('banners/reorder', [\App\Http\Controllers\Api\Admin\BannerController::class, 'reorder']);
+            Route::patch('banners/{id}/status', [\App\Http\Controllers\Api\Admin\BannerController::class, 'updateStatus']);
+            Route::apiResource('banners', \App\Http\Controllers\Api\Admin\BannerController::class);
+        });
+        
+        Route::middleware(['check.module:admin_reviews'])->group(function () {
+            Route::post('reviews/{id}/restore', [\App\Http\Controllers\Api\Admin\ReviewController::class, 'restore']);
+            Route::patch('reviews/{id}/status', [\App\Http\Controllers\Api\Admin\ReviewController::class, 'updateStatus']);
+            Route::post('reviews/{id}/reply', [\App\Http\Controllers\Api\Admin\ReviewController::class, 'reply']);
+            Route::apiResource('reviews', \App\Http\Controllers\Api\Admin\ReviewController::class)->except(['store', 'update']); // Admin không tự tạo hay sửa nội dung review khách
+        });
     });
 });
 

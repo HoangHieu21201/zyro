@@ -1,4 +1,4 @@
-<!-- File: frontend/src/pages/admin/product/Index.vue -->
+
 <template>
   <div class="product-index-wrapper pb-5 mb-5">
     
@@ -98,6 +98,7 @@
         </div>
         
         <div class="card-body p-0 mt-2">
+          <!-- GIAO DIỆN PC -->
           <div class="table-responsive d-none d-lg-block">
             <table class="table table-hover align-middle mb-0" style="table-layout: fixed; width: 100%; min-width: 1100px;">
               <thead class="bg-light dark:bg-[#212529]">
@@ -118,7 +119,11 @@
                 <tr v-else v-for="product in displayProducts" :key="product.id" :class="{'bg-light opacity-75 dark:bg-[#121416]': product.deleted_at || product.status === 'hidden'}">
                   <td class="px-4 py-3">
                     <div class="d-flex align-items-center">
-                      <img :src="getImageUrl(product.thumbnail_image)" @error="handleImageError" class="rounded-3 object-fit-cover me-3 border shadow-sm pe-none dark:border-gray-600" style="width: 60px; height: 60px;">
+                      <!-- ĐÃ BỔ SUNG ZOOM NGAY TRÊN BẢNG HIỂN THỊ -->
+                      <img :src="getImageUrl(product.thumbnail_image)" @error="handleImageError" 
+                           class="rounded-3 object-fit-cover me-3 border shadow-sm dark:border-gray-600 img-zoomable" 
+                           style="width: 60px; height: 60px;" 
+                           @click.stop="openImageZoom(getImageUrl(product.thumbnail_image))">
                       <div class="overflow-hidden">
                         <h6 class="mb-0 fw-bold text-dark dark:text-gray-200 text-truncate" :title="product.name">
                           <i v-if="product.is_featured" class="bi bi-star-fill text-warning me-1" title="Nổi bật"></i>
@@ -198,7 +203,11 @@
             <div v-else v-for="product in displayProducts" :key="product.id" class="card border-0 shadow-sm mb-3 rounded-4 dark:bg-[#212529]" :class="{'opacity-75': product.deleted_at || product.status === 'hidden'}">
               <div class="card-body p-3">
                 <div class="d-flex align-items-center mb-3 border-bottom dark:border-gray-700 pb-3">
-                  <img :src="getImageUrl(product.thumbnail_image)" @error="handleImageError" class="rounded-3 object-fit-cover me-3 border shadow-sm dark:border-gray-600" style="width: 60px; height: 60px;">
+                  <!-- ĐÃ BỔ SUNG ZOOM CHO MOBILE -->
+                  <img :src="getImageUrl(product.thumbnail_image)" @error="handleImageError" 
+                       class="rounded-3 object-fit-cover me-3 border shadow-sm dark:border-gray-600 img-zoomable" 
+                       style="width: 60px; height: 60px;"
+                       @click.stop="openImageZoom(getImageUrl(product.thumbnail_image))">
                   <div class="overflow-hidden w-100">
                     <h6 class="mb-1 fw-bold dark:text-gray-200 text-truncate">
                       <i v-if="product.is_featured" class="bi bi-star-fill text-warning me-1"></i>{{ product.name }}
@@ -379,15 +388,15 @@
       </div>
     </div>
 
-    <!-- MODAL PHÓNG TO ẢNH -->
-    <div class="modal fade" id="imageZoomModal" tabindex="-1" aria-hidden="true" style="z-index: 1070;">
+    <!-- ĐÃ CẬP NHẬT: MODAL PHÓNG TO ẢNH (KÈM HIỆU ỨNG BLUR KÍNH) -->
+    <div class="modal fade glass-modal" id="imageZoomModal" tabindex="-1" aria-hidden="true" style="z-index: 1070;">
       <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content bg-transparent border-0 shadow-none">
-          <div class="modal-header border-0 pb-0 justify-content-end">
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1) grayscale(100%) brightness(200%);"></button>
+          <div class="modal-header border-0 pb-0 justify-content-end position-absolute top-0 end-0 w-100" style="z-index: 2;">
+            <button type="button" class="btn-close btn-close-white m-3" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1) grayscale(100%) brightness(200%);"></button>
           </div>
-          <div class="modal-body text-center p-0">
-            <img :src="zoomedImageUrl" class="img-fluid rounded shadow-lg" style="max-height: 80vh; object-fit: contain;">
+          <div class="modal-body text-center p-0 position-relative">
+            <img :src="zoomedImageUrl" class="img-fluid rounded-4 shadow-lg border border-secondary-subtle dark:border-gray-600" style="max-height: 85vh; object-fit: contain; background-color: var(--color-c-effect);">
           </div>
         </div>
       </div>
@@ -675,9 +684,16 @@ html.dark .active-badge { background-color: rgba(255, 255, 255, 0.1) !important;
 .custom-scrollbar-x::-webkit-scrollbar { height: 6px; }
 .custom-scrollbar-x::-webkit-scrollbar-thumb { background: var(--color-c-light, #94B4C1); border-radius: 10px; }
 
-/* Thêm class zoom ảnh */
-.img-zoomable { cursor: zoom-in; transition: transform 0.2s; }
-.img-zoomable:hover { transform: scale(1.05); }
+/* CSS cho ảnh phóng to */
+.img-zoomable { cursor: zoom-in; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.img-zoomable:hover { transform: scale(1.02); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+
+/* Class bọc ngoài Modal để làm mờ nền */
+.glass-modal {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  background-color: rgba(0, 0, 0, 0.4);
+}
 
 .transition-all { transition: all 0.3s ease; }
 </style>
