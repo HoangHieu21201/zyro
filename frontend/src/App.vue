@@ -4,11 +4,9 @@
 </template>
 
 <script setup>
-// Nơi chứa logic chung cho toàn app (như init Auth, check Token...)
 </script>
 
 <style>
-/* Nhúng trực tiếp Tailwind v4 */
 @import "tailwindcss";
 
 /* Định nghĩa bộ màu Xanh Urban bằng cú pháp v4 */
@@ -23,6 +21,25 @@
   body {
     /* Sử dụng biến màu vừa khai báo ở trên */
     @apply bg-c-effect text-c-dark font-sans antialiased;
+  }
+}
+
+/* =======================================================
+   ZYRO GLOBAL CONTAINER (TỶ LỆ VÀNG 1310px)
+   (Trên màn 1650px sẽ tự động chừa margin 170px mỗi bên y như Figma)
+======================================================== */
+.zyro-container {
+  width: 100%;
+  max-width: 1310px;
+  margin: 0 auto;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+@media (min-width: 1400px) {
+  .zyro-container {
+    padding-left: 0;
+    padding-right: 0;
   }
 }
 
@@ -45,7 +62,6 @@
 
 /* =======================================================
    GLOBAL CSS: CHUẨN HÓA GIAO DIỆN DARK MODE CHO BOOTSTRAP
-   (Áp dụng toàn cục, không cần đặt trong file Layout)
 ======================================================== */
 [data-bs-theme="dark"] body {
     background-color: #121416 !important;

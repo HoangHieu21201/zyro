@@ -492,4 +492,4 @@ html.dark .active-badge { background-color: rgba(255, 255, 255, 0.1) !important;
 
 .custom-scrollbar-x::-webkit-scrollbar { height: 6px; }
 .custom-scrollbar-x::-webkit-scrollbar-thumb { background: var(--color-c-light, #94B4C1); border-radius: 10px; }
-</style>
+</style> 

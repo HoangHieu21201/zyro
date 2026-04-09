@@ -232,7 +232,7 @@ const admin = [
         path: 'returns',
         name: 'admin-returns',
         component: () => import('../pages/admin/return/Index.vue'),
-        meta: { moduleCode: 'admin_orders' }, 
+        meta: { moduleCode: 'admin_orders' },
       },
       {
         path: 'returns/:id/edit',
@@ -241,86 +241,18 @@ const admin = [
         meta: { moduleCode: 'admin_orders' },
       },
 
-      // --------------------------------------
-
-
-      // ROUTE QUẢN LÝ CHÂN DUNG SORA (GALLERY)
-      {
-        path: 'gallery',
-        name: 'admin-gallery',
-        component: () => import('../pages/admin/gallery/Index.vue'),
-        meta: { moduleCode: 'admin_gallery' },
-      },
-      {
-        path: 'gallery/create',
-        name: 'admin-gallery-create',
-        component: () => import('../pages/admin/gallery/Create.vue'),
-        meta: { moduleCode: 'admin_gallery' },
-      },
-      {
-        path: 'gallery/:id/edit',
-        name: 'admin-gallery-edit',
-        component: () => import('../pages/admin/gallery/Edit.vue'),
-        meta: { moduleCode: 'admin_gallery' },
-      },
-
-      // ROUTE QUẢN LÝ ĐƠN HÀNG (ORDERS)
       {
         path: 'orders',
         name: 'admin-orders',
         component: () => import('../pages/admin/order/Index.vue'),
         meta: { moduleCode: 'admin_orders' },
       },
-      // edit order
       {
         path: 'orders/:id',
         name: 'admin-orders-edit',
         component: () => import('../pages/admin/order/Edit.vue'),
         meta: { moduleCode: 'admin_orders' },
       },
-      {
-        path: 'coupons',
-        name: 'admin-coupons',
-        component: () => import('../pages/admin/coupon/index.vue'),
-      },
-      {
-        path: 'coupons/create',
-        name: 'admin-coupon-create',
-        component: () => import('../pages/admin/coupon/create.vue'),
-      },
-      {
-        path: 'coupons/:id/edit',
-        name: 'admin-coupon-edit',
-        component: () => import('../pages/admin/coupon/edit.vue'),
-      },
-
-
-      // ROUTE QUẢN LÝ COMBO SẢN PHẨM (PRODUCT COMBOS)
-      {
-        path: 'combos',
-        name: 'admin-combos',
-        component: () => import('../pages/admin/combo/Index.vue'),
-        meta: { moduleCode: 'admin_combos' },
-      },
-      {
-        path: 'combos/create',
-        name: 'admin-combos-create',
-        component: () => import('../pages/admin/combo/Create.vue'),
-        meta: { moduleCode: 'admin_combos' },
-      },
-      {
-        path: 'combos/:id/edit',
-        name: 'admin-combos-edit',
-        component: () => import('../pages/admin/combo/Edit.vue'),
-        meta: { moduleCode: 'admin_combos' },
-      },
-      // ROUTE QUẢN LÝ KHO HÀNG (INVENTORY)
-      {
-        path: 'inventory',
-        name: 'admin-inventory',
-        component: () => import('../pages/admin/inventory/Index.vue'),
-        meta: { moduleCode: 'admin_inventory' },
-      }
 
     ],
   },
