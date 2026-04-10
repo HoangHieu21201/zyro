@@ -1,4 +1,3 @@
-<!-- File: frontend/src/pages/admin/category/Edit.vue -->
 <template>
   <div class="category-edit-wrapper pb-5 mb-5">
     <div class="container-fluid py-4" v-if="!isLoading">
@@ -33,7 +32,6 @@
                   <div class="invalid-feedback">{{ errors.parent_id?.[0] }}</div>
                 </div>
 
-                <!-- ĐÃ FIX: Ô Read-only cho thứ tự ưu tiên -->
                 <div class="col-md-6">
                   <label class="form-label fw-bold text-dark dark:text-gray-200">Thứ tự hiển thị</label>
                   <div class="p-2 bg-light dark:bg-[#212529] border dark:border-gray-700 rounded-3 d-flex align-items-center justify-content-between h-100" style="min-height: 42px;">
@@ -60,8 +58,9 @@
                     
                     <div class="input-group shadow-sm mb-3">
                       <span class="input-group-text bg-white dark:bg-[#1a2533] border-end-0 text-muted"><i class="bi bi-tag"></i></span>
+                      <!-- ĐÃ FIX: Dùng keydown.enter.prevent thay vì keyup để chặn Form bị Submit -->
                       <input type="text" class="form-control border-start-0 py-2 dark:bg-[#1a2533] dark:text-white dark:border-gray-700" 
-                             v-model="newAttribute" @keyup.enter.prevent="addAttribute" placeholder="Nhập tên thuộc tính và ấn Enter">
+                             v-model="newAttribute" @keydown.enter.prevent="addAttribute" placeholder="VD: Màu, Size (ngăn cách bằng dấu phẩy)">
                       <button class="btn btn-urban px-4 fw-bold" type="button" @click.prevent="addAttribute">Thêm</button>
                     </div>
 
@@ -236,13 +235,24 @@ const removeImage = (type) => {
   }
 };
 
+// ĐÃ FIX: Hỗ trợ chẻ Tags bằng dấu phẩy (,)
 const addAttribute = () => {
   const val = newAttribute.value.trim();
-  if (val && !attributesList.value.includes(val)) {
-    attributesList.value.push(val);
-  }
+  if (!val) return;
+  
+  // Tách chuỗi bằng dấu phẩy, dọn dẹp khoảng trắng 2 đầu và bỏ các phần tử rỗng
+  const newAttrs = val.split(',').map(item => item.trim()).filter(item => item !== '');
+  
+  newAttrs.forEach(attr => {
+      // Chỉ push vào nếu mảng chưa có tag này
+      if (!attributesList.value.includes(attr)) {
+          attributesList.value.push(attr);
+      }
+  });
+  
   newAttribute.value = '';
 };
+
 const removeAttribute = (index) => {
   attributesList.value.splice(index, 1);
 };

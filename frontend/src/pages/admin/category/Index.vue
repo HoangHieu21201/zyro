@@ -1,4 +1,3 @@
-<!-- File: frontend/src/pages/admin/category/Index.vue -->
 <template>
   <div class="category-index-wrapper pb-5 mb-5">
     
@@ -65,6 +64,21 @@
           </h6>
           
           <div class="d-flex align-items-center flex-wrap gap-2">
+            
+            <!-- ĐÃ BỔ SUNG: BỘ LỌC DANH MỤC GỐC -->
+            <div class="d-flex align-items-center bg-light dark:bg-[#212529] px-3 py-1.5 rounded-pill border dark:border-gray-700 shadow-sm" v-show="!isReorderMode">
+              <i class="bi bi-funnel text-urban me-2"></i>
+              <select class="form-select form-select-sm border-0 bg-transparent fw-bold text-secondary dark:text-gray-300 p-0 pe-4 cursor-pointer shadow-none" style="width: auto; min-width: 140px;" v-model="selectedParentId" @change="currentPage = 1">
+                <option value="all">Tất cả danh mục</option>
+                <option value="root">Chỉ Danh mục Gốc</option>
+                <optgroup label="Danh mục con của:">
+                  <option v-for="rootCat in rootCategories" :key="rootCat.id" :value="rootCat.id">
+                    {{ rootCat.name }}
+                  </option>
+                </optgroup>
+              </select>
+            </div>
+
             <template v-if="!searchQuery">
               <button class="btn btn-sm px-3 py-2 fw-bold shadow-sm transition-all d-flex align-items-center" 
                       :class="isReorderMode ? 'btn-warning text-dark' : 'btn-light dark:bg-[#2b3035] dark:border-gray-600 dark:text-gray-200 border text-dark'"
@@ -362,10 +376,13 @@ const currentPageLevel = ref(null);
 const isLoading = ref(true);
 const isFirstLoad = ref(true); 
 const isRefreshing = ref(false);
+
 const searchQuery = ref('');
 const activeTab = ref('all');
+const selectedParentId = ref('all'); // ĐÃ BỔ SUNG: Trạng thái lọc danh mục cha
+
 const currentPage = ref(1);
-const itemsPerPage = 10;
+const itemsPerPage = 8;
 
 const currentAdmin = JSON.parse(localStorage.getItem('admin_info') || '{}');
 const currentUserId = currentAdmin.id;
@@ -580,17 +597,34 @@ const openQuickView = (cat) => {
   quickViewModalInstance.show();
 };
 
+// ĐÃ BỔ SUNG: Dữ liệu cho Dropdown Danh Mục Gốc
+const rootCategories = computed(() => {
+  return categories.value.filter(c => !c.parent_id && !c.deleted_at);
+});
+
 const processedCategories = computed(() => {
   let result = categories.value;
+  
   if (activeTab.value === 'deleted') { result = result.filter(c => c.deleted_at); } 
   else {
     result = result.filter(c => !c.deleted_at);
     if (activeTab.value !== 'all') result = result.filter(c => c.status === activeTab.value);
   }
+  
+  // ĐÃ BỔ SUNG: Lọc theo Danh mục Gốc / Con
+  if (selectedParentId.value !== 'all') {
+    if (selectedParentId.value === 'root') {
+      result = result.filter(c => !c.parent_id); // Chỉ lấy những thằng không có cha
+    } else {
+      result = result.filter(c => c.parent_id === selectedParentId.value); // Lấy những thằng con của cha đã chọn
+    }
+  }
+
   if (searchQuery.value) {
     const q = searchQuery.value.toLowerCase();
     result = result.filter(c => (c.name?.toLowerCase().includes(q)) || (c.slug?.toLowerCase().includes(q)));
   }
+  
   return result;
 });
 

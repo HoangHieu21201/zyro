@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
@@ -25,19 +24,54 @@ class CategoryController extends Controller
         return is_numeric($max) ? $max + 1 : 1;
     }
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         try {
-            $categories = Category::with('parent')->withCount('children')
-                // Ưu tiên hiện các category có số trước, null đẩy xuống cuối
-                ->orderByRaw('sort_order IS NULL, sort_order ASC')
+            $query = Category::with('parent')->withCount('children');
+
+            // ĐÃ BỔ SUNG: Lọc theo danh mục cha (parent_id)
+            // Nếu frontend gọi /api/admin/categories?parent_id=null -> Trả về danh mục gốc
+            // Nếu frontend gọi /api/admin/categories?parent_id=1 -> Trả về danh mục con của ID 1
+            if ($request->has('parent_id')) {
+                $parentId = $request->parent_id;
+                if ($parentId === 'null' || $parentId == 0 || $parentId === '') {
+                    $query->whereNull('parent_id');
+                } else {
+                    $query->where('parent_id', $parentId);
+                }
+            }
+
+            $categories = $query->orderByRaw('sort_order IS NULL, sort_order ASC')
                 ->orderBy('id', 'desc')
                 ->withTrashed()
                 ->get();
-                
+
             return response()->json(['success' => true, 'data' => $categories]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Lỗi tải danh sách: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * ĐÃ BỔ SUNG: Hàm getTree() trả về cấu trúc Cha - Con lồng nhau
+     * Phục vụ cực tốt cho Select Box 2 cấp hoặc Mega Menu
+     */
+    public function getTree(): JsonResponse
+    {
+        try {
+            // Chỉ lấy danh mục gốc (parent_id = null)
+            // Kèm theo eager loading tất cả danh mục con của nó
+            $categories = Category::whereNull('parent_id')
+                ->with(['children' => function ($q) {
+                    $q->orderByRaw('sort_order IS NULL, sort_order ASC')->orderBy('id', 'desc');
+                }])
+                ->orderByRaw('sort_order IS NULL, sort_order ASC')
+                ->orderBy('id', 'desc')
+                ->get();
+
+            return response()->json(['success' => true, 'data' => $categories]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Lỗi tải cây danh mục: ' . $e->getMessage()], 500);
         }
     }
 
@@ -47,7 +81,7 @@ class CategoryController extends Controller
             $data = $request->validated();
             $data['slug'] = $this->generateUniqueSlug($data['name']);
             $data['status'] = $data['status'] ?? 'active';
-            
+
             // LOGIC SẮP XẾP: Tự động cấp phát nếu đang active
             $data['sort_order'] = ($data['status'] === 'active') ? $this->getNextSortOrder() : null;
 
@@ -140,7 +174,7 @@ class CategoryController extends Controller
 
             // LOGIC SẮP XẾP: Xóa mềm thì tước bỏ vị trí ưu tiên
             $category->sort_order = null;
-            
+
             // Xóa slug để nhường chỗ cho danh mục khác
             $category->slug = $category->slug . '-deleted-' . time();
             $category->save();
@@ -234,13 +268,13 @@ class CategoryController extends Controller
     private function isCircularReference($categoryId, $parentId): bool
     {
         if ($categoryId == $parentId) return true;
-        
+
         $currentParent = Category::find($parentId);
         while ($currentParent) {
             if ($currentParent->parent_id == $categoryId) return true;
             $currentParent = Category::find($currentParent->parent_id);
         }
-        
+
         return false;
     }
 }
