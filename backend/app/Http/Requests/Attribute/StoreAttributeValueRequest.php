@@ -15,7 +15,7 @@ class StoreAttributeValueRequest extends FormRequest
     {
         return [
             'attribute_id' => ['required', 'integer', 'exists:attributes,id'],
-            'value'        => ['required', 'string', 'max:255'],
+            'value'        => ['required', 'string', 'min:1', 'max:100'],
             'meta_value'   => ['nullable', 'string', 'max:255']
         ];
     }
@@ -23,9 +23,17 @@ class StoreAttributeValueRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'attribute_id.required' => 'Thiếu ID Thuộc tính cha.',
-            'attribute_id.exists'   => 'Thuộc tính cha không tồn tại.',
+            'attribute_id.required' => 'Thiếu thông tin phân loại (ID Thuộc tính).',
+            'attribute_id.integer'  => 'Mã phân loại không hợp lệ.',
+            'attribute_id.exists'   => 'Thuộc tính cha không tồn tại trong hệ thống.',
+            
             'value.required'        => 'Giá trị không được để trống.',
+            'value.string'          => 'Giá trị phải là chuỗi ký tự.',
+            'value.min'             => 'Giá trị phải chứa ít nhất 1 ký tự (Ví dụ: S, M, L).',
+            'value.max'             => 'Giá trị không được vượt quá 100 ký tự.',
+            
+            'meta_value.string'     => 'Giá trị bổ sung (Meta) phải là chuỗi ký tự.',
+            'meta_value.max'        => 'Giá trị bổ sung không được vượt quá 255 ký tự.',
         ];
     }
 }

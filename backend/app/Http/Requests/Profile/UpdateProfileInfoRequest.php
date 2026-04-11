@@ -1,5 +1,7 @@
 <?php
 
+// File: backend/app/Http/Requests/Profile/UpdateProfileInfoRequest.php
+
 namespace App\Http\Requests\Profile;
 
 use Illuminate\Foundation\Http\FormRequest;
@@ -18,7 +20,8 @@ class UpdateProfileInfoRequest extends FormRequest
         $userId = $this->user()->id;
 
         return [
-            'fullname' => ['required', 'string', 'max:100'],
+            // ĐÃ THÊM min:3
+            'fullname' => ['required', 'string', 'min:3', 'max:100'],
             'email'    => [
                 'required', 
                 'email', 
@@ -37,10 +40,12 @@ class UpdateProfileInfoRequest extends FormRequest
     {
         return [
             'fullname.required' => 'Họ tên không được để trống.',
+            'fullname.min'      => 'Họ tên quá ngắn (Tối thiểu 3 ký tự).',
+            'fullname.max'      => 'Họ tên không được vượt quá 100 ký tự.',
             'email.required'    => 'Email không được để trống.',
             'email.unique'      => 'Email này đã bị người khác sử dụng.',
             'phone.regex'       => 'Số điện thoại không hợp lệ.',
-            'avatar.image'      => 'File phải là hình ảnh.',
+            'avatar.image'      => 'File tải lên phải là hình ảnh.',
             'avatar.max'        => 'Dung lượng ảnh tối đa 5MB.',
         ];
     }

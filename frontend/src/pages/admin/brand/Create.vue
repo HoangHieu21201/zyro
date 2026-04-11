@@ -1,6 +1,6 @@
 <!-- File: frontend/src/pages/admin/brand/Create.vue -->
 <template>
-  <div class="brand-create-wrapper pb-5 mb-5">
+  <div class="brand-create-wrapper mb-5">
     <div class="container-fluid py-4">
       <div class="d-flex align-items-center mb-4">
         <router-link :to="{ name: 'admin-brands' }" class="text-decoration-none text-muted me-3 hover:text-urban transition-all">
@@ -19,14 +19,14 @@
               <div class="row g-4">
                 <div class="col-md-12">
                   <label class="form-label fw-bold text-dark dark:text-gray-200">Tên thương hiệu <span class="text-danger">*</span></label>
+                  <!-- ĐÃ THÊM: required minlength="3" maxlength="255" -->
                   <input type="text" class="form-control py-2 dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" 
-                         v-model="form.name" :class="{'is-invalid': errors.name}" placeholder="VD: Nike, Adidas...">
+                         v-model="form.name" :class="{'is-invalid': errors.name}" placeholder="VD: Nike, Adidas..." required minlength="3" maxlength="255">
                   <div class="invalid-feedback">{{ errors.name?.[0] }}</div>
                 </div>
 
                 <div class="col-md-12">
                   <label class="form-label fw-bold text-dark dark:text-gray-200">Thứ tự hiển thị</label>
-                  <!-- ĐÃ FIX: Gỡ bỏ class h-100 gây lỗi tràn khung ở thẻ div dưới đây -->
                   <div class="p-2 bg-light dark:bg-[#212529] border dark:border-gray-700 rounded-3 d-flex align-items-center justify-content-between" style="min-height: 42px;">
                     <div class="d-flex align-items-center">
                       <i class="bi bi-sort-numeric-down text-urban me-2 fs-5"></i>

@@ -19,14 +19,14 @@
               <div class="row g-4">
                 <div class="col-md-12">
                   <label class="form-label fw-bold text-dark dark:text-gray-200">Tên thương hiệu <span class="text-danger">*</span></label>
+                  <!-- ĐÃ THÊM: required minlength="3" maxlength="255" -->
                   <input type="text" class="form-control py-2 dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" 
-                         v-model="form.name" :class="{'is-invalid': errors.name}" placeholder="VD: Nike, Adidas...">
+                         v-model="form.name" :class="{'is-invalid': errors.name}" placeholder="VD: Nike, Adidas..." required minlength="3" maxlength="255">
                   <div class="invalid-feedback">{{ errors.name?.[0] }}</div>
                 </div>
 
                 <div class="col-md-12">
                   <label class="form-label fw-bold text-dark dark:text-gray-200">Thứ tự hiển thị</label>
-                  <!-- ĐÃ FIX: Gỡ bỏ class h-100 -->
                   <div class="p-2 bg-light dark:bg-[#212529] border dark:border-gray-700 rounded-3 d-flex align-items-center justify-content-between" style="min-height: 42px;">
                     <div class="d-flex align-items-center">
                       <i class="bi bi-sort-numeric-down text-urban me-2 fs-5"></i>
@@ -62,13 +62,17 @@
                 <!-- Logo -->
                 <div class="mb-4 text-center p-3 border border-dashed dark:border-gray-700 rounded-4 bg-light dark:bg-[#212529]">
                   <label class="form-label fw-bold text-dark dark:text-gray-200 d-block mb-3">Logo Thương Hiệu</label>
-                  <img :src="previewLogo" class="rounded-4 object-fit-contain shadow-sm mb-3 bg-white p-2 dark:border dark:border-gray-600" style="width: 100%; height: 160px;">
+                  
+                  <div class="bg-white rounded-4 shadow-sm border border-light-subtle dark:border-gray-600 mb-3 mx-auto d-flex align-items-center justify-content-center" style="width: 100%; height: 160px; padding: 10px;">
+                    <img :src="previewLogo" class="object-fit-contain w-100 h-100">
+                  </div>
+
                   <div class="d-flex gap-2 justify-content-center">
-                    <button type="button" class="btn btn-sm btn-outline-urban rounded-pill px-3 fw-semibold flex-grow-1" @click="$refs.logoInput.click()">
-                      <i class="bi bi-cloud-upload"></i> Thay ảnh
+                    <button type="button" class="btn btn-sm btn-urban rounded-pill px-3 fw-semibold flex-grow-1 shadow-sm" @click="$refs.logoInput.click()">
+                      <i class="bi bi-cloud-upload me-1"></i> Thay ảnh
                     </button>
-                    <button v-if="hasOldLogo || form.logo" type="button" class="btn btn-sm btn-light text-danger border dark:border-gray-600 rounded-pill px-3" @click="removeLogo">
-                      Xóa
+                    <button v-if="hasOldLogo || form.logo" type="button" class="btn btn-sm btn-light text-danger border dark:border-gray-600 rounded-pill px-3 shadow-sm" @click="removeLogo">
+                      <i class="bi bi-trash3"></i> Xóa
                     </button>
                   </div>
                   <input type="file" ref="logoInput" @change="onLogoChange" class="d-none" accept="image/*">
@@ -80,7 +84,7 @@
         
         <hr class="my-4 dark:border-gray-700">
         <div class="text-end">
-          <router-link :to="{ name: 'admin-brands' }" class="btn btn-light dark:bg-[#2b3035] dark:text-gray-300 dark:border-gray-600 me-2 px-4 shadow-sm border fw-bold text-decoration-none">Hủy</router-link>
+          <router-link :to="{ name: 'admin-brands' }" class="btn btn-light dark:bg-[#2b3035] dark:text-gray-300 dark:border-gray-600 me-2 px-4 shadow-sm border fw-bold text-decoration-none">Hủy bỏ</router-link>
           <button type="submit" class="btn btn-urban text-white px-5 fw-bold shadow-sm" :disabled="isSaving">
             <span v-if="isSaving" class="spinner-border spinner-border-sm me-2"></span> Cập Nhật Ngay
           </button>

@@ -15,8 +15,15 @@ class UpdateAttributeRequest extends FormRequest
     public function rules(): array
     {
         $id = $this->route('attribute');
+        
         return [
-            'name' => ['required', 'string', 'max:255', Rule::unique('attributes', 'name')->ignore($id)]
+            'name' => [
+                'required', 
+                'string', 
+                'min:2', 
+                'max:50', 
+                Rule::unique('attributes', 'name')->ignore($id)
+            ]
         ];
     }
 
@@ -24,7 +31,10 @@ class UpdateAttributeRequest extends FormRequest
     {
         return [
             'name.required' => 'Tên thuộc tính không được để trống.',
-            'name.unique'   => 'Tên thuộc tính bị trùng lặp với thuộc tính khác.',
+            'name.string'   => 'Tên thuộc tính phải là chuỗi ký tự.',
+            'name.min'      => 'Tên thuộc tính quá ngắn (Tối thiểu 2 ký tự).',
+            'name.max'      => 'Tên thuộc tính không được vượt quá 50 ký tự.',
+            'name.unique'   => 'Tên thuộc tính này bị trùng lặp với một thuộc tính khác.',
         ];
     }
 }

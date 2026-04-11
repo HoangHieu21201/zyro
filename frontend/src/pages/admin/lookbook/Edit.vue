@@ -36,7 +36,6 @@
         <div class="card border-0 shadow-sm rounded-4 dark:bg-[#1a2533] p-4 mb-4 animation-fade-in">
           <h6 class="fw-bold mb-3 text-urban text-uppercase"><i class="bi bi-info-circle me-2"></i>THÔNG TIN CHUNG</h6>
           
-          <!-- HÀNG 1: THÔNG TIN CƠ BẢN -->
           <div class="row g-3 mb-4">
             <div class="col-xl-4 col-lg-6">
               <label class="form-label fw-bold text-dark dark:text-gray-200 small text-uppercase">Tên BST <span class="text-danger">*</span></label>
@@ -61,7 +60,6 @@
 
             <div class="col-xl-3 col-lg-6">
               <label class="form-label fw-bold text-dark dark:text-gray-200 small text-uppercase mb-2 d-block">Trạng thái xuất bản</label>
-              <!-- ĐÃ FIX CSS: Switch thu gọn, không còn bị xô lệch và chìm chữ -->
               <div class="d-flex align-items-center px-3 py-1 bg-light dark:bg-[#212529] border border-light-subtle dark:border-gray-700 rounded-3 shadow-sm h-100" style="min-height: 40px;">
                 <div class="form-check form-switch mb-0 d-flex align-items-center gap-2 w-100 ps-0">
                   <input class="form-check-input fs-4 m-0 ms-1 cursor-pointer float-none" type="checkbox" role="switch" id="publishSwitch" v-model="form.isPublished">
@@ -71,14 +69,13 @@
             </div>
           </div>
           
-          <!-- HÀNG 2: TÍNH GIÁ TỰ ĐỘNG (ĐÃ GỠ BACKGROUND LỖI VÀ GIỮ NGUYÊN CẤU TRÚC ĐẸP) -->
           <div class="p-3 bg-light dark:bg-[#212529] border dark:border-gray-700 rounded-3 mb-4">
             <h6 class="fw-bold text-urban mb-3"><i class="bi bi-calculator-fill me-2"></i>Tính giá Set đồ tự động (Up-sale)</h6>
             
             <div class="row g-3 align-items-start">
               
               <div class="col-xl-3 col-md-6">
-                <label class="form-label small text-muted dark:text-gray-400 fw-bold text-uppercase">Tổng giá SP đã ghim</label>
+                <label class="form-label small text-muted dark:text-gray-400 fw-bold text-uppercase">Tổng giá SP đã thêm</label>
                 <div class="form-control bg-white dark:bg-[#1a2533] border-0 text-secondary fw-bold d-flex align-items-center shadow-sm" style="cursor: not-allowed; height: 39px;">
                   {{ formatCurrency(totalPinnedPrice) }}
                 </div>
@@ -110,7 +107,6 @@
             </div>
           </div>
 
-          <!-- HÀNG 3: MÔ TẢ -->
           <div>
              <label class="form-label fw-bold text-dark dark:text-gray-200 small text-uppercase">Mô tả ngắn (Tùy chọn)</label>
              <input type="text" class="form-control bg-light dark:bg-[#212529] dark:text-white border-0 shadow-sm-hover" v-model="form.description">
@@ -122,7 +118,6 @@
         <!-- ========================================== -->
         <div class="row g-4">
           
-          <!-- CỘT TRÁI: CHỈ ĐỂ TẢI ẢNH NỀN -->
           <div class="col-xl-3 col-lg-4">
             <div class="card border-0 shadow-sm rounded-4 dark:bg-[#1a2533] h-100">
               <div class="card-body p-4 text-center d-flex flex-column">
@@ -141,40 +136,43 @@
                 <div class="text-danger small fw-bold mb-2" v-if="errors.main_image">{{ errors.main_image[0] }}</div>
                 
                 <div class="alert alert-warning small border-0 p-2 text-start mt-auto" v-if="hasNewImage">
-                  <i class="bi bi-exclamation-triangle fw-bold me-1"></i> Các ghim tọa độ cũ đã bị xóa do đổi ảnh (Tỷ lệ khác). Vui lòng tạo ghim lại!
+                  <i class="bi bi-exclamation-triangle fw-bold me-1"></i> Ảnh mẫu đã thay đổi. Vui lòng kiểm tra lại vị trí các ghim cho chính xác với ảnh mới!
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- CỘT PHẢI: KHÔNG GIAN GHIM (WORKSPACE) -->
           <div class="col-xl-9 col-lg-8">
             <div class="card border-0 shadow-sm rounded-4 dark:bg-[#1a2533] h-100 overflow-hidden d-flex flex-column">
               <div class="card-header bg-white dark:bg-[#1a2533] border-bottom dark:border-gray-700 py-3 px-4 d-flex justify-content-between align-items-center">
                  <div>
                    <h5 class="fw-bold text-dark dark:text-white mb-1"><i class="bi bi-pin-map-fill text-urban me-2"></i>Không gian Ghim (Workspace)</h5>
-                   <p class="text-muted small mb-0">Click trực tiếp vào vị trí trên ảnh mẫu bên dưới để thả ghim và gắn sản phẩm.</p>
+                   <p class="text-muted small mb-0">Có thể Click trực tiếp lên ảnh để đính ghim, kéo thả ghim, hoặc ấn "Thêm SP" bên phải.</p>
                  </div>
               </div>
               
               <div class="card-body p-0 d-flex flex-column flex-xxl-row bg-c-effect dark:bg-[#121416]">
                 
-                <!-- CANVAS ẢNH (Khu vực thao tác chính) -->
+                <!-- CANVAS ẢNH -->
                 <div class="flex-grow-1 p-4 d-flex align-items-center justify-content-center" style="min-height: 500px;">
                    <div v-if="!mainImagePreview" class="text-center text-muted opacity-50">
                      <i class="bi bi-ban fs-1 d-block mb-2"></i>
-                     Vui lòng tải ảnh mẫu ở cột bên trái để bắt đầu.
+                     Vui lòng tải ảnh mẫu ở cột bên trái để bắt đầu ghim tọa độ.
                    </div>
 
-                   <div v-else class="position-relative shadow-sm border border-2 border-white dark:border-gray-700 bg-white rounded-3 overflow-hidden" style="display: inline-block;">
-                     <img :src="mainImagePreview" class="img-fluid cursor-crosshair" @click="handleImageClick" ref="imageCanvas" style="max-height: 75vh; object-fit: contain;" @error="handleImageError">
+                   <div v-else class="position-relative shadow-sm border border-2 border-white dark:border-gray-700 bg-white rounded-3 overflow-hidden" style="display: inline-block;" ref="imageCanvas">
+                     <img :src="mainImagePreview" class="img-fluid cursor-crosshair pe-none" style="max-height: 75vh; object-fit: contain;" @error="handleImageError">
+                     <!-- Lớp layer vô hình để hứng sự kiện Click add Pin (để không bị đụng với Drag) -->
+                     <div class="position-absolute top-0 start-0 w-100 h-100 cursor-crosshair z-0" @click="handleImageClick"></div>
                      
-                     <!-- Render các ghim (Pins) -->
+                     <!-- ĐÃ NÂNG CẤP: KÉO THẢ GHIM MƯỢT MÀ -->
                      <div v-for="(pin, index) in pins" :key="index"
-                          class="position-absolute translate-middle pin-marker"
+                          class="position-absolute translate-middle pin-marker z-1"
+                          :class="{ 'dragging': draggingPinIndex === index }"
                           :style="{ top: pin.y + '%', left: pin.x + '%' }"
-                          @click.stop="editPin(index)"
-                          title="Click để sửa sản phẩm">
+                          @mousedown.stop.prevent="startDragPin(index, $event)"
+                          @touchstart.stop="startDragPin(index, $event)"
+                          title="Kéo thả để di chuyển, Click để sửa SP">
                         <div class="pin-pulse"></div>
                         <span class="badge bg-urban rounded-circle shadow border border-2 border-white position-relative d-flex align-items-center justify-content-center" style="width: 28px; height: 28px; font-size: 0.85rem;">
                           {{ index + 1 }}
@@ -183,34 +181,41 @@
                    </div>
                 </div>
 
-                <!-- DANH SÁCH SẢN PHẨM ĐÃ GHIM (Cột nhỏ bên phải Workspace) -->
-                <div class="bg-white dark:bg-[#1a2533] p-3 border-start dark:border-gray-700 custom-scrollbar-y" style="width: 100%; max-width: 350px; overflow-y: auto; max-height: 80vh;">
-                   <h6 class="fw-bold text-dark dark:text-white mb-3 border-bottom dark:border-gray-700 pb-2">Danh sách Đã Ghim ({{ pins.length }})</h6>
-                   <div class="text-danger small fw-bold mb-3" v-if="errors.items_data">{{ errors.items_data[0] }}</div>
-                   
-                   <div v-if="pins.length === 0" class="text-muted small fst-italic text-center py-5 bg-light dark:bg-[#212529] rounded-3 border border-dashed dark:border-gray-700">
-                     Chưa có ghim nào được tạo.
+                <!-- DANH SÁCH SẢN PHẨM ĐÃ THÊM -->
+                <div class="bg-white dark:bg-[#1a2533] p-3 border-start dark:border-gray-700 d-flex flex-column" style="width: 100%; max-width: 360px;">
+                   <div class="d-flex justify-content-between align-items-center border-bottom dark:border-gray-700 pb-2 mb-3">
+                     <h6 class="fw-bold text-dark dark:text-white mb-0">Danh sách SP ({{ pins.length }})</h6>
+                     <button type="button" class="btn btn-sm btn-outline-urban rounded-pill fw-bold shadow-sm" @click="openDirectAddModal">
+                       <i class="bi bi-plus-lg"></i> Thêm Tự Do
+                     </button>
                    </div>
                    
-                   <div v-else class="d-flex flex-column gap-3">
-                     <div v-for="(pin, index) in pins" :key="index" class="p-2 border dark:border-gray-600 rounded-3 bg-light dark:bg-[#212529] position-relative transition-all hover-border-urban shadow-sm">
-                       <div class="d-flex justify-content-between align-items-center mb-2">
-                          <span class="badge bg-urban rounded-pill px-2 shadow-sm">Ghim #{{ index + 1 }}</span>
-                          <button type="button" class="btn-close btn-close-sm dark:filter-invert" @click.stop="removePin(index)"></button>
-                       </div>
-                       
-                       <!-- Nút chọn / Hiển thị sản phẩm -->
-                       <div v-if="pin.product_id" class="d-flex align-items-center bg-white dark:bg-[#1a2533] p-2 border dark:border-gray-700 rounded shadow-sm cursor-pointer" @click="editPin(index)">
-                          <img :src="pin.product_image" class="rounded object-fit-cover me-2 border dark:border-gray-600" style="width: 45px; height: 45px;" @error="handleImageError">
-                          <div class="overflow-hidden">
-                            <div class="fw-bold text-dark dark:text-gray-200 small text-truncate" :title="pin.product_name">{{ pin.product_name }}</div>
-                            <div class="text-urban fw-bold mt-1" style="font-size: 0.75rem;">{{ formatCurrency(pin.product_price) }}</div>
-                          </div>
-                       </div>
-
-                       <div v-else class="bg-white dark:bg-[#1a2533] border border-danger border-dashed p-3 rounded text-center cursor-pointer hover-bg-effect" @click="editPin(index)">
-                          <i class="bi bi-search text-danger fs-4 mb-1 d-block"></i>
-                          <span class="small text-danger fw-semibold">Click để chọn Sản phẩm</span>
+                   <div class="text-danger small fw-bold mb-3" v-if="errors.items_data">{{ errors.items_data[0] }}</div>
+                   
+                   <div class="custom-scrollbar-y flex-grow-1" style="overflow-y: auto; max-height: 70vh; padding-right: 4px;">
+                     <div v-if="pins.length === 0" class="text-muted small fst-italic text-center py-5 bg-light dark:bg-[#212529] rounded-3 border border-dashed dark:border-gray-700 mt-2">
+                       Chưa có sản phẩm nào.
+                     </div>
+                     
+                     <div v-else class="d-flex flex-column gap-3 pb-2">
+                       <div v-for="(pin, index) in pins" :key="index" class="p-2 border dark:border-gray-600 rounded-3 bg-light dark:bg-[#212529] position-relative transition-all hover-border-urban shadow-sm">
+                         <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-urban rounded-pill px-2 shadow-sm">#{{ index + 1 }}</span>
+                            <button type="button" class="btn-close btn-close-sm dark:filter-invert" @click.stop="removePin(index)"></button>
+                         </div>
+                         
+                         <!-- Card Hiển thị SP -->
+                         <div v-if="pin.product_id" class="d-flex align-items-center bg-white dark:bg-[#1a2533] p-2 border dark:border-gray-700 rounded shadow-sm cursor-pointer" @click="editPin(index)">
+                            <img :src="pin.product_image" class="rounded object-fit-cover me-2 border dark:border-gray-600" style="width: 45px; height: 45px;" @error="handleImageError">
+                            <div class="overflow-hidden">
+                              <div class="fw-bold text-dark dark:text-gray-200 small text-truncate" :title="pin.product_name">{{ pin.product_name }}</div>
+                              <div class="text-urban fw-bold mt-1" style="font-size: 0.75rem;">{{ formatCurrency(pin.product_price) }}</div>
+                            </div>
+                         </div>
+                         <div v-else class="bg-white dark:bg-[#1a2533] border border-danger border-dashed p-3 rounded text-center cursor-pointer hover-bg-effect" @click="editPin(index)">
+                            <i class="bi bi-search text-danger fs-4 mb-1 d-block"></i>
+                            <span class="small text-danger fw-semibold">Click để chọn Sản phẩm</span>
+                         </div>
                        </div>
                      </div>
                    </div>
@@ -224,38 +229,68 @@
       </form>
     </div>
 
-    <!-- MODAL TÌM KIẾM & GẮN SẢN PHẨM CHO GHIM -->
+    <!-- ======================================================== -->
+    <!-- MODAL CHỌN SẢN PHẨM KHỔNG LỒ (FULL CỘT + LỌC)-->
+    <!-- ======================================================== -->
     <div class="modal fade" id="productSearchModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
-      <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content rounded-4 border-0 shadow dark:bg-[#1a2533]">
           <div class="modal-header border-bottom-0 pb-0">
-            <h5 class="fw-bold text-dark dark:text-white"><i class="bi bi-box-seam text-urban me-2"></i>Chọn sản phẩm cho Ghim #{{ activePinIndex !== null ? activePinIndex + 1 : '' }}</h5>
+            <h5 class="fw-bold text-dark dark:text-white">
+              <i class="bi bi-box-seam text-urban me-2"></i>
+              Chọn sản phẩm cho {{ activePinIndex !== null ? 'Ghim #' + (activePinIndex + 1) : 'Bộ Sưu Tập' }}
+            </h5>
             <button type="button" class="btn-close dark:filter-invert" data-bs-dismiss="modal"></button>
           </div>
+          
           <div class="modal-body p-4">
-            <div class="input-group input-group-lg shadow-sm mb-4">
-               <span class="input-group-text bg-white dark:bg-[#212529] border-end-0 text-muted"><i class="bi bi-search"></i></span>
-               <input type="text" class="form-control border-start-0 bg-white dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" v-model="modalSearchQuery" placeholder="Nhập mã SKU hoặc Tên sản phẩm để tìm...">
+            <!-- BỘ LỌC ĐA CHIỀU TRONG MODAL -->
+            <div class="row g-3 mb-4">
+               <div class="col-lg-4">
+                 <div class="input-group shadow-sm-hover">
+                   <span class="input-group-text bg-white dark:bg-[#212529] border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                   <input type="text" class="form-control border-start-0 bg-white dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-none" v-model="modalSearchQuery" placeholder="Tên SP, mã SKU...">
+                 </div>
+               </div>
+               
+               <div class="col-lg-4">
+                 <select class="form-select bg-white dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover fw-medium" v-model="modalFilterCategory">
+                   <option value="">-- Tất cả Danh mục --</option>
+                   <option v-for="cat in hierarchicalCategories" :key="cat.id" :value="cat.id" :class="{'fw-bold text-dark dark:text-white': cat.level === 0}">
+                     {{ cat.displayName }}
+                   </option>
+                 </select>
+               </div>
+               
+               <div class="col-lg-4">
+                 <select class="form-select bg-white dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover fw-medium" v-model="modalFilterBrand">
+                   <option value="">-- Tất cả Thương hiệu --</option>
+                   <option v-for="brand in brands" :key="brand.id" :value="brand.id">{{ brand.name }}</option>
+                 </select>
+               </div>
             </div>
 
-            <div class="text-center py-4" v-if="isSearchingProducts">
+            <div class="text-center py-4" v-if="isPageLoading">
                <span class="spinner-border text-urban mb-2"></span><br>
-               <span class="text-muted small">Đang tìm kiếm...</span>
+               <span class="text-muted small">Đang tải dữ liệu...</span>
             </div>
 
-            <div v-else class="custom-scrollbar-y pe-2" style="max-height: 40vh; overflow-y: auto;">
-               <div v-if="filteredProducts.length === 0" class="text-center text-muted fst-italic py-3">Không tìm thấy sản phẩm nào (Chỉ hiển thị SP đang Xuất bản).</div>
+            <div v-else class="custom-scrollbar-y pe-2 pb-2" style="height: 55vh; overflow-y: auto;">
+               <div v-if="filteredProducts.length === 0" class="text-center text-muted fst-italic py-5">
+                  <i class="bi bi-inbox fs-1 d-block mb-2 opacity-25"></i>
+                  Không tìm thấy sản phẩm nào phù hợp (Chỉ hiển thị SP đang Xuất bản).
+               </div>
                <div class="row g-3">
-                 <div class="col-md-6" v-for="prod in filteredProducts" :key="prod.id">
-                   <div class="card border border-secondary-subtle dark:border-gray-700 rounded-3 h-100 cursor-pointer shadow-sm-hover product-select-card" 
+                 <div class="col-lg-3 col-md-4 col-sm-6" v-for="prod in filteredProducts" :key="prod.id">
+                   <div class="card border border-secondary-subtle dark:border-gray-700 rounded-4 h-100 cursor-pointer shadow-sm-hover product-select-card" 
                         :class="{'border-urban bg-urban bg-opacity-10': activePinData?.product_id === prod.id}"
                         @click="selectProductForPin(prod)">
-                     <div class="card-body p-2 d-flex align-items-center">
-                        <img :src="getImageUrl(prod.thumbnail_image)" class="rounded border object-fit-cover me-3 dark:border-gray-600 bg-white" style="width: 55px; height: 55px;" @error="handleImageError">
-                        <div class="overflow-hidden">
-                           <div class="fw-bold text-dark dark:text-white small text-truncate" :title="prod.name">{{ prod.name }}</div>
-                           <div class="text-muted font-monospace mt-1 mb-1" style="font-size: 0.7rem;">{{ prod.slug }}</div>
-                           <div class="text-urban fw-bold" style="font-size: 0.8rem;">{{ formatCurrency(prod.base_price) }}</div>
+                     <div class="card-body p-3 d-flex flex-column align-items-center text-center">
+                        <img :src="getImageUrl(prod.thumbnail_image)" class="rounded-3 border object-fit-cover mb-3 dark:border-gray-600 bg-white" style="width: 80px; height: 80px;" @error="handleImageError">
+                        <div class="w-100">
+                           <div class="fw-bold text-dark dark:text-white small text-truncate mb-1" :title="prod.name">{{ prod.name }}</div>
+                           <div class="text-muted font-monospace mb-2" style="font-size: 0.7rem;">{{ prod.slug }}</div>
+                           <div class="text-danger fw-bold fs-6">{{ formatCurrency(prod.base_price) }}</div>
                         </div>
                      </div>
                    </div>
@@ -271,13 +306,13 @@
 
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
 import axios from 'axios';
 import defaultImage from '@/assets/images/defaults/placeholder.png';
 
-const router = useRouter();
 const route = useRoute();
+const router = useRouter();
 const lookbookId = route.params.id;
 
 const isPageLoading = ref(true);
@@ -293,14 +328,18 @@ const imageCanvas = ref(null);
 
 const pins = ref([]);
 
+const categories = ref([]);
+const brands = ref([]);
+
 const activePinIndex = ref(null);
 const activePinData = computed(() => activePinIndex.value !== null ? pins.value[activePinIndex.value] : null);
 let productModalInstance = null;
-const allPublishedProducts = ref([]);
-const isSearchingProducts = ref(false);
-const modalSearchQuery = ref('');
 
-// LOGIC TÍNH GIÁ TỰ ĐỘNG
+const allPublishedProducts = ref([]);
+const modalSearchQuery = ref('');
+const modalFilterCategory = ref('');
+const modalFilterBrand = ref('');
+
 const discountType = ref('amount'); 
 const discountValue = ref(0);
 
@@ -346,10 +385,73 @@ const handleMainImageUpload = (e) => {
     mainImageFile.value = f;
     mainImagePreview.value = URL.createObjectURL(f);
     hasNewImage.value = true;
-    pins.value = []; // Reset pins khi đổi ảnh vì sai tọa độ
   }
 };
 
+// ========================================================
+// LOGIC KÉO THẢ GHIM (DRAG & DROP PINS)
+// ========================================================
+const draggingPinIndex = ref(null);
+let startDragX = 0;
+let startDragY = 0;
+let hasMoved = false;
+
+const startDragPin = (index, event) => {
+  draggingPinIndex.value = index;
+  hasMoved = false;
+
+  const clientX = event.clientX || (event.touches && event.touches[0].clientX);
+  const clientY = event.clientY || (event.touches && event.touches[0].clientY);
+  
+  startDragX = clientX;
+  startDragY = clientY;
+
+  document.addEventListener('mousemove', onDragPin);
+  document.addEventListener('mouseup', endDragPin);
+  document.addEventListener('touchmove', onDragPin, { passive: false });
+  document.addEventListener('touchend', endDragPin);
+};
+
+const onDragPin = (event) => {
+  if (draggingPinIndex.value === null || !imageCanvas.value) return;
+
+  const clientX = event.clientX || (event.touches && event.touches[0].clientX);
+  const clientY = event.clientY || (event.touches && event.touches[0].clientY);
+
+  // Nhích chuột lớn hơn 3px thì mới được tính là đang drag
+  if (Math.abs(clientX - startDragX) > 3 || Math.abs(clientY - startDragY) > 3) {
+    hasMoved = true;
+  }
+
+  if (hasMoved) {
+    if (event.type === 'touchmove') event.preventDefault(); // Tránh cuộn trang khi đang kéo trên điện thoại
+    
+    const rect = imageCanvas.value.getBoundingClientRect();
+    let x = ((clientX - rect.left) / rect.width) * 100;
+    let y = ((clientY - rect.top) / rect.height) * 100;
+
+    x = Math.max(0, Math.min(100, x));
+    y = Math.max(0, Math.min(100, y));
+
+    pins.value[draggingPinIndex.value].x = x.toFixed(2);
+    pins.value[draggingPinIndex.value].y = y.toFixed(2);
+  }
+};
+
+const endDragPin = (event) => {
+  if (draggingPinIndex.value !== null && !hasMoved) {
+    // Nếu chỉ nhấp chuột (click) mà không kéo đi, mở modal sửa
+    editPin(draggingPinIndex.value);
+  }
+
+  draggingPinIndex.value = null;
+  document.removeEventListener('mousemove', onDragPin);
+  document.removeEventListener('mouseup', endDragPin);
+  document.removeEventListener('touchmove', onDragPin);
+  document.removeEventListener('touchend', endDragPin);
+};
+
+// Vẫn giữ lại tính năng click lên Ảnh để đẻ ra 1 điểm mới
 const handleImageClick = (e) => {
   if (!imageCanvas.value) return;
   const rect = imageCanvas.value.getBoundingClientRect();
@@ -365,39 +467,101 @@ const removePin = (index) => { pins.value.splice(index, 1); };
 const editPin = (index) => {
   activePinIndex.value = index;
   modalSearchQuery.value = ''; 
+  modalFilterCategory.value = '';
+  modalFilterBrand.value = '';
+  if (!productModalInstance) productModalInstance = new window.bootstrap.Modal(document.getElementById('productSearchModal'));
+  productModalInstance.show();
+};
+
+const openDirectAddModal = () => {
+  activePinIndex.value = null; 
+  modalSearchQuery.value = '';
+  modalFilterCategory.value = '';
+  modalFilterBrand.value = '';
   if (!productModalInstance) productModalInstance = new window.bootstrap.Modal(document.getElementById('productSearchModal'));
   productModalInstance.show();
 };
 
 const selectProductForPin = (prod) => {
-  if (activePinIndex.value !== null && pins.value[activePinIndex.value]) {
-     const isExist = pins.value.some((p, idx) => p.product_id === prod.id && idx !== activePinIndex.value);
-     if (isExist) {
-        Swal.fire({ toast:true, position: 'top-end', icon: 'warning', title: 'Sản phẩm này đã được ghim trong ảnh!', showConfirmButton: false, timer: 2000 });
-        return;
-     }
-
-     pins.value[activePinIndex.value].product_id = prod.id;
-     pins.value[activePinIndex.value].product_name = prod.name;
-     pins.value[activePinIndex.value].product_price = prod.base_price;
-     pins.value[activePinIndex.value].product_image = getImageUrl(prod.thumbnail_image);
-     
-     productModalInstance.hide();
+  const isExist = pins.value.some((p, idx) => p.product_id === prod.id && idx !== activePinIndex.value);
+  if (isExist) {
+     Swal.fire({ toast:true, position: 'top-end', icon: 'warning', title: 'Sản phẩm này đã có trong set!', showConfirmButton: false, timer: 2000 });
+     return;
   }
+
+  if (activePinIndex.value !== null && pins.value[activePinIndex.value]) {
+      pins.value[activePinIndex.value].product_id = prod.id;
+      pins.value[activePinIndex.value].product_name = prod.name;
+      pins.value[activePinIndex.value].product_price = prod.base_price;
+      pins.value[activePinIndex.value].product_image = getImageUrl(prod.thumbnail_image);
+  } else {
+      pins.value.push({
+          x: 50, y: 50,
+          product_id: prod.id,
+          product_name: prod.name,
+          product_price: prod.base_price,
+          product_image: getImageUrl(prod.thumbnail_image),
+          sort_order: pins.value.length
+      });
+  }
+  
+  productModalInstance.hide();
 };
 
+// LOGIC CÂY DANH MỤC TRỰC QUAN CHO SELECT MODAL
+const hierarchicalCategories = computed(() => {
+  const buildTree = (parentId = null, level = 0) => {
+    let res = [];
+    const children = categories.value.filter(c => (c.parent_id || null) === (parentId || null));
+    children.forEach(child => {
+      res.push({
+        ...child,
+        displayName: (level > 0 ? '\u00A0\u00A0\u00A0\u00A0'.repeat(level) + '↳ ' : '') + child.name,
+        level: level
+      });
+      res = res.concat(buildTree(child.id, level + 1));
+    });
+    return res;
+  };
+  return buildTree(null);
+});
+
+const getAllCategoryIds = (id) => {
+  let ids = [id];
+  const children = categories.value.filter(c => c.parent_id === id);
+  children.forEach(child => {
+    ids = ids.concat(getAllCategoryIds(child.id));
+  });
+  return ids;
+};
+
+// BỘ LỌC ĐA CẤP
 const filteredProducts = computed(() => {
-  if (!modalSearchQuery.value) return allPublishedProducts.value.slice(0, 20); 
-  const q = modalSearchQuery.value.toLowerCase();
-  return allPublishedProducts.value.filter(p => p.name.toLowerCase().includes(q) || p.slug.toLowerCase().includes(q));
+  let res = allPublishedProducts.value;
+
+  if (modalSearchQuery.value) {
+    const q = modalSearchQuery.value.toLowerCase();
+    res = res.filter(p => p.name.toLowerCase().includes(q) || p.slug.toLowerCase().includes(q));
+  }
+  if (modalFilterCategory.value) {
+    const targetCategoryIds = getAllCategoryIds(modalFilterCategory.value);
+    res = res.filter(p => targetCategoryIds.includes(p.category_id));
+  }
+  if (modalFilterBrand.value) {
+    res = res.filter(p => p.brand_id === modalFilterBrand.value);
+  }
+  
+  return res.slice(0, 30); 
 });
 
 const fetchData = async () => {
   isPageLoading.value = true;
   try {
-    const [resLB, resProd] = await Promise.all([
+    const [resLB, resProd, resCats, resBrands] = await Promise.all([
       axios.get(`http://127.0.0.1:8000/api/v1/admin/lookbooks/${lookbookId}`, { headers: getHeaders() }),
-      axios.get('http://127.0.0.1:8000/api/v1/admin/products?status=published', { headers: getHeaders() })
+      axios.get('http://127.0.0.1:8000/api/v1/admin/products?status=published', { headers: getHeaders() }),
+      axios.get('http://127.0.0.1:8000/api/v1/admin/categories', { headers: getHeaders() }),
+      axios.get('http://127.0.0.1:8000/api/v1/admin/brands', { headers: getHeaders() })
     ]);
     
     const lb = resLB.data?.data;
@@ -414,10 +578,14 @@ const fetchData = async () => {
 
     if (lb.items && lb.items.length > 0) {
        pins.value = lb.items.map(item => {
-           const coords = typeof item.pin_coordinates === 'string' ? JSON.parse(item.pin_coordinates) : item.pin_coordinates;
+           let coords = { x: 50, y: 50 };
+           try {
+              coords = typeof item.pin_coordinates === 'string' ? JSON.parse(item.pin_coordinates) : item.pin_coordinates;
+           } catch(e) {}
+
            return {
-               x: coords?.x || 0,
-               y: coords?.y || 0,
+               x: coords?.x || 50,
+               y: coords?.y || 50,
                product_id: item.product_id,
                product_name: item.product ? item.product.name : 'SP Không tồn tại',
                product_price: item.product ? item.product.base_price : 0,
@@ -434,8 +602,12 @@ const fetchData = async () => {
     }
 
     const payload = resProd.data?.data;
-    allPublishedProducts.value = Array.isArray(payload?.data) ? payload.data : (Array.isArray(payload) ? payload : []);
-    
+    const rawProds = Array.isArray(payload?.data) ? payload.data : (Array.isArray(payload) ? payload : []);
+    allPublishedProducts.value = rawProds.filter(p => p.status === 'published' && !p.deleted_at);
+
+    categories.value = Array.isArray(resCats.data?.data) ? resCats.data.data.filter(c => !c.deleted_at && c.status === 'active') : [];
+    brands.value = Array.isArray(resBrands.data?.data) ? resBrands.data.data.filter(b => !b.deleted_at && b.status === 'active') : [];
+
     isDataLoaded.value = true;
   } catch (err) {
     console.error("Lỗi tải data Edit", err);
@@ -500,7 +672,7 @@ onMounted(() => fetchData());
 .hover-bg-effect:hover { background-color: var(--color-c-effect, #EBF1F5) !important; }
 .hover-border-urban:hover { border-color: var(--color-c-hover, #547792) !important; }
 
-/* Cấm bôi đen chữ */
+/* FIX CẤM BÔI ĐEN CHỮ */
 .no-select { user-select: none !important; -webkit-user-select: none !important; -moz-user-select: none !important; }
 .cursor-pointer { cursor: pointer; }
 .cursor-crosshair { cursor: crosshair; }
@@ -510,8 +682,9 @@ onMounted(() => fetchData());
 .form-control:focus, .form-select:focus { border-color: var(--color-c-hover, #547792); box-shadow: none !important; }
 .border-dashed { border-style: dashed !important; border-width: 2px !important; }
 
-/* HIỆU ỨNG GHIM (PIN) CHUẨN MỰC MUA SẮM */
-.pin-marker { z-index: 10; cursor: pointer; transition: transform 0.2s; }
+/* HIỆU ỨNG GHIM (PIN) CHUẨN MỰC MUA SẮM VÀ KÉO THẢ */
+.pin-marker { z-index: 10; cursor: grab; transition: transform 0.2s; }
+.pin-marker:active, .pin-marker.dragging { cursor: grabbing; transition: none; transform: scale(1.15) translate(-50%, -50%); }
 .pin-marker:hover { transform: scale(1.15) translate(-50%, -50%); transform-origin: 0 0; }
 .pin-pulse { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; background-color: rgba(84, 119, 146, 0.4); border-radius: 50%; animation: ripple 1.5s infinite ease-in-out; z-index: -1; }
 @keyframes ripple { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; } }
@@ -524,4 +697,8 @@ onMounted(() => fetchData());
 .custom-scrollbar-y::-webkit-scrollbar-thumb { background: var(--color-c-light, #94B4C1); border-radius: 10px; }
 .animation-fade-in { animation: fadeIn 0.4s ease-in-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Logo Shimmer Loading */
+.logo-shimmer { font-size: 3.5rem; font-weight: 900; letter-spacing: -1.5px; background: linear-gradient(120deg, var(--color-c-dark) 30%, var(--color-c-light) 50%, var(--color-c-dark) 70%); background-size: 200% auto; color: transparent; -webkit-background-clip: text; background-clip: text; animation: shine 1.5s linear infinite; }
+@keyframes shine { to { background-position: 200% center; } }
 </style>

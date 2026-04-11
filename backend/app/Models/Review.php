@@ -1,5 +1,7 @@
 <?php
 
+// File: backend/app/Models/Review.php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -42,16 +44,19 @@ class Review extends Model
 
     public function product()
     {
-        return $this->belongsTo(Product::class);
+        // ĐÃ THÊM withTrashed(): Giữ review sống sót hiển thị được tên SP kể cả khi Admin đã xóa SP đó
+        return $this->belongsTo(Product::class)->withTrashed();
     }
     
     public function user()
     {
-        return $this->belongsTo(User::class);
+        // ĐÃ THÊM withTrashed()
+        return $this->belongsTo(User::class)->withTrashed();
     }
     
     public function order()
     {
-        return $this->belongsTo(Order::class);
+        // ĐÃ THÊM withTrashed()
+        return $this->belongsTo(Order::class)->withTrashed();
     }
 }

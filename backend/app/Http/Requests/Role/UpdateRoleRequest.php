@@ -22,11 +22,12 @@ class UpdateRoleRequest extends FormRequest
             'value' => [
                 'required',
                 'string',
+                'min:3',
                 'max:50',
                 'regex:/^[a-z0-9\-\_]+$/',
                 Rule::unique('roles', 'value')->ignore($roleId)->whereNull('deleted_at'),
             ],
-            'label'       => ['required', 'string', 'max:70'],
+            'label'       => ['required', 'string', 'min:3', 'max:70'],
             'badge_class' => ['nullable', 'string', 'max:50'],
             'level'       => ['required', 'integer', 'min:1', 'max:10'],
         ];
@@ -36,12 +37,14 @@ class UpdateRoleRequest extends FormRequest
     {
         return [
             'value.required' => 'Mã vai trò không được để trống.',
+            'value.min'      => 'Mã vai trò tối thiểu phải có 3 ký tự.',
             'value.string'   => 'Mã vai trò phải là chuỗi ký tự.',
             'value.max'      => 'Mã vai trò không được vượt quá 50 ký tự.',
             'value.regex'    => 'Mã vai trò không hợp lệ (chỉ dùng chữ thường, số, dấu - hoặc _).',
             'value.unique'   => 'Mã vai trò này đã bị trùng lặp với một vai trò khác.',
             
             'label.required' => 'Tên hiển thị không được để trống.',
+            'label.min'      => 'Tên hiển thị quá ngắn (Tối thiểu 3 ký tự).',
             'label.string'   => 'Tên hiển thị phải là chuỗi ký tự.',
             'label.max'      => 'Tên hiển thị không được vượt quá 70 ký tự.',
             
