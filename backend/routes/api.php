@@ -89,13 +89,14 @@ Route::prefix('v1/admin')->group(function () {
         });
 
         // 1.8 Sản phẩm (Products)
-        Route::middleware(['check.module:admin_products'])->group(function () {
+         Route::middleware(['check.module:admin_products'])->group(function () {
             Route::post('products/{id}/restore', [\App\Http\Controllers\Api\Admin\ProductController::class, 'restore']);
             Route::patch('products/{id}/status', [\App\Http\Controllers\Api\Admin\ProductController::class, 'updateStatus']); // ĐÃ THÊM API NÀY
             Route::apiResource('products', \App\Http\Controllers\Api\Admin\ProductController::class);
 
             Route::apiResource('attributes', \App\Http\Controllers\Api\Admin\AttributeController::class)->except(['show']);
             Route::post('attribute-values', [\App\Http\Controllers\Api\Admin\AttributeValueController::class, 'store']);
+            Route::delete('attribute-values/{id}', [\App\Http\Controllers\Api\Admin\AttributeValueController::class, 'destroy']);
         });
 
         // Quản lý Lookbooks

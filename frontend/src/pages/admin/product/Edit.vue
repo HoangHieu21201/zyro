@@ -2,7 +2,6 @@
 <template>
   <div class="product-edit-wrapper pb-5 mb-5">
     
-    <!-- ĐÃ FIX: TRẢ LẠI GIAO DIỆN LOADING SHIMMER CHUẨN ZYRO -->
     <div v-if="isPageLoading" class="d-flex flex-column justify-content-center align-items-center w-100" style="min-height: 70vh;">
       <h1 class="logo-shimmer mb-3">ZYRO</h1>
       <p class="text-muted dark:text-gray-400 fw-semibold small text-uppercase tracking-widest" style="letter-spacing: 2px;">Đang tải hồ sơ sản phẩm...</p>
@@ -18,7 +17,7 @@
           </router-link>
           <div class="d-flex flex-column">
             <h3 class="fw-bold text-dark dark:text-white mb-0">Cập nhật Sản phẩm</h3>
-            <p class="text-muted dark:text-gray-400 small mb-0 mt-1">Chỉnh sửa thông tin gốc, lưới biến thể và thư viện ảnh</p>
+            <p class="text-muted dark:text-gray-400 small mb-0 mt-1">Chỉnh sửa thông hiện tại, dọn dẹp các thuộc tính rác</p>
           </div>
         </div>
       </div>
@@ -89,17 +88,29 @@
                         <option value="Kids">Trẻ em</option>
                       </select>
                     </div>
+                    
                     <div class="col-md-4">
                       <label class="form-label fw-bold text-dark dark:text-gray-200">Kiểu dáng (Fit Type)</label>
-                      <input type="text" class="form-control bg-white dark:bg-[#1a2533] dark:text-white border-secondary-subtle dark:border-gray-600" v-model="form.fit_type">
+                      <select class="form-select bg-white dark:bg-[#1a2533] dark:text-white border-secondary-subtle dark:border-gray-600" v-model="form.fit_type">
+                        <option value="">-- Không chọn --</option>
+                        <option value="Regular Fit">Regular Fit (Tiêu chuẩn)</option>
+                        <option value="Slim Fit">Slim Fit (Ôm dáng)</option>
+                        <option value="Loose Fit">Loose Fit (Rộng rãi)</option>
+                        <option value="Oversize">Oversize (Quá khổ)</option>
+                        <option value="Skinny">Skinny (Bó sát)</option>
+                        <option value="Straight">Straight (Ống đứng)</option>
+                      </select>
                     </div>
+                    
                     <div class="col-md-4">
                       <label class="form-label fw-bold text-dark dark:text-gray-200">Giá cơ sở hiển thị <span class="text-danger">*</span></label>
-                      <input type="number" class="form-control bg-white dark:bg-[#1a2533] dark:text-white fw-bold border-secondary-subtle dark:border-gray-600" v-model.number="form.base_price" required min="0">
-                      <small class="text-danger fw-bold mt-1 d-block">{{ formatCurrency(form.base_price) }}</small>
+                      <div class="input-group shadow-sm-hover">
+                        <input type="text" class="form-control bg-white dark:bg-[#1a2533] dark:text-white fw-bold border-secondary-subtle dark:border-gray-600 border-end-0" 
+                               :value="formatThousand(form.base_price)" @input="e => updateNumber(e, form, 'base_price')" required>
+                        <span class="input-group-text bg-white dark:bg-[#1a2533] text-muted border-secondary-subtle dark:border-gray-600 border-start-0 fw-bold">₫</span>
+                      </div>
                     </div>
 
-                    <!-- FIX: Chống bôi đen text (chìm chữ) -->
                     <div class="col-12 mt-3">
                       <div class="p-3 border border-secondary-subtle dark:border-gray-600 rounded-3 bg-white dark:bg-[#1a2533] d-flex align-items-center justify-content-between shadow-sm">
                         <div>
@@ -115,7 +126,6 @@
                 </div>
               </div>
 
-              <!-- Ảnh đại diện -->
               <div class="col-lg-4">
                 <div class="p-4 bg-light dark:bg-[#212529] rounded-4 border dark:border-gray-700 text-center h-100">
                   <h6 class="fw-bold mb-4 text-start text-urban text-uppercase"><i class="bi bi-image me-2"></i>Ảnh & Chi Tiết</h6>
@@ -148,37 +158,41 @@
                     <i class="bi bi-grid-3x3-gap-fill me-2"></i> LƯỚI QUẢN LÝ KHO & GIÁ
                   </h6>
                   <div class="d-flex align-items-center gap-2">
-                    <select class="form-select form-select-sm border-secondary-subtle dark:border-gray-600 dark:bg-[#1a2533] dark:text-white fw-bold text-secondary" v-model="selectedAttrToAdd" style="min-width: 150px;">
-                      <option value="">+ Chọn thuộc tính (Cột)</option>
-                      <option v-for="attr in systemAttributes" :key="attr.id" :value="attr.id" :disabled="activeAttributes.includes(attr.id.toString())">{{ attr.name }}</option>
-                    </select>
-                    <button type="button" class="btn btn-sm btn-success px-3 fw-bold shadow-sm" @click="addAttributeColumn"><i class="bi bi-plus-lg"></i></button>
+                    <div class="input-group input-group-sm shadow-sm">
+                      <select class="form-select border-secondary-subtle dark:border-gray-600 dark:bg-[#1a2533] dark:text-white fw-bold text-secondary" v-model="selectedAttrToAdd" style="min-width: 150px;">
+                        <option value="">+ Chọn thuộc tính</option>
+                        <template v-if="systemAttributes.length > 0">
+                          <option v-for="attr in systemAttributes" :key="attr.id" :value="attr.id" :disabled="activeAttributes.includes(attr.id.toString())">
+                            {{ attr.name }}
+                          </option>
+                        </template>
+                      </select>
+                      <button type="button" class="btn btn-success px-3 fw-bold" @click="addAttributeColumn"><i class="bi bi-plus-lg"></i></button>
+                    </div>
                     <div class="vr mx-1 text-secondary opacity-25"></div>
-                    <button type="button" class="btn btn-sm btn-outline-primary border-0 fw-bold" @click="openModal('createAttrModal')"><i class="bi bi-tag-fill me-1"></i> Tạo mới</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary border-0 fw-bold" @click="openModal('createAttrModal')"><i class="bi bi-tag-fill me-1"></i> Tạo Cột</button>
                     <button type="button" class="btn btn-sm btn-outline-secondary dark:text-gray-400 dark:border-gray-600 border-0 fw-bold" @click="openModal('manageAttrModal')"><i class="bi bi-gear-fill me-1"></i> Quản lý</button>
                   </div>
                 </div>
 
                 <div class="card-body p-0 bg-white dark:bg-[#1a2533]">
-                  <div class="table-responsive custom-scrollbar-x" style="min-height: 350px;">
+                  <div class="table-responsive custom-scrollbar-x" style="min-height: 450px; padding-bottom: 120px;">
                     <table class="table table-bordered mb-0 variant-table w-100 dark:border-gray-700">
                       <thead class="bg-light dark:bg-[#2b3035]">
                         <tr>
                           <th style="width: 60px;" class="dark:text-gray-300">Ảnh</th>
                           <th style="min-width: 130px;" class="dark:text-gray-300">Mã SKU</th>
                           
-                          <!-- CỘT THUỘC TÍNH (Background xanh rõ ràng) -->
-                          <th v-for="attrId in activeAttributes" :key="attrId" style="min-width: 140px; background-color: var(--color-c-hover) !important; color: white !important;" class="align-middle position-relative border-urban">
+                          <th v-for="attrId in activeAttributes" :key="attrId" style="min-width: 160px; background-color: var(--color-c-hover) !important; color: white !important;" class="align-middle position-relative border-urban">
                             {{ getAttributeName(attrId) }}
                             <button type="button" class="btn-close btn-close-white position-absolute top-50 end-0 translate-middle-y me-2" style="font-size: 0.6rem;" @click="removeAttributeColumn(attrId)"></button>
                           </th>
                           
-                          <!-- ĐÃ FIX THỨ TỰ: VỐN -> BÁN -> KHUYẾN MÃI -->
-                          <th style="width: 140px;" class="bg-secondary bg-opacity-10 text-dark dark:text-gray-300">Giá vốn (Nhập) <span class="text-danger">*</span></th>
+                          <th style="width: 140px;" class="bg-secondary bg-opacity-10 text-dark dark:text-gray-300">Giá vốn <span class="text-danger">*</span></th>
                           <th style="width: 140px;" class="bg-warning bg-opacity-10 text-dark dark:text-gray-300">Giá bán ra <span class="text-danger">*</span></th>
-                          <th style="width: 140px;" class="dark:text-gray-300">Giá Khuyến mãi</th>
+                          <th style="width: 140px;" class="dark:text-gray-300">Khuyến mãi</th>
                           <th style="width: 100px;" class="dark:text-gray-300">Tồn kho <span class="text-danger">*</span></th>
-                          <th style="width: 50px;"></th>
+                          <th style="width: 80px;">Thao tác</th>
                         </tr>
                       </thead>
                       <tbody class="dark:border-gray-700">
@@ -198,32 +212,84 @@
                             <input type="text" class="form-control form-control-sm font-monospace bg-light dark:bg-[#2b3035] dark:text-white dark:border-gray-600" v-model="v.sku" required>
                           </td>
 
-                          <td v-for="attrId in activeAttributes" :key="attrId" class="align-middle">
-                            <select class="form-select form-select-sm dark:bg-[#212529] dark:text-white dark:border-gray-600" v-model="v.attributes[attrId]" :class="{ 'is-invalid border-danger': v.attrError }" @change="handleAttributeChange($event, attrId, index)">
-                              <option value="">-- Chọn --</option>
-                              <option v-for="val in getAttributeValues(attrId)" :key="val.id" :value="val.id">{{ val.value }}</option>
-                              <option value="NEW" class="text-success fw-bold">+ Tạo giá trị mới...</option>
-                            </select>
+                          <!-- ======================================================== -->
+                          <!-- DROPDOWN CUSTOM VUE CHUẨN Z-INDEX 1000 -->
+                          <!-- ======================================================== -->
+                          <td v-for="attrId in activeAttributes" :key="attrId" class="align-middle" style="min-width: 160px;">
+                            <div class="position-relative custom-vue-dropdown" @click.stop>
+                              <button class="btn btn-sm w-100 text-start d-flex justify-content-between align-items-center bg-light dark:bg-[#2b3035] dark:text-white dark:border-gray-600 border"
+                                      :class="{ 'is-invalid border-danger': v.attrError }"
+                                      type="button" 
+                                      @click="toggleDropdown(index, attrId)">
+                                <span class="text-truncate pe-2">{{ getSelectedValueName(attrId, v.attributes[attrId]) }}</span>
+                                <i class="bi text-muted" style="font-size: 0.65rem;" :class="activeDropdown === `${index}-${attrId}` ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                              </button>
+                              
+                              <transition name="fade">
+                                <div v-show="activeDropdown === `${index}-${attrId}`" 
+                                     class="position-absolute shadow-lg border rounded-3 p-3 bg-white dark:bg-[#1a2533] dark:border-gray-600" 
+                                     style="width: 300px; z-index: 1000; top: 100%; left: 0; margin-top: 4px; cursor: default;">
+                                  <div class="row g-2">
+                                    <div class="col-6">
+                                      <h6 class="small text-muted fw-bold border-bottom dark:border-gray-700 pb-1 mb-2">Chữ/Ký tự</h6>
+                                      <div class="d-flex flex-wrap gap-1 custom-scrollbar-y" style="max-height: 150px; overflow-y: auto;">
+                                         <div v-for="val in getSortedValues(attrId).alpha" :key="val.id"
+                                              class="badge border d-flex align-items-center p-0 shadow-sm transition-all"
+                                              :class="v.attributes[attrId] == val.id ? 'bg-urban text-white border-urban' : 'bg-white text-dark dark:bg-[#212529] dark:text-gray-200 dark:border-gray-600 hover-border-urban'">
+                                            <span class="cursor-pointer px-2 py-1 flex-grow-1 text-center" @click="selectAttrValue(index, attrId, val.id)">{{ val.value }}</span>
+                                            <div class="border-start dark:border-gray-600 px-1 cursor-pointer text-danger hover-danger d-flex align-items-center justify-content-center" style="height: 100%;" @click.stop="deleteAttributeValueModal(val.id, attrId)" title="Xóa rác">
+                                              <i class="bi bi-x fs-6"></i>
+                                            </div>
+                                         </div>
+                                         <span v-if="getSortedValues(attrId).alpha.length === 0" class="text-muted small fst-italic">Trống</span>
+                                      </div>
+                                    </div>
+                                    <div class="col-6 border-start dark:border-gray-700">
+                                      <h6 class="small text-muted fw-bold border-bottom dark:border-gray-700 pb-1 mb-2">Chữ Số</h6>
+                                      <div class="d-flex flex-wrap gap-1 custom-scrollbar-y" style="max-height: 150px; overflow-y: auto;">
+                                         <div v-for="val in getSortedValues(attrId).numeric" :key="val.id"
+                                              class="badge border d-flex align-items-center p-0 shadow-sm transition-all"
+                                              :class="v.attributes[attrId] == val.id ? 'bg-urban text-white border-urban' : 'bg-white text-dark dark:bg-[#212529] dark:text-gray-200 dark:border-gray-600 hover-border-urban'">
+                                            <span class="cursor-pointer px-2 py-1 flex-grow-1 text-center" @click="selectAttrValue(index, attrId, val.id)">{{ val.value }}</span>
+                                            <div class="border-start dark:border-gray-600 px-1 cursor-pointer text-danger hover-danger d-flex align-items-center justify-content-center" style="height: 100%;" @click.stop="deleteAttributeValueModal(val.id, attrId)" title="Xóa rác">
+                                              <i class="bi bi-x fs-6"></i>
+                                            </div>
+                                         </div>
+                                         <span v-if="getSortedValues(attrId).numeric.length === 0" class="text-muted small fst-italic">Trống</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <hr class="dark:border-gray-700 my-2">
+                                  <button type="button" class="btn btn-sm btn-light dark:bg-[#2b3035] text-success w-100 fw-bold border-dashed dark:border-gray-600" @click.stop="openCreateValueModal(attrId, index); activeDropdown = null">
+                                    <i class="bi bi-plus-lg"></i> Thêm giá trị mới
+                                  </button>
+                                </div>
+                              </transition>
+                            </div>
                           </td>
 
-                          <!-- TEXT VNĐ ĐỎ BÊN DƯỚI TỪNG Ô GIÁ -->
                           <td class="align-middle">
-                            <input type="number" class="form-control form-control-sm text-end fw-bold dark:bg-[#212529] dark:border-gray-600 dark:text-white" v-model.number="v.cost_price" min="0" required>
-                            <small class="text-danger d-block mt-1 text-end" style="font-size: 0.65rem;">{{ formatCurrency(v.cost_price) }}</small>
+                            <input type="text" class="form-control form-control-sm text-end fw-bold dark:bg-[#212529] dark:border-gray-600 dark:text-white" 
+                                   :value="formatThousand(v.cost_price)" @input="e => updateNumber(e, v, 'cost_price')" required>
                           </td>
                           <td class="align-middle">
-                            <input type="number" class="form-control form-control-sm text-end fw-bold text-urban dark:bg-[#212529] dark:border-gray-600" :class="{ 'is-invalid': v.priceError }" v-model.number="v.price" min="0" required @input="validateRow(index)">
-                            <small class="text-danger d-block mt-1 text-end" style="font-size: 0.65rem;">{{ formatCurrency(v.price) }}</small>
+                            <input type="text" class="form-control form-control-sm text-end fw-bold text-urban dark:bg-[#212529] dark:border-gray-600" 
+                                   :class="{ 'is-invalid': v.priceError }" 
+                                   :value="formatThousand(v.price)" @input="e => { updateNumber(e, v, 'price'); validateRow(index); }" required>
                           </td>
                           <td class="align-middle">
-                            <input type="number" class="form-control form-control-sm text-end text-danger fw-semibold dark:bg-[#212529] dark:border-gray-600" :class="{ 'is-invalid': v.saleError }" v-model.number="v.promotional_price" min="0" @input="validateRow(index)">
-                            <small class="text-danger d-block mt-1 text-end" style="font-size: 0.65rem;" v-if="v.promotional_price > 0">{{ formatCurrency(v.promotional_price) }}</small>
+                            <input type="text" class="form-control form-control-sm text-end text-danger fw-semibold dark:bg-[#212529] dark:border-gray-600" 
+                                   :class="{ 'is-invalid': v.saleError }" 
+                                   :value="formatThousand(v.promotional_price)" @input="e => { updateNumber(e, v, 'promotional_price', true); validateRow(index); }">
                           </td>
                           <td class="align-middle">
                             <input type="number" class="form-control form-control-sm text-center fw-bold dark:bg-[#212529] dark:border-gray-600 dark:text-white" v-model.number="v.stock_quantity" min="0" required>
                           </td>
                           <td class="text-center align-middle">
-                            <button type="button" class="btn btn-sm text-secondary hover-danger border-0" @click="removeVariantRow(index)"><i class="bi bi-x-lg fs-6"></i></button>
+                            <div class="d-flex justify-content-center gap-1">
+                              <button type="button" class="btn btn-sm text-primary hover-opacity border-0" @click="duplicateVariantRow(index)" title="Nhân bản dòng này"><i class="bi bi-copy fs-6"></i></button>
+                              <button type="button" class="btn btn-sm text-secondary hover-danger border-0" @click="removeVariantRow(index)" title="Xóa dòng"><i class="bi bi-x-lg fs-6"></i></button>
+                            </div>
                           </td>
                         </tr>
                       </tbody>
@@ -260,9 +326,7 @@
                       <h5 class="fw-bold mb-1 text-dark dark:text-white"><i class="bi bi-images me-2 text-urban"></i>Bộ sưu tập (Gallery)</h5>
                       <p class="text-muted small mb-4">Tải lên tối đa 8 ảnh các góc chụp của sản phẩm. Định dạng JPG, PNG, WEBP.</p>
                       
-                      <!-- Lưới hiển thị Gallery -->
                       <div class="d-flex flex-wrap gap-3">
-                        <!-- Nút Upload -->
                         <div class="gallery-upload-box d-flex flex-column justify-content-center align-items-center border border-dashed border-2 rounded-4 text-muted cursor-pointer hover-bg-light dark:border-gray-600 dark:text-gray-400 bg-white dark:bg-[#212529]" 
                              @click="$refs.galleryInput.click()" 
                              style="width: 120px; height: 120px;">
@@ -271,12 +335,10 @@
                           <input type="file" ref="galleryInput" @change="handleGalleryUpload" class="d-none" accept="image/*" multiple>
                         </div>
 
-                        <!-- Các ảnh đã up -->
                         <div class="position-relative border rounded-4 overflow-hidden shadow-sm dark:border-gray-600" 
                              style="width: 120px; height: 120px;" 
                              v-for="(img, index) in galleryPreviews" :key="index">
                           <img :src="img.url" class="w-100 h-100 object-fit-cover">
-                          <!-- Nút Xóa nhỏ xinh -->
                           <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 rounded-circle p-0 d-flex align-items-center justify-content-center opacity-75 hover-opacity-100" 
                                   style="width: 24px; height: 24px;" 
                                   @click.stop="removeGalleryImage(index, img.id)">
@@ -303,7 +365,6 @@
                        
                        <hr class="dark:border-gray-700 my-4">
 
-                       <!-- NÚT LƯU THIẾT KẾ MỚI -->
                        <button type="submit" class="btn btn-urban btn-lg text-white w-100 fw-bold shadow-sm rounded-pill d-flex align-items-center justify-content-center" :disabled="isSaving">
                           <span v-if="isSaving" class="spinner-border spinner-border-sm me-2"></span>
                           <i class="bi bi-floppy2-fill me-2" v-else></i> LƯU CẬP NHẬT
@@ -314,7 +375,7 @@
 
               </div>
               <div class="pt-4 mt-4 border-top dark:border-gray-700 text-start">
-                <button type="button" class="btn btn-light dark:bg-[#2b3035] dark:text-gray-300 px-4 rounded-pill border shadow-sm" @click="currentStep = 2"><i class="bi bi-arrow-left"></i> Quay lại Lưới biến thể</button>
+                <button type="button" class="btn btn-light dark:bg-[#2b3035] dark:text-gray-300 dark:border-gray-600 px-4 border fw-semibold rounded-pill" @click="currentStep = 2"><i class="bi bi-arrow-left"></i> Quay lại Lưới biến thể</button>
               </div>
             </div>
 
@@ -342,18 +403,24 @@
       </div>
     </div>
 
-    <!-- MODAL TẠO GIÁ TRỊ THUỘC TÍNH (VALUE) -->
+    <!-- MODAL TẠO GIÁ TRỊ THUỘC TÍNH (BULK CREATE) -->
     <div class="modal fade" id="createValueModal" tabindex="-1">
-      <div class="modal-dialog modal-sm modal-dialog-centered">
+      <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow dark:bg-[#1a2533]">
           <div class="modal-header py-3 bg-success text-white">
-            <h6 class="modal-title fw-bold"><i class="bi bi-plus-circle me-2"></i>Thêm giá trị biến thể</h6>
+            <h6 class="modal-title fw-bold"><i class="bi bi-plus-circle me-2"></i>Thêm nhanh giá trị biến thể</h6>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body p-4">
             <div class="mb-4">
-              <label class="form-label small fw-bold dark:text-gray-200">Giá trị cho <span class="text-success text-uppercase">{{ currentOperatingAttr ? currentOperatingAttr.name : '' }}</span>:</label>
-              <input type="text" class="form-control bg-light dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-none" v-model="newValueForm.value" placeholder="VD: Xanh ngọc, XL..." @keydown.enter.prevent="submitCreateValue" ref="newValueInputRef">
+              <label class="form-label small fw-bold dark:text-gray-200">
+                Nhập các giá trị cho <span class="text-success text-uppercase fs-6">{{ currentOperatingAttr ? currentOperatingAttr.name : '' }}</span>
+              </label>
+              <input type="text" class="form-control bg-light dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-none mb-2" 
+                     v-model="newValueForm.value" 
+                     placeholder="VD: S, M, L, XL, XXL..." 
+                     @keydown.enter.prevent="submitCreateValue" ref="newValueInputRef">
+              <small class="text-muted fst-italic">Mẹo: Gõ nhiều giá trị cách nhau bằng dấu phẩy (,) để tạo hàng loạt cùng lúc.</small>
             </div>
             <button type="button" class="btn btn-success w-100 fw-bold rounded-pill shadow-sm" @click="submitCreateValue" :disabled="!newValueForm.value">Lưu Giá Trị</button>
           </div>
@@ -361,18 +428,18 @@
       </div>
     </div>
 
-    <!-- MODAL QUẢN LÝ THUỘC TÍNH -->
+    <!-- MODAL QUẢN LÝ THUỘC TÍNH VÀ GIÁ TRỊ (XÓA RÁC - GRID 2 CỘT) -->
     <div class="modal fade" id="manageAttrModal" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow dark:bg-[#1a2533]">
           <div class="modal-header py-3 bg-secondary text-white">
-            <h6 class="modal-title fw-bold"><i class="bi bi-gear-fill me-2"></i>Quản lý Thuộc tính hệ thống</h6>
+            <h6 class="modal-title fw-bold"><i class="bi bi-gear-fill me-2"></i>Quản lý Thuộc tính & Giá trị</h6>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body p-4">
             <div class="mb-3">
-              <label class="form-label small fw-bold dark:text-gray-200">Chọn thuộc tính cần sửa:</label>
-              <select class="form-select dark:bg-[#212529] dark:text-white dark:border-gray-700" v-model="selectedAttrToManage">
+              <label class="form-label small fw-bold dark:text-gray-200">Chọn thuộc tính cần dọn dẹp/sửa:</label>
+              <select class="form-select dark:bg-[#212529] dark:text-white dark:border-gray-700 fw-semibold" v-model="selectedAttrToManage">
                 <option value="">-- Chọn thuộc tính --</option>
                 <template v-if="systemAttributes.length > 0">
                   <option v-for="attr in systemAttributes" :key="attr.id" :value="attr.id">{{ attr.name }}</option>
@@ -380,17 +447,49 @@
               </select>
             </div>
 
-            <div v-if="selectedAttrToManage" class="mt-4 pt-3 border-top dark:border-gray-700">
+            <!-- Khu vực chỉnh sửa khi đã chọn 1 thuộc tính -->
+            <div v-if="selectedAttrToManage" class="mt-4 pt-3 border-top dark:border-gray-700 animation-fade-in">
               <div class="mb-3">
                 <label class="form-label small fw-bold dark:text-gray-200">Tên hiển thị mới:</label>
-                <input type="text" class="form-control dark:bg-[#212529] dark:text-white dark:border-gray-700" v-model="manageAttrName" @keydown.enter.prevent="updateAttribute(selectedAttrToManage)">
+                <div class="input-group shadow-sm">
+                  <input type="text" class="form-control dark:bg-[#212529] dark:text-white dark:border-gray-700" v-model="manageAttrName" @keydown.enter.prevent="updateAttribute(selectedAttrToManage)">
+                  <button type="button" class="btn btn-primary px-3 fw-bold" @click="updateAttribute(selectedAttrToManage)" :disabled="!manageAttrName">Cập nhật</button>
+                </div>
               </div>
-              <div class="d-flex justify-content-between pt-2">
-                <button type="button" class="btn btn-sm btn-outline-danger px-3 rounded-pill" @click="deleteAttribute(selectedAttrToManage)">
-                  <i class="bi bi-trash me-1"></i> Xóa
-                </button>
-                <button type="button" class="btn btn-sm btn-primary px-4 fw-bold rounded-pill" @click="updateAttribute(selectedAttrToManage)" :disabled="!manageAttrName">
-                  Cập nhật
+
+              <div class="mb-4">
+                <label class="form-label small fw-bold dark:text-gray-200 d-block">Danh sách giá trị (Nhấn 'x' để xóa rác):</label>
+                <div class="row g-2 p-2 bg-light dark:bg-[#212529] rounded-3 border dark:border-gray-700">
+                  <div class="col-6">
+                     <h6 class="small text-muted fw-bold text-center border-bottom pb-1 mb-2">Chữ cái / Ký tự</h6>
+                     <div class="d-flex flex-column gap-2 pe-1 custom-scrollbar-y" style="max-height: 200px; overflow-y: auto;">
+                        <div v-for="val in sortedAttrValues.alpha" :key="val.id" class="d-flex justify-content-between align-items-center bg-white dark:bg-[#1a2533] border dark:border-gray-600 rounded px-2 py-1 shadow-sm">
+                           <span class="fw-semibold text-dark dark:text-gray-200 small text-truncate" :title="val.value">{{ val.value }}</span>
+                           <button type="button" class="btn btn-sm text-danger p-0 border-0 ms-2 flex-shrink-0" @click="deleteAttributeValueModal(val.id, selectedAttrToManage)" title="Xóa rác">
+                              <i class="bi bi-x-circle-fill fs-6"></i>
+                           </button>
+                        </div>
+                        <div v-if="sortedAttrValues.alpha.length === 0" class="text-center text-muted small fst-italic py-2">Trống</div>
+                     </div>
+                  </div>
+                  <div class="col-6 border-start dark:border-gray-600">
+                     <h6 class="small text-muted fw-bold text-center border-bottom pb-1 mb-2">Chữ Số</h6>
+                     <div class="d-flex flex-column gap-2 pe-1 custom-scrollbar-y" style="max-height: 200px; overflow-y: auto;">
+                        <div v-for="val in sortedAttrValues.numeric" :key="val.id" class="d-flex justify-content-between align-items-center bg-white dark:bg-[#1a2533] border dark:border-gray-600 rounded px-2 py-1 shadow-sm">
+                           <span class="fw-semibold text-dark dark:text-gray-200 small text-truncate" :title="val.value">{{ val.value }}</span>
+                           <button type="button" class="btn btn-sm text-danger p-0 border-0 ms-2 flex-shrink-0" @click="deleteAttributeValueModal(val.id, selectedAttrToManage)" title="Xóa rác">
+                              <i class="bi bi-x-circle-fill fs-6"></i>
+                           </button>
+                        </div>
+                        <div v-if="sortedAttrValues.numeric.length === 0" class="text-center text-muted small fst-italic py-2">Trống</div>
+                     </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="d-flex justify-content-start pt-2">
+                <button type="button" class="btn btn-sm btn-outline-danger px-3 rounded-pill fw-semibold" @click="deleteAttribute(selectedAttrToManage)">
+                  <i class="bi bi-trash me-1"></i> Xóa toàn bộ cột thuộc tính
                 </button>
               </div>
             </div>
@@ -403,16 +502,16 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick, watch } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import Swal from 'sweetalert2';
 import axios from 'axios';
+import defaultImage from '@/assets/images/defaults/placeholder.png'; // Thêm import defaultImage
 
 const router = useRouter();
 const route = useRoute();
 const productId = route.params.id;
 
-// ĐẢM BẢO KHAI BÁO BIẾN CHO RENDER TEMPLATE TRÁNH LỖI
 const isPageLoading = ref(true);
 const isSaving = ref(false);
 const isProcessingSchema = ref(false);
@@ -450,9 +549,46 @@ const newValueInputRef = ref(null);
 const selectedAttrToManage = ref('');
 const manageAttrName = ref('');
 
+// LOGIC CUSTOM VUE DROPDOWN
+const activeDropdown = ref(null);
+const toggleDropdown = (rowIndex, attrId) => {
+  const id = `${rowIndex}-${attrId}`;
+  activeDropdown.value = activeDropdown.value === id ? null : id;
+};
+const closeDropdowns = () => {
+  activeDropdown.value = null;
+};
+
 const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
+
+// ĐÃ KHÔI PHỤC: Hàm xử lý URL ảnh và lỗi tải ảnh
 const getImageUrl = (path) => path ? `http://127.0.0.1:8000/storage/${path}` : null;
-const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0);
+const handleImageError = (e) => { e.target.src = defaultImage; }; // Trả về placeholder nếu lỗi
+
+// Format nghìn (Thêm dấu chấm) dành cho Input Type Text
+const formatThousand = (val) => {
+  if (val === null || val === undefined || val === '') return '';
+  return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+};
+
+// Cập nhật biến số thô khi người dùng gõ
+const updateNumber = (e, targetObj, key, allowEmpty = false) => {
+  let rawValue = e.target.value.replace(/\D/g, ''); // Loại bỏ mọi thứ không phải là số
+  if (rawValue === '') {
+    targetObj[key] = allowEmpty ? null : 0;
+    e.target.value = '';
+  } else {
+    let numValue = parseInt(rawValue, 10);
+    targetObj[key] = numValue;
+    e.target.value = formatThousand(numValue);
+  }
+};
+
+// Hàm định dạng tiền tệ không có phần thập phân
+const formatCurrency = (val) => {
+  if (val === null || val === undefined || val === '') return '0 ₫';
+  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(val);
+};
 
 const canProceedToStep2 = computed(() => {
   return form.value.name && form.value.category_id && form.value.base_price >= 0;
@@ -514,7 +650,33 @@ const handleVariantImage = (index, e) => {
 };
 
 const getAttributeName = (attrId) => { const a = systemAttributes.value.find(x => x.id == attrId); return a ? a.name : 'Unknown'; };
-const getAttributeValues = (attrId) => { const a = systemAttributes.value.find(x => x.id == attrId); return a ? (a.values || []) : []; };
+
+const getSelectedValueName = (attrId, valueId) => {
+  if (!valueId) return '-- Chọn --';
+  const attr = systemAttributes.value.find(a => a.id === parseInt(attrId));
+  if (!attr || !attr.values) return '-- Chọn --';
+  const val = attr.values.find(v => v.id === parseInt(valueId));
+  return val ? val.value : '-- Chọn --';
+};
+
+const getSortedValues = (attrId) => {
+  const attr = systemAttributes.value.find(a => a.id === parseInt(attrId));
+  if (!attr || !attr.values) return { alpha: [], numeric: [] };
+
+  const alpha = [];
+  const numeric = [];
+  attr.values.forEach(v => {
+    if (/^\d/.test(v.value)) numeric.push(v);
+    else alpha.push(v);
+  });
+  return { alpha, numeric };
+};
+
+const selectAttrValue = (rowIndex, attrId, valId) => {
+  variants.value[rowIndex].attributes[attrId] = valId;
+  activeDropdown.value = null; // Tự đóng sau khi chọn
+  validateDuplicates();
+};
 
 const addAttributeColumn = () => {
   if (!selectedAttrToAdd.value) return;
@@ -540,12 +702,38 @@ const addVariantRow = () => {
   const prefix = form.value.slug ? form.value.slug.substring(0, 4).toUpperCase().replace(/-/g, '') : 'SKU';
   const newSku = `${prefix}${randomCode}-V${variants.value.length + 1}`;
   let rowAttrs = {}; activeAttributes.value.forEach(id => rowAttrs[id] = "");
-  variants.value.push({ sku: newSku, cost_price: 0, price: form.value.base_price, promotional_price: 0, stock_quantity: 10, imageFile: null, preview: null, attributes: rowAttrs, hasDuplicateError: false, attrError: false, priceError: false, saleError: false });
+  variants.value.push({ sku: newSku, cost_price: 0, price: form.value.base_price, promotional_price: null, stock_quantity: 10, imageFile: null, preview: null, attributes: rowAttrs, hasDuplicateError: false, attrError: false, priceError: false, saleError: false });
 };
 
 const removeVariantRow = (index) => {
   if (variants.value.length <= 1) { Swal.fire('Lưu ý', 'Sản phẩm phải có ít nhất 1 biến thể!', 'warning'); return; }
   variants.value.splice(index, 1); validateDuplicates();
+};
+
+const duplicateVariantRow = (index) => {
+  const rowToCopy = variants.value[index];
+  const randomCode = Math.floor(1000 + Math.random() * 9000);
+  const prefix = form.value.slug ? form.value.slug.substring(0, 4).toUpperCase().replace(/-/g, '') : 'SKU';
+  const newSku = `${prefix}${randomCode}-V${variants.value.length + 1}`;
+
+  const copiedAttrs = { ...rowToCopy.attributes };
+
+  variants.value.splice(index + 1, 0, {
+    sku: newSku, 
+    cost_price: rowToCopy.cost_price,
+    price: rowToCopy.price,
+    promotional_price: rowToCopy.promotional_price,
+    stock_quantity: rowToCopy.stock_quantity,
+    imageFile: rowToCopy.imageFile, 
+    preview: rowToCopy.preview, 
+    attributes: copiedAttrs,
+    hasDuplicateError: false,
+    attrError: false,
+    priceError: false,
+    saleError: false
+  });
+
+  validateDuplicates();
 };
 
 const validateRow = (index) => {
@@ -582,6 +770,7 @@ const openModal = (id) => {
   if (id === 'manageAttrModal') manageAttrModalObj = m;
   m.show();
 };
+
 const hideModals = () => { 
   if (createAttrModalObj) createAttrModalObj.hide(); 
   if (createValueModalObj) createValueModalObj.hide(); 
@@ -599,28 +788,45 @@ const submitCreateAttribute = async () => {
   } catch (e) { if (e.response) Swal.fire('Lỗi', e.response.data.message || 'Lỗi thêm', 'error'); }
 };
 
-const handleAttributeChange = (event, attrId, rowIndex) => {
-  const val = event.target.value;
-  if (val === 'NEW') {
-    currentOperatingAttr.value = systemAttributes.value.find(x => x.id == attrId);
-    currentOperatingRowIndex.value = rowIndex; newValueForm.value.value = '';
-    variants.value[rowIndex].attributes[attrId] = '';
-    openModal('createValueModal');
-    nextTick(() => { if (newValueInputRef.value) newValueInputRef.value.focus(); });
-  } else validateDuplicates();
+const openCreateValueModal = (attrId, rowIndex) => {
+  currentOperatingAttr.value = systemAttributes.value.find(x => x.id === parseInt(attrId));
+  currentOperatingRowIndex.value = rowIndex; 
+  newValueForm.value.value = '';
+  openModal('createValueModal');
+  nextTick(() => { if (newValueInputRef.value) newValueInputRef.value.focus(); });
 };
 
 const submitCreateValue = async () => {
   if (!newValueForm.value.value || !currentOperatingAttr.value) return;
   try {
-    const payload = { attribute_id: currentOperatingAttr.value.id, value: newValueForm.value.value };
-    const res = await axios.post('http://127.0.0.1:8000/api/v1/admin/attribute-values', payload, { headers: getHeaders() });
+    const valuesArray = newValueForm.value.value.split(',').map(v => v.trim()).filter(v => v !== '');
+    if(valuesArray.length === 0) return;
+
+    const promises = valuesArray.map(val => {
+      const payload = { attribute_id: currentOperatingAttr.value.id, value: val };
+      return axios.post('http://127.0.0.1:8000/api/v1/admin/attribute-values', payload, { headers: getHeaders() });
+    });
+
+    const results = await Promise.all(promises);
+
     const attrObj = systemAttributes.value.find(x => x.id == currentOperatingAttr.value.id);
-    if (attrObj) { if (!attrObj.values) attrObj.values = []; attrObj.values.push(res.data.data); }
-    if (currentOperatingRowIndex.value !== null) variants.value[currentOperatingRowIndex.value].attributes[attrObj.id] = res.data.data.id;
-    hideModals(); validateDuplicates();
-    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã thêm giá trị', showConfirmButton: false, timer: 2000 });
-  } catch (e) { if (e.response) Swal.fire('Lỗi', e.response.data.message || 'Lỗi thêm', 'error'); }
+    if (attrObj) { 
+      if (!attrObj.values) attrObj.values = []; 
+      results.forEach(res => {
+         attrObj.values.push(res.data.data); 
+      });
+    }
+    
+    if (currentOperatingRowIndex.value !== null && results.length > 0) {
+       variants.value[currentOperatingRowIndex.value].attributes[attrObj.id] = results[0].data.data.id;
+    }
+    
+    hideModals(); 
+    validateDuplicates();
+    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: `Đã tạo nhanh ${valuesArray.length} giá trị`, showConfirmButton: false, timer: 2000 });
+  } catch (e) { 
+    if (e.response) Swal.fire('Lỗi', e.response.data.message || 'Lỗi thêm', 'error'); 
+  }
 };
 
 watch(selectedAttrToManage, (newId) => {
@@ -655,12 +861,64 @@ const deleteAttribute = async (id) => {
     });
 };
 
+const deleteAttributeValueModal = async (valueId, attrId) => {
+  if (!valueId) return;
+  activeDropdown.value = null; // Tắt dropdown lập tức
+
+  setTimeout(() => {
+    Swal.fire({
+      title: 'Xóa giá trị này?',
+      text: "Các sản phẩm đang dùng giá trị này sẽ bị xóa cấu hình. Bạn chắc chắn chứ?",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Đồng ý Xóa'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await axios.delete(`http://127.0.0.1:8000/api/v1/admin/attribute-values/${valueId}`, { headers: getHeaders() });
+
+          const attr = systemAttributes.value.find(a => a.id === parseInt(attrId));
+          if (attr && attr.values) {
+            attr.values = attr.values.filter(v => v.id !== valueId);
+          }
+
+          variants.value.forEach(v => {
+            if (v.attributes[attrId] == valueId) {
+              v.attributes[attrId] = '';
+            }
+          });
+          
+          validateDuplicates();
+          Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã dọn dẹp giá trị rác', showConfirmButton: false, timer: 1500 });
+        } catch (e) {
+          if (e.response) Swal.fire('Lỗi', e.response.data.message || 'Giá trị này đang được sử dụng ở sản phẩm khác, không thể xóa!', 'error');
+        }
+      }
+    });
+  }, 200);
+};
+
+const sortedAttrValues = computed(() => {
+  if (!selectedAttrToManage.value) return { alpha: [], numeric: [] };
+  const attr = systemAttributes.value.find(a => a.id === parseInt(selectedAttrToManage.value));
+  if (!attr || !attr.values) return { alpha: [], numeric: [] };
+
+  const alpha = [];
+  const numeric = [];
+  attr.values.forEach(v => {
+    if (/^\d/.test(v.value)) numeric.push(v);
+    else alpha.push(v);
+  });
+  return { alpha, numeric };
+});
+
 const submitProduct = async () => {
   isSaving.value = true;
   try {
     const formData = new FormData();
-    formData.append('_method', 'PUT'); // ĐẢM BẢO CHẮC CHẮN METHOD PUT ĐƯỢC GỬI LÊN
-    
+    formData.append('_method', 'PUT'); 
     formData.append('category_id', form.value.category_id);
     if (form.value.brand_id) formData.append('brand_id', form.value.brand_id);
     formData.append('name', form.value.name);
@@ -668,7 +926,8 @@ const submitProduct = async () => {
     formData.append('base_price', form.value.base_price);
     formData.append('description', form.value.description);
     formData.append('care_instructions', form.value.care_instructions);
-    formData.append('gender', form.value.gender);
+    
+    formData.append('gender', form.value.gender || 'Unisex');
     formData.append('fit_type', form.value.fit_type);
     formData.append('is_featured', form.value.is_featured ? 1 : 0);
     formData.append('status', form.value.isPublished ? 'published' : 'draft');
@@ -711,9 +970,7 @@ const submitProduct = async () => {
   } finally { isSaving.value = false; }
 };
 
-// ĐÃ BỌC TRY-CATCH CHO TỪNG BIẾN CHỐNG CHẾT TRANG KHI API THIẾU DỮ LIỆU
 const fetchData = async () => {
-  isPageLoading.value = true;
   try {
     const [catRes, attrRes, brandRes, prodRes] = await Promise.all([
       axios.get('http://127.0.0.1:8000/api/v1/admin/categories', { headers: getHeaders() }),
@@ -772,9 +1029,9 @@ const fetchData = async () => {
              });
           }
           return {
-            id: v.id, sku: v.sku, cost_price: v.cost_price || 0, price: v.price || 0, promotional_price: v.promotional_price || 0,
+            id: v.id, sku: v.sku, cost_price: v.cost_price || 0, price: v.price || 0, promotional_price: v.promotional_price || null,
             stock_quantity: v.stock_quantity || 0, preview: getImageUrl(v.image_url),
-            attributes: attrMaps, imageFile: null
+            attributes: attrMaps, imageFile: null, attrError: false, hasDuplicateError: false, priceError: false, saleError: false
           };
        });
     }
@@ -786,7 +1043,14 @@ const fetchData = async () => {
   } finally { isPageLoading.value = false; }
 };
 
-onMounted(() => fetchData());
+onMounted(() => {
+  fetchData();
+  document.addEventListener('click', closeDropdowns);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', closeDropdowns);
+});
 </script>
 
 <style scoped>
@@ -795,14 +1059,18 @@ onMounted(() => fetchData());
 .border-urban { border-color: var(--color-c-hover, #547792) !important; }
 .btn-urban { background-color: var(--color-c-hover, #547792); color: white; border: none; transition: 0.2s; }
 .btn-urban:hover { background-color: var(--color-c-dark, #213448); color: white; transform: translateY(-2px); }
-.btn-outline-urban { color: var(--color-c-hover, #547792); border-color: var(--color-c-hover, #547792); background: transparent; }
+.btn-outline-urban { color: var(--color-c-hover, #547792); border-color: var(--color-c-hover, #547792); background: transparent; transition: 0.2s; }
 .btn-outline-urban:hover { background-color: var(--color-c-hover, #547792); color: white; }
 
 .hover-bg-light:hover { background-color: rgba(84, 119, 146, 0.05) !important; }
 html.dark .hover-bg-light:hover { background-color: rgba(255, 255, 255, 0.05) !important; }
 
 /* Cấm bôi đen text */
-.user-select-none { user-select: none; }
+.user-select-none { 
+  user-select: none !important; 
+  -webkit-user-select: none !important; 
+  -moz-user-select: none !important; 
+}
 
 .custom-tab { color: #6c757d; border-bottom: 3px solid transparent; transition: all 0.3s; }
 .custom-tab.active-tab { color: var(--color-c-hover, #547792) !important; border-bottom-color: var(--color-c-hover, #547792); }
@@ -812,7 +1080,12 @@ html.dark .hover-bg-light:hover { background-color: rgba(255, 255, 255, 0.05) !i
 
 .cursor-pointer { cursor: pointer; }
 
-/* FIX CỘT THUỘC TÍNH */
+/* CSS FIX NÚT ACTIONS & XÓA RÁC */
+.hover-opacity:hover { opacity: 0.7; }
+.hover-danger:hover { color: #dc3545 !important; }
+.hover-border-urban:hover { border-color: var(--color-c-hover, #547792) !important; }
+.hover-scale:hover { transform: scale(1.15); transition: transform 0.2s ease; }
+
 .variant-table th { font-size: 0.75rem; text-transform: uppercase; color: #555; vertical-align: middle; text-align: center; border-bottom: 2px solid #e9ecef; white-space: nowrap; padding: 12px; }
 .variant-table th.bg-urban { background-color: var(--color-c-hover, #547792) !important; color: white !important; }
 .variant-table td { vertical-align: middle; padding: 8px; }
@@ -836,4 +1109,17 @@ html.dark .row-error td { background-color: rgba(220, 53, 69, 0.1) !important; }
 
 .custom-scrollbar-x::-webkit-scrollbar { height: 6px; }
 .custom-scrollbar-x::-webkit-scrollbar-thumb { background: var(--color-c-light, #94B4C1); border-radius: 10px; }
+.custom-scrollbar-y::-webkit-scrollbar { width: 6px; }
+.custom-scrollbar-y::-webkit-scrollbar-thumb { background: var(--color-c-light, #94B4C1); border-radius: 10px; }
+
+/* Custom Vue Dropdown Transition */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(-5px);
+}
 </style>

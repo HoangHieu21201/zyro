@@ -20,7 +20,7 @@ class ProductController extends Controller
                 ->withCount('variants') 
                 ->orderBy('id', 'desc')
                 ->withTrashed()
-                ->paginate(15);
+                ->get();
                 
             return response()->json(['success' => true, 'data' => $products]);
         } catch (\Exception $e) {

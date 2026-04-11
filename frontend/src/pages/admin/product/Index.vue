@@ -1,4 +1,4 @@
-
+<!-- File: frontend/src/pages/admin/product/Index.vue -->
 <template>
   <div class="product-index-wrapper pb-5 mb-5">
     
@@ -74,9 +74,12 @@
           <div class="d-flex align-items-center flex-wrap gap-2 bg-light dark:bg-[#212529] p-2 rounded-3 border dark:border-gray-700">
             <div class="d-flex align-items-center small fw-semibold text-muted me-2"><i class="bi bi-funnel me-1"></i> Bộ lọc:</div>
             
-            <select class="form-select form-select-sm border-0 bg-white dark:bg-[#1a2533] dark:text-white shadow-sm" style="width: 160px;" v-model="filterCategory">
+            <!-- ĐÃ NÂNG CẤP: DROPDOWN ĐA CẤP DỄ NHÌN HƠN -->
+            <select class="form-select form-select-sm border-0 bg-white dark:bg-[#1a2533] dark:text-white shadow-sm" style="width: 180px;" v-model="filterCategory">
               <option value="">Tất cả Danh mục</option>
-              <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
+              <option v-for="c in hierarchicalCategories" :key="c.id" :value="c.id" :class="{'fw-bold text-dark dark:text-white': c.level === 0}">
+                {{ c.displayName }}
+              </option>
             </select>
             
             <select class="form-select form-select-sm border-0 bg-white dark:bg-[#1a2533] dark:text-white shadow-sm" style="width: 160px;" v-model="filterBrand">
@@ -119,7 +122,6 @@
                 <tr v-else v-for="product in displayProducts" :key="product.id" :class="{'bg-light opacity-75 dark:bg-[#121416]': product.deleted_at || product.status === 'hidden'}">
                   <td class="px-4 py-3">
                     <div class="d-flex align-items-center">
-                      <!-- ĐÃ BỔ SUNG ZOOM NGAY TRÊN BẢNG HIỂN THỊ -->
                       <img :src="getImageUrl(product.thumbnail_image)" @error="handleImageError" 
                            class="rounded-3 object-fit-cover me-3 border shadow-sm dark:border-gray-600 img-zoomable" 
                            style="width: 60px; height: 60px;" 
@@ -203,7 +205,6 @@
             <div v-else v-for="product in displayProducts" :key="product.id" class="card border-0 shadow-sm mb-3 rounded-4 dark:bg-[#212529]" :class="{'opacity-75': product.deleted_at || product.status === 'hidden'}">
               <div class="card-body p-3">
                 <div class="d-flex align-items-center mb-3 border-bottom dark:border-gray-700 pb-3">
-                  <!-- ĐÃ BỔ SUNG ZOOM CHO MOBILE -->
                   <img :src="getImageUrl(product.thumbnail_image)" @error="handleImageError" 
                        class="rounded-3 object-fit-cover me-3 border shadow-sm dark:border-gray-600 img-zoomable" 
                        style="width: 60px; height: 60px;"
@@ -255,9 +256,7 @@
       </div>
     </div>
 
-    <!-- ======================================================== -->
     <!-- POPUP QUICK VIEW (ĐÃ QUY HOẠCH LẠI BỐ CỤC TRÊN/DƯỚI) -->
-    <!-- ======================================================== -->
     <div class="modal fade" id="quickViewModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
       <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content rounded-4 border-0 shadow dark:bg-[#1a2533]">
@@ -388,7 +387,7 @@
       </div>
     </div>
 
-    <!-- ĐÃ CẬP NHẬT: MODAL PHÓNG TO ẢNH (KÈM HIỆU ỨNG BLUR KÍNH) -->
+    <!-- MODAL PHÓNG TO ẢNH (KÈM HIỆU ỨNG BLUR KÍNH) -->
     <div class="modal fade glass-modal" id="imageZoomModal" tabindex="-1" aria-hidden="true" style="z-index: 1070;">
       <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content bg-transparent border-0 shadow-none">
@@ -465,6 +464,34 @@ const getLevelColor = (level) => {
   }
 };
 
+// ĐÃ THÊM LẠI LOGIC TẠO CÂY ĐA CẤP (Nesting) CHO SELECT CATEGORY ĐỂ GIAO DIỆN ĐẸP HƠN
+const hierarchicalCategories = computed(() => {
+  const buildTree = (parentId = null, level = 0) => {
+    let res = [];
+    const children = categories.value.filter(c => (c.parent_id || null) === (parentId || null));
+    children.forEach(child => {
+      res.push({
+        ...child,
+        displayName: (level > 0 ? '\u00A0\u00A0\u00A0\u00A0'.repeat(level) + '↳ ' : '') + child.name,
+        level: level
+      });
+      res = res.concat(buildTree(child.id, level + 1));
+    });
+    return res;
+  };
+  return buildTree(null);
+});
+
+// Hàm giúp lấy tất cả ID của 1 danh mục và các con, cháu của nó (Recursive)
+const getAllCategoryIds = (id) => {
+  let ids = [id];
+  const children = categories.value.filter(c => c.parent_id === id);
+  children.forEach(child => {
+    ids = ids.concat(getAllCategoryIds(child.id));
+  });
+  return ids;
+};
+
 const fetchData = async (isSilent = false) => {
   if (isSilent) isRefreshing.value = true;
   else if (!isFirstLoad.value) isLoading.value = true;
@@ -484,7 +511,6 @@ const fetchData = async (isSilent = false) => {
       ...p, localStatus: p.status, isStatusChanged: false, isUpdatingStatus: false
     }));
     
-    // ĐÃ FIX BỘ LỌC: Bỏ qua danh mục/thương hiệu đã xóa
     const allCats = Array.isArray(resCats.data?.data) ? resCats.data.data : [];
     categories.value = allCats.filter(c => (c.status === 'active' || c.status === 'published') && !c.deleted_at);
     
@@ -600,8 +626,10 @@ const processedProducts = computed(() => {
     result = result.filter(c => (c.name?.toLowerCase().includes(q)) || (c.slug?.toLowerCase().includes(q)));
   }
 
+  // ĐÃ FIX BỘ LỌC DANH MỤC: Gom toàn bộ ID của các danh mục con nếu danh mục đang chọn có danh mục con
   if (filterCategory.value) {
-    result = result.filter(c => c.category_id === filterCategory.value);
+    const targetCategoryIds = getAllCategoryIds(filterCategory.value);
+    result = result.filter(c => targetCategoryIds.includes(c.category_id));
   }
 
   if (filterBrand.value) {

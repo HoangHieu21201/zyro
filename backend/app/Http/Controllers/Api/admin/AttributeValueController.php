@@ -32,4 +32,17 @@ class AttributeValueController extends Controller
             return response()->json(['success' => false, 'message' => 'Lỗi: ' . $e->getMessage()], 500);
         }
     }
+
+    // ĐÃ THÊM: API Xóa giá trị rác
+    public function destroy($id): JsonResponse
+    {
+        try {
+            $attrValue = AttributeValue::findOrFail($id);
+            $attrValue->delete();
+            
+            return response()->json(['success' => true, 'message' => 'Đã dọn dẹp giá trị rác thành công.']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Không thể xóa giá trị này: ' . $e->getMessage()], 500);
+        }
+    }
 }

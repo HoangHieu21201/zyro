@@ -1,7 +1,5 @@
 <?php
 
-// File: backend/app/Http/Controllers/Api/Admin/LookbookController.php
-
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
@@ -22,7 +20,6 @@ class LookbookController extends Controller
         try {
             $query = Lookbook::withTrashed()->withCount('items');
 
-            // Hỗ trợ Frontend lọc theo giới tính (Gender)
             if ($request->has('gender') && $request->gender !== '') {
                 $query->where('gender', $request->gender);
             }
@@ -52,24 +49,25 @@ class LookbookController extends Controller
     {
         try {
             $lookbook = DB::transaction(function () use ($request) {
-                // Biến $data đã chứa toàn bộ dữ liệu bao gồm trường 'gender'
                 $data = $request->validated();
 
                 if ($request->hasFile('main_image')) {
                     $data['main_image'] = $request->file('main_image')->store('lookbooks/main', 'public');
                 }
 
-                // Tạo Lookbook gốc
                 $lookbook = Lookbook::create($data);
 
-                // Xử lý các sản phẩm được ghim tọa độ
                 $itemsData = json_decode($request->input('items_data'), true);
                 if (is_array($itemsData)) {
                     foreach ($itemsData as $item) {
+                        // ĐÃ FIX: Nếu thêm tự do không có tọa độ, set mặc định ra giữa ảnh (50,50) và bọc JSON
+                        $coords = isset($item['pin_coordinates']) ? $item['pin_coordinates'] : ['x' => 50, 'y' => 50];
+                        $coordsJson = is_array($coords) ? json_encode($coords) : $coords;
+
                         LookbookItem::create([
                             'lookbook_id'     => $lookbook->id,
                             'product_id'      => $item['product_id'],
-                            'pin_coordinates' => $item['pin_coordinates'],
+                            'pin_coordinates' => $coordsJson,
                             'sort_order'      => $item['sort_order'] ?? 0
                         ]);
                     }
@@ -92,7 +90,6 @@ class LookbookController extends Controller
         try {
             $lookbook = DB::transaction(function () use ($request, $id) {
                 $lookbook = Lookbook::findOrFail($id);
-                // Biến $data đã chứa toàn bộ dữ liệu bao gồm trường 'gender'
                 $data = $request->validated();
 
                 if ($request->hasFile('main_image')) {
@@ -102,7 +99,6 @@ class LookbookController extends Controller
                     $data['main_image'] = $request->file('main_image')->store('lookbooks/main', 'public');
                 }
 
-                // Cập nhật Lookbook
                 $lookbook->update($data);
 
                 // Xóa toàn bộ ghim cũ và nạp ghim mới (Chống rác tọa độ)
@@ -111,10 +107,14 @@ class LookbookController extends Controller
                 $itemsData = json_decode($request->input('items_data'), true);
                 if (is_array($itemsData)) {
                     foreach ($itemsData as $item) {
+                        // ĐÃ FIX TỌA ĐỘ
+                        $coords = isset($item['pin_coordinates']) ? $item['pin_coordinates'] : ['x' => 50, 'y' => 50];
+                        $coordsJson = is_array($coords) ? json_encode($coords) : $coords;
+
                         LookbookItem::create([
                             'lookbook_id'     => $lookbook->id,
                             'product_id'      => $item['product_id'],
-                            'pin_coordinates' => $item['pin_coordinates'],
+                            'pin_coordinates' => $coordsJson,
                             'sort_order'      => $item['sort_order'] ?? 0
                         ]);
                     }
