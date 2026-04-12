@@ -1,7 +1,5 @@
 <?php
 
-// File: backend/app/Events/CategoryEvent.php
-
 namespace App\Events;
 
 use App\Models\Category;
@@ -27,7 +25,6 @@ class CategoryEvent implements ShouldBroadcast
 
     public function broadcastOn(): array
     {
-        // Đăng ký kênh riêng cho Categories
         return [
             new PrivateChannel('admin.categories'),
         ];
@@ -40,7 +37,6 @@ class CategoryEvent implements ShouldBroadcast
 
     public function broadcastWith(): array
     {
-        // Load kèm parent để Frontend dễ hiển thị cây danh mục (Tree View)
         if (!$this->category->relationLoaded('parent') && $this->action !== 'deleted') {
             $this->category->load('parent');
         }

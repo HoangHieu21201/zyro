@@ -9,18 +9,30 @@ use App\Http\Requests\Product\UpdateProductRequest;
 use App\Events\ProductEvent;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
+    private string $cacheKey = 'products_list_all';
+
+    private function clearCache(): void
+    {
+        Cache::forget($this->cacheKey);
+    }
+
+    // Lấy danh sách sản phẩm
     public function index(): JsonResponse
     {
         try {
-            $products = Product::with(['category', 'brand'])
-                ->withCount('variants') 
-                ->orderBy('id', 'desc')
-                ->withTrashed()
-                ->get();
+            $products = Cache::remember($this->cacheKey, 86400, function () {
+                return Product::with(['category', 'brand'])
+                    ->withCount('variants') 
+                    ->orderBy('id', 'desc')
+                    ->withTrashed()
+                    ->get();
+            });
                 
             return response()->json(['success' => true, 'data' => $products]);
         } catch (\Exception $e) {
@@ -28,6 +40,7 @@ class ProductController extends Controller
         }
     }
 
+    // Khởi tạo sản phẩm mới
     public function store(StoreProductRequest $request): JsonResponse
     {
         try {
@@ -41,7 +54,6 @@ class ProductController extends Controller
 
                 $product = Product::create($data);
 
-                // Xử lý Variants (Bao gồm Cost Price)
                 $variantsData = json_decode($request->input('variants_data'), true);
                 if (is_array($variantsData)) {
                     foreach ($variantsData as $index => $vData) {
@@ -71,7 +83,6 @@ class ProductController extends Controller
                     }
                 }
 
-                // Xử lý Thư viện ảnh (Gallery)
                 if ($request->hasFile('gallery_images')) {
                     foreach ($request->file('gallery_images') as $idx => $file) {
                         $product->images()->create([
@@ -84,6 +95,8 @@ class ProductController extends Controller
                 return $product;
             });
 
+            $this->clearCache();
+
             $product->load(['category', 'brand']);
             broadcast(new ProductEvent('created', $product))->toOthers();
 
@@ -93,6 +106,7 @@ class ProductController extends Controller
         }
     }
 
+    // Xem chi tiết
     public function show($id): JsonResponse
     {
         try {
@@ -107,14 +121,16 @@ class ProductController extends Controller
         }
     }
 
-    // ĐÃ THÊM: Cập nhật siêu tốc Trạng thái từ bảng Index
-    public function updateStatus(\Illuminate\Http\Request $request, $id): JsonResponse
+    // Cập nhật trạng thái
+    public function updateStatus(Request $request, $id): JsonResponse
     {
         $request->validate(['status' => 'required|in:published,draft,hidden']);
         try {
             $product = Product::findOrFail($id);
             $product->update(['status' => $request->status]);
             
+            $this->clearCache();
+
             $product->load(['category', 'brand']);
             broadcast(new ProductEvent('updated', $product))->toOthers();
             
@@ -124,7 +140,7 @@ class ProductController extends Controller
         }
     }
 
-    // ĐÃ THÊM: Logic Update toàn bộ Sản phẩm từ màn Edit.vue
+    // Cập nhật sản phẩm & biến thể
     public function update(UpdateProductRequest $request, $id): JsonResponse
     {
         try {
@@ -133,7 +149,6 @@ class ProductController extends Controller
                 $data = $request->validated();
                 $data['is_featured'] = filter_var($data['is_featured'] ?? false, FILTER_VALIDATE_BOOLEAN);
 
-                // Nếu có ảnh đại diện mới thì xóa ảnh cũ đi
                 if ($request->hasFile('thumbnail_image')) {
                     if ($product->thumbnail_image) Storage::disk('public')->delete($product->thumbnail_image);
                     $data['thumbnail_image'] = $request->file('thumbnail_image')->store('products/thumbnails', 'public');
@@ -141,10 +156,8 @@ class ProductController extends Controller
 
                 $product->update($data);
 
-                // 1. Xử lý Cập nhật / Thêm mới / Xóa Variants
                 $variantsData = json_decode($request->input('variants_data'), true);
                 if (is_array($variantsData)) {
-                    // Lấy danh sách SKU gửi lên để giữ lại, cái nào ko có trong danh sách thì XÓA (Soft delete)
                     $incomingSkus = array_column($variantsData, 'sku');
                     $product->variants()->whereNotIn('sku', $incomingSkus)->delete();
 
@@ -167,14 +180,13 @@ class ProductController extends Controller
                         }
 
                         if ($variant) {
-                            if ($variant->trashed()) $variant->restore(); // Khôi phục nếu bị soft delete nhầm
+                            if ($variant->trashed()) $variant->restore();
                             $variant->update($variantDataToSave);
                         } else {
                             $variantDataToSave['reserved_stock'] = 0;
                             $variant = $product->variants()->create($variantDataToSave);
                         }
 
-                        // Cập nhật lại Mảng Thuộc tính Trung gian (Pivot)
                         if (!empty($vData['attributes'])) {
                             $attributeValueIds = array_filter(array_values($vData['attributes']));
                             $variant->attributeValues()->sync($attributeValueIds);
@@ -184,7 +196,6 @@ class ProductController extends Controller
                     }
                 }
 
-                // 2. Xử lý Xóa ảnh Gallery cũ
                 if ($request->filled('deleted_gallery_ids')) {
                     $deletedIds = json_decode($request->input('deleted_gallery_ids'), true);
                     if (is_array($deletedIds) && count($deletedIds) > 0) {
@@ -196,7 +207,6 @@ class ProductController extends Controller
                     }
                 }
 
-                // 3. Thêm ảnh Gallery mới
                 if ($request->hasFile('gallery_images')) {
                     $maxSort = $product->images()->max('sort_order') ?? -1;
                     foreach ($request->file('gallery_images') as $idx => $file) {
@@ -210,8 +220,9 @@ class ProductController extends Controller
                 return $product;
             });
 
-            $product->load(['category', 'brand', 'images']);
-            $product->load(['variants.attributeValues.attribute']);
+            $this->clearCache();
+
+            $product->load(['category', 'brand', 'images', 'variants.attributeValues.attribute']);
             broadcast(new ProductEvent('updated', $product))->toOthers();
 
             return response()->json(['success' => true, 'message' => 'Đã cập nhật sản phẩm thành công!', 'data' => $product]);
@@ -220,6 +231,7 @@ class ProductController extends Controller
         }
     }
 
+    // Đưa vào thùng rác
     public function destroy($id): JsonResponse
     {
         try {
@@ -228,6 +240,8 @@ class ProductController extends Controller
             $product->save();
             $product->delete();
 
+            $this->clearCache();
+
             broadcast(new ProductEvent('deleted', $product))->toOthers();
             return response()->json(['success' => true, 'message' => 'Đã đưa vào thùng rác!']);
         } catch (\Exception $e) {
@@ -235,6 +249,7 @@ class ProductController extends Controller
         }
     }
 
+    // Khôi phục
     public function restore($id): JsonResponse
     {
         try {
@@ -249,6 +264,8 @@ class ProductController extends Controller
             $product->save();
             $product->restore();
             
+            $this->clearCache();
+
             $product->load(['category', 'brand']);
             broadcast(new ProductEvent('restored', $product))->toOthers();
 

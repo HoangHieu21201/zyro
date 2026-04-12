@@ -12,11 +12,15 @@ use App\Events\BrandEvent;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache; // BẮT BUỘC IMPORT CACHE CỦA REDIS
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class BrandController extends Controller
 {
+    // Đã khai báo Tên Chìa Khóa (Key) cho Redis để dễ quản lý
+    private string $cacheKey = 'brands_list_all';
+
     private function getNextSortOrder(): int
     {
         $max = Brand::max('sort_order');
@@ -26,10 +30,12 @@ class BrandController extends Controller
     public function index(): JsonResponse
     {
         try {
-            $brands = Brand::orderByRaw('sort_order IS NULL, sort_order ASC')
-                ->orderBy('id', 'desc')
-                ->withTrashed()
-                ->get();
+            $brands = Cache::remember($this->cacheKey, 86400, function () {
+                return Brand::orderByRaw('sort_order IS NULL, sort_order ASC')
+                    ->orderBy('id', 'desc')
+                    ->withTrashed()
+                    ->get();
+            });
                 
             return response()->json(['success' => true, 'data' => $brands]);
         } catch (\Exception $e) {
@@ -53,6 +59,9 @@ class BrandController extends Controller
 
             $brand = Brand::create($data);
 
+            // REDIS: Xóa Cache cũ
+            Cache::forget($this->cacheKey);
+
             broadcast(new BrandEvent('created', $brand))->toOthers();
 
             return response()->json(['success' => true, 'message' => 'Tạo thương hiệu thành công!', 'data' => $brand], 201);
@@ -64,6 +73,7 @@ class BrandController extends Controller
     public function show($id): JsonResponse
     {
         try {
+            // Chi tiết 1 Thương hiệu không cần Cache vì nó query theo ID (PK) rất nhanh
             $brand = Brand::withTrashed()->findOrFail($id);
             return response()->json(['success' => true, 'data' => $brand]);
         } catch (\Exception $e) {
@@ -97,6 +107,9 @@ class BrandController extends Controller
 
             $brand->update($data);
 
+            // REDIS: Xóa Cache cũ
+            Cache::forget($this->cacheKey);
+
             broadcast(new BrandEvent('updated', $brand))->toOthers();
 
             return response()->json(['success' => true, 'message' => 'Cập nhật thương hiệu thành công!', 'data' => $brand]);
@@ -120,6 +133,9 @@ class BrandController extends Controller
             $brand->save();
 
             $brand->delete();
+
+            // REDIS: Xóa Cache cũ
+            Cache::forget($this->cacheKey);
 
             broadcast(new BrandEvent('deleted', $brand))->toOthers();
 
@@ -148,6 +164,9 @@ class BrandController extends Controller
             $brand->save();
             $brand->restore();
 
+            // REDIS: Xóa Cache cũ
+            Cache::forget($this->cacheKey);
+
             broadcast(new BrandEvent('restored', $brand))->toOthers();
 
             return response()->json(['success' => true, 'message' => 'Khôi phục thương hiệu thành công!']);
@@ -170,6 +189,10 @@ class BrandController extends Controller
                     Brand::where('id', $item['id'])->update(['sort_order' => $item['sort_order']]);
                 }
             });
+
+            // REDIS: Xóa Cache cũ
+            Cache::forget($this->cacheKey);
+
             return response()->json(['success' => true, 'message' => 'Cập nhật thứ tự hiển thị thành công!']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Lỗi hệ thống: ' . $e->getMessage()], 500);

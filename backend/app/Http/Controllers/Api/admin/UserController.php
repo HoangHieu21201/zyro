@@ -1,7 +1,5 @@
 <?php
 
-// File: backend/app/Http/Controllers/Api/Admin/UserController.php
-
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
@@ -12,18 +10,29 @@ use App\Events\UserEvent;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\JsonResponse;
 
 class UserController extends Controller
 {
+    private string $cacheKey = 'users_list_all';
+
+    private function clearCache(): void
+    {
+        Cache::forget($this->cacheKey);
+    }
+
+    // Danh sách khách hàng
     public function index(): JsonResponse
     {
         try {
-            $users = User::withTrashed()
-                ->with(['tier'])
-                ->withCount('addresses')
-                ->orderBy('id', 'desc')
-                ->get();
+            $users = Cache::remember($this->cacheKey, 86400, function () {
+                return User::withTrashed()
+                    ->with(['tier'])
+                    ->withCount('addresses')
+                    ->orderBy('id', 'desc')
+                    ->get();
+            });
                 
             return response()->json(['success' => true, 'data' => $users]);
         } catch (\Exception $e) {
@@ -31,6 +40,7 @@ class UserController extends Controller
         }
     }
 
+    // Thêm khách hàng mới
     public function store(StoreUserRequest $request): JsonResponse
     {
         try {
@@ -45,7 +55,6 @@ class UserController extends Controller
 
                 $newUser = User::create($data);
 
-                // Nếu có nhập địa chỉ thì tạo luôn địa chỉ mặc định
                 if (!empty($data['shipping_address']) && !empty($data['city'])) {
                     $newUser->addresses()->create([
                         'customer_name'    => $newUser->full_name,
@@ -61,6 +70,8 @@ class UserController extends Controller
                 return $newUser;
             });
 
+            $this->clearCache();
+
             $user->load('tier');
             broadcast(new UserEvent('created', $user))->toOthers();
 
@@ -70,12 +81,12 @@ class UserController extends Controller
         }
     }
 
+    // Xem chi tiết
     public function show($id): JsonResponse
     {
         try {
             $user = User::withTrashed()
                 ->with(['tier'])
-                // Lấy danh sách địa chỉ, ưu tiên địa chỉ mặc định lên đầu
                 ->with(['addresses' => function($q) {
                     $q->orderBy('is_default', 'desc')->orderBy('id', 'desc');
                 }])
@@ -87,6 +98,7 @@ class UserController extends Controller
         }
     }
 
+    // Cập nhật
     public function update(UpdateUserRequest $request, $id): JsonResponse
     {
         try {
@@ -110,7 +122,6 @@ class UserController extends Controller
             DB::transaction(function () use ($user, $data) {
                 $user->update($data);
 
-                // Tự động đồng bộ Tên/SĐT mới vào các Địa chỉ nếu admin đổi Tên/SĐT gốc
                 if (array_key_exists('full_name', $data) || array_key_exists('phone', $data)) {
                     $user->addresses()->update([
                         'customer_name'  => $user->full_name,
@@ -118,6 +129,8 @@ class UserController extends Controller
                     ]);
                 }
             });
+
+            $this->clearCache();
 
             $user->load('tier');
             broadcast(new UserEvent('updated', $user))->toOthers();
@@ -128,12 +141,15 @@ class UserController extends Controller
         }
     }
 
+    // Khóa / Xóa mềm
     public function destroy($id): JsonResponse
     {
         try {
             $user = User::findOrFail($id);
             $user->delete(); 
             
+            $this->clearCache();
+
             broadcast(new UserEvent('deleted', $user))->toOthers();
 
             return response()->json(['success' => true, 'message' => 'Đã khóa và chuyển khách hàng vào thùng rác!']);
@@ -142,12 +158,12 @@ class UserController extends Controller
         }
     }
 
+    // Khôi phục
     public function restore($id): JsonResponse
     {
         try {
             $user = User::withTrashed()->findOrFail($id);
 
-            // Chống xung đột Unique khi khôi phục
             $conflict = User::whereNull('deleted_at')
                 ->where(function ($q) use ($user) {
                     $q->where('email', $user->email);
@@ -166,6 +182,8 @@ class UserController extends Controller
             $user->restore();
             $user->load('tier');
             
+            $this->clearCache();
+
             broadcast(new UserEvent('restored', $user))->toOthers();
             
             return response()->json(['success' => true, 'message' => 'Đã khôi phục tài khoản thành công!']);

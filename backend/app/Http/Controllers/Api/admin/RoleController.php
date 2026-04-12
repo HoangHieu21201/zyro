@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
@@ -7,13 +6,19 @@ use App\Models\Role;
 use App\Http\Requests\Role\StoreRoleRequest;
 use App\Http\Requests\Role\UpdateRoleRequest;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Cache; 
 
 class RoleController extends Controller
 {
+    private string $cacheKey = 'admin_roles_list';
+
     public function index(): JsonResponse
     {
         try {
-            $roles = Role::withCount('admins')->withTrashed()->orderBy('level', 'asc')->get();
+            $roles = Cache::remember($this->cacheKey, 86400, function () {
+                return Role::withCount('admins')->withTrashed()->orderBy('level', 'asc')->get();
+            });
+
             return response()->json(['success' => true, 'data' => $roles]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Lỗi hệ thống: ' . $e->getMessage()], 500);
@@ -34,6 +39,8 @@ class RoleController extends Controller
             }
 
             $role = Role::create($data);
+
+            Cache::forget($this->cacheKey);
 
             broadcast(new \App\Events\RoleEvent('created', $role))->toOthers();
 
@@ -82,6 +89,8 @@ class RoleController extends Controller
 
             $role->update($data);
 
+            Cache::forget($this->cacheKey);
+
             broadcast(new \App\Events\RoleEvent('updated', $role))->toOthers();
 
             return response()->json(['success' => true, 'message' => 'Cập nhật Role thành công', 'data' => $role]);
@@ -106,6 +115,8 @@ class RoleController extends Controller
             $role->update(['value' => $role->value . '_deleted_' . time()]);
             $role->delete();
 
+            Cache::forget($this->cacheKey);
+
             broadcast(new \App\Events\RoleEvent('deleted', $role))->toOthers();
 
             return response()->json(['success' => true, 'message' => 'Đã đưa Role vào thùng rác.']);
@@ -127,6 +138,8 @@ class RoleController extends Controller
             $role->update(['value' => $originalValue]);
             $role->restore();
             
+            Cache::forget($this->cacheKey);
+
             broadcast(new \App\Events\RoleEvent('restored', $role))->toOthers();
 
             return response()->json(['success' => true, 'message' => 'Đã khôi phục Role thành công', 'data' => $role]);

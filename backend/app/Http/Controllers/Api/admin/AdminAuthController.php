@@ -1,7 +1,5 @@
 <?php
 
-// File: backend/app/Http/Controllers/Api/Admin/AdminAuthController.php
-
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
@@ -13,13 +11,12 @@ use App\Models\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 class AdminAuthController extends Controller
 {
-    // Đăng ký (Thường dùng cho setup hoặc API ẩn)
+    // Đăng ký tài khoản
     public function register(AdminRegisterRequest $request): JsonResponse
     {
         $data = $request->validated();
@@ -32,10 +29,10 @@ class AdminAuthController extends Controller
         $admin = Admin::create($data);
         $admin->load('role');
 
-        return response()->json(['success' => true, 'message' => 'Tạo tài khoản quản trị thành công', 'data' => $admin], 201);
+        return response()->json(['success' => true, 'message' => 'Tạo tài khoản thành công', 'data' => $admin], 201);
     }
 
-    // Đăng nhập
+    // Đăng nhập hệ thống
     public function login(AdminLoginRequest $request): JsonResponse
     {
         $data = $request->validated();
@@ -45,12 +42,10 @@ class AdminAuthController extends Controller
             return response()->json(['success' => false, 'message' => 'Email hoặc mật khẩu không chính xác'], 401);
         }
 
-        // Chặn tài khoản bị khóa
         if ($admin->status !== 'active') {
             return response()->json(['success' => false, 'message' => 'Tài khoản của bạn đã bị khóa hoặc vô hiệu hóa'], 403);
         }
 
-        // Định danh quyền hạn theo Level
         $abilities = $admin->role ? ['level:' . $admin->role->level] : ['level:5'];
         $token = $admin->createToken('admin_token', $abilities)->plainTextToken;
 
@@ -62,20 +57,15 @@ class AdminAuthController extends Controller
         ]);
     }
 
-    // Gửi OTP Quên mật khẩu
+    // Gửi OTP Quên mật khẩu (Lưu vào Redis Cache 15 phút)
     public function forgotPassword(AdminForgotPasswordRequest $request): JsonResponse
     {
         $email = $request->validated('email');
         $otp = (string) random_int(100000, 999999);
 
-        // Lưu/Update mã OTP
-        DB::table('password_reset_tokens')->updateOrInsert(
-            ['email' => $email],
-            ['token' => $otp, 'created_at' => Carbon::now()]
-        );
+        Cache::put('admin_pwd_reset_' . $email, $otp, now()->addMinutes(15));
 
         try {
-            // Template Email Zyro
             $htmlContent = "
                 <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #EBF1F5; border-radius: 10px;'>
                     <h2 style='color: #213448; text-align: center; letter-spacing: 2px;'>ZYRO.</h2>
@@ -86,7 +76,7 @@ class AdminAuthController extends Controller
                         <p style='margin: 0; color: #4a5568; font-size: 14px;'>Mã xác nhận (OTP) của bạn là:</p>
                         <h1 style='color: #213448; font-size: 32px; margin: 10px 0; letter-spacing: 5px;'>{$otp}</h1>
                     </div>
-                    <p style='color: #e53e3e; font-size: 13px; text-align: center;'>* Mã này sẽ hết hạn sau 15 phút. Tuyệt đối không chia sẻ mã này cho bất kỳ ai.</p>
+                    <p style='color: #e53e3e; font-size: 13px; text-align: center;'>* Mã này sẽ tự động hủy sau 15 phút.</p>
                     <hr style='border: none; border-top: 1px solid #EBF1F5; margin: 30px 0;' />
                     <p style='color: #a0aec0; font-size: 12px; text-align: center;'>Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email.</p>
                 </div>
@@ -96,47 +86,39 @@ class AdminAuthController extends Controller
                 $message->to($email)->subject('Mã xác nhận đặt lại mật khẩu (OTP) - Zyro Admin');
             });
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Lỗi cấu hình gửi mail. (' . $e->getMessage() . ')'], 500);
+            return response()->json(['success' => false, 'message' => 'Lỗi cấu hình gửi mail.'], 500);
         }
 
         return response()->json(['success' => true, 'message' => 'Mã xác nhận đã được gửi đến email của bạn.']);
     }
 
-    // Đặt lại mật khẩu
+    // Đặt lại mật khẩu (Kiểm tra bằng Redis)
     public function resetPassword(AdminResetPasswordRequest $request): JsonResponse
     {
         $data = $request->validated();
-        
-        $resetRecord = DB::table('password_reset_tokens')
-            ->where('email', $data['email'])
-            ->where('token', $data['token'])
-            ->first();
+        $cachedOtp = Cache::get('admin_pwd_reset_' . $data['email']);
 
-        if (!$resetRecord) {
-            return response()->json(['success' => false, 'message' => 'Mã xác nhận không hợp lệ hoặc sai số.'], 400);
+        if (!$cachedOtp) {
+            return response()->json(['success' => false, 'message' => 'Mã xác nhận đã hết hạn hoặc không tồn tại.'], 400);
         }
 
-        // Hết hạn sau 15 phút
-        if (Carbon::parse($resetRecord->created_at)->addMinutes(15)->isPast()) {
-            DB::table('password_reset_tokens')->where('email', $data['email'])->delete();
-            return response()->json(['success' => false, 'message' => 'Mã xác nhận đã hết hạn. Vui lòng yêu cầu mã mới.'], 400);
+        if ($cachedOtp !== $data['token']) {
+            return response()->json(['success' => false, 'message' => 'Mã xác nhận không hợp lệ.'], 400);
         }
 
         $admin = Admin::where('email', $data['email'])->first();
         $admin->update(['password' => Hash::make($data['password'])]);
 
-        DB::table('password_reset_tokens')->where('email', $data['email'])->delete();
-        $admin->tokens()->delete(); // Thu hồi toàn bộ token cũ
+        Cache::forget('admin_pwd_reset_' . $data['email']);
+        $admin->tokens()->delete(); 
 
         return response()->json(['success' => true, 'message' => 'Mật khẩu đã được cập nhật thành công.']);
     }
 
-    // Lấy Profile hiện tại
+    // Lấy thông tin cá nhân
     public function me(Request $request): JsonResponse
     {
-        /** @var \App\Models\Admin $admin */
         $admin = $request->user()->load('role');
-        
         return response()->json(['success' => true, 'data' => $admin]);
     }
 
@@ -144,7 +126,6 @@ class AdminAuthController extends Controller
     public function logout(Request $request): JsonResponse
     {
         $request->user()->currentAccessToken()->delete();
-
         return response()->json(['success' => true, 'message' => 'Đăng xuất thành công']);
     }
 }

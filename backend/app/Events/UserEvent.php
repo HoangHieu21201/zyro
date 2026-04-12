@@ -1,7 +1,5 @@
 <?php
 
-// File: backend/app/Events/UserEvent.php
-
 namespace App\Events;
 
 use App\Models\User;
@@ -38,7 +36,6 @@ class UserEvent implements ShouldBroadcast
 
     public function broadcastWith(): array
     {
-        // Load kèm tier để UI hiển thị hạng thành viên
         if (!$this->user->relationLoaded('tier') && $this->action !== 'deleted') {
             $this->user->load('tier');
         }

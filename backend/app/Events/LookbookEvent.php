@@ -1,7 +1,5 @@
 <?php
 
-// File: backend/app/Events/LookbookEvent.php
-
 namespace App\Events;
 
 use App\Models\Lookbook;
@@ -39,7 +37,6 @@ class LookbookEvent implements ShouldBroadcast
     public function broadcastWith(): array
     {
         if ($this->action !== 'deleted') {
-            // Load items để Frontend biết số lượng ghim trên ảnh
             $this->lookbook->load('items');
         }
 

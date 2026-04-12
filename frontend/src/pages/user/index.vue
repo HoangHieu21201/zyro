@@ -60,23 +60,25 @@
     </section>
 
     <!-- =======================================================
-         3. HÀNG MỚI VỀ (NATIVE SWIPER CÓ TABS)
+         3. HÀNG MỚI VỀ (NATIVE SWIPER CÓ TABS - DỮ LIỆU THẬT)
     ======================================================== -->
     <section class="py-5 bg-white overflow-hidden">
       <div class="zyro-container py-3">
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-4 gap-3">
           <h3 class="fw-bold text-uppercase mb-0 tracking-wide text-dark">Hàng Mới Về</h3>
           <ul class="nav nav-underline gap-4 section-tabs">
-            <li class="nav-item"><a class="nav-link fw-bold active" href="#" @click.prevent>NAM</a></li>
+            <li class="nav-item"><a class="nav-link fw-bold active" href="#" @click.prevent>TẤT CẢ</a></li>
+            <li class="nav-item"><a class="nav-link fw-bold" href="#" @click.prevent>NAM</a></li>
             <li class="nav-item"><a class="nav-link fw-bold" href="#" @click.prevent>NỮ</a></li>
-            <li class="nav-item"><a class="nav-link fw-bold" href="#" @click.prevent>TRẺ EM</a></li>
-            <li class="nav-item"><a class="nav-link fw-bold" href="#" @click.prevent>GIÀY DÉP</a></li>
           </ul>
         </div>
 
         <div class="product-swiper-container pb-3 px-1 cursor-grab" ref="swiperRef" @mousedown="startDrag"
           @mouseleave="endDrag" @mouseup="endDrag" @mousemove="doDrag">
-          <div class="product-swiper-slide" v-for="product in latestProducts" :key="'new' + product.id">
+          <!-- Hiển thị Skeleton nếu đang load, hoặc vòng lặp Data thật -->
+          <div v-if="isLoading" class="text-center py-5 w-100"><span class="spinner-border text-muted"></span></div>
+          <div v-else-if="latestProducts.length === 0" class="text-center py-5 w-100 text-muted">Chưa có sản phẩm mới.</div>
+          <div v-else class="product-swiper-slide" v-for="product in latestProducts" :key="'new' + product.id">
             <ProductCard class="h-100" :product="product" @quick-view="handleOpenQuickView"
               @compare="handleAddToCompare" @wishlist="handleAddToWishlist" @options="handleGoToDetail" />
           </div>
@@ -92,7 +94,7 @@
     </section>
 
     <!-- =======================================================
-         4. ĐƯỢC YÊU THÍCH NHẤT (GRID 5 CỘT)
+         4. ĐƯỢC YÊU THÍCH NHẤT (GRID 5 CỘT - DỮ LIỆU THẬT)
     ======================================================== -->
     <section class="py-5 bg-light dark:bg-[#121416]">
       <div class="zyro-container py-3">
@@ -119,7 +121,10 @@
             </div>
           </div>
 
-          <ProductCard class="h-100" v-for="product in mostLovedProducts" :key="'loved' + product.id" :product="product"
+          <div v-if="isLoading" class="col-span-3 text-center py-5 w-100"><span class="spinner-border text-muted"></span></div>
+          <div v-else-if="mostLovedProducts.length === 0" class="col-span-3 text-center py-5 w-100 text-muted">Chưa có sản phẩm nổi bật.</div>
+          
+          <ProductCard v-else class="h-100" v-for="product in mostLovedProducts.slice(0, 3)" :key="'loved' + product.id" :product="product"
             @quick-view="handleOpenQuickView" @compare="handleAddToCompare" @wishlist="handleAddToWishlist"
             @options="handleGoToDetail" />
         </div>
@@ -264,12 +269,34 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
+import axios from 'axios';
 
 import ProductCard from '@/components/client/ProductCard.vue';
 import QuickViewModal from '@/components/client/QuickViewModal.vue';
 import CompareModal from '@/components/client/CompareModal.vue';
 
 const router = useRouter();
+
+// ========================================================
+// API CALL LẤY DỮ LIỆU THẬT
+// ========================================================
+const latestProducts = ref([]);
+const mostLovedProducts = ref([]);
+const isLoading = ref(true);
+
+const fetchHomeData = async () => {
+  try {
+    const res = await axios.get('http://127.0.0.1:8000/api/v1/client/home');
+    if(res.data.success) {
+      latestProducts.value = res.data.data.new_arrivals || [];
+      mostLovedProducts.value = res.data.data.featured || [];
+    }
+  } catch (error) {
+    console.error('Lỗi lấy dữ liệu trang chủ:', error);
+  } finally {
+    isLoading.value = false;
+  }
+};
 
 const handleGoToDetail = (product) => {
   router.push(`/product/${product.id}`);
@@ -354,7 +381,6 @@ const scrollCollection = (direction) => {
 const slowDownMarquee = (e) => {
   const animations = e.currentTarget.getAnimations();
   animations.forEach(anim => {
-    // Giảm tốc độ xuống 50% thay vì dừng hẳn
     anim.playbackRate = 0.5; 
   });
 };
@@ -362,13 +388,12 @@ const slowDownMarquee = (e) => {
 const restoreMarqueeSpeed = (e) => {
   const animations = e.currentTarget.getAnimations();
   animations.forEach(anim => {
-    // Trả lại tốc độ mặc định
     anim.playbackRate = 1; 
   });
 };
 
 // ========================================================
-// MOCK DATA 
+// MOCK DATA (CÁC SECTION CHƯA CÓ API)
 // ========================================================
 const flashSaleProducts = ref([
   { id: 201, name: 'Áo Sơ Mi Nữ Lụa Satin', price: 299000, old_price: 500000, discount_percent: 40, image: 'https://images.unsplash.com/photo-1551163943-3f6a855d1153?q=80&w=400&auto=format&fit=crop' },
@@ -376,25 +401,6 @@ const flashSaleProducts = ref([
   { id: 203, name: 'Chân Váy Xếp Ly Cao Cấp', price: 350000, old_price: 500000, discount_percent: 30, image: 'https://images.unsplash.com/photo-1583496661160-c588c4af5d4a?q=80&w=400&auto=format&fit=crop' },
   { id: 204, name: 'Áo Thun Typography Nữ', price: 199000, old_price: 398000, discount_percent: 50, image: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=400&auto=format&fit=crop' },
   { id: 205, name: 'Áo Khoác Gió Nữ Thể Thao', price: 450000, old_price: 650000, discount_percent: 30, image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?q=80&w=400&auto=format&fit=crop' },
-]);
-
-const latestProducts = ref([
-  { id: 101, name: 'Sơ Mi Tay Dài Nam Đen Siêu Co Giãn', price: 549000, old_price: null, is_new: true, image: 'https://images.unsplash.com/photo-1596755094514-f87e32f85e23?q=80&w=600&auto=format&fit=crop', colors: [{ hex: '#2c3e50' }, { hex: '#8e44ad' }] },
-  { id: 102, name: 'Sơ Mi Nam Cộc Tay Cafe', price: 469000, old_price: null, is_new: true, image: 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?q=80&w=600&auto=format&fit=crop', colors: [{ hex: '#bdc3c7' }, { hex: '#3498db' }] },
-  { id: 103, name: 'Áo Thun Nam Basic Slimfit', price: 149000, old_price: 299000, discount_percent: 50, image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=600&auto=format&fit=crop', colors: [{ hex: '#7f8fa6' }, { hex: '#000000' }] },
-  { id: 106, name: 'Sơ Mi Nam Nano Kẻ Caro', price: 469000, old_price: null, image: 'https://images.unsplash.com/photo-1588359348347-9bc6cbb6858a?q=80&w=600&auto=format&fit=crop' },
-  { id: 105, name: 'Áo Phông Tay Raglan Dài Chỉ Ngang', price: 249000, old_price: 539000, discount_percent: 54, image: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?q=80&w=600&auto=format&fit=crop' }
-]);
-
-const mostLovedProducts = ref([
-  { id: 301, name: 'Áo Polo Thể Thao Nữ Năng Động', price: 329000, old_price: null, image: 'https://images.unsplash.com/photo-1518310383802-640c2de311b2?q=80&w=600&auto=format&fit=crop', colors: [{ hex: '#fab1a0' }, { hex: '#c8d6e5' }] },
-  { id: 302, name: 'Sơ Mi Nữ Dài Tay Dấu Nẹp', price: 319000, old_price: 449000, discount_percent: 29, image: 'https://images.unsplash.com/photo-1551163943-3f6a855d1153?q=80&w=600&auto=format&fit=crop' },
-  { id: 303, name: 'Áo Phông Nữ Slimfit Coton', price: 99000, old_price: 149000, discount_percent: 34, image: 'https://images.unsplash.com/photo-1434389673229-a178bcdaab30?q=80&w=600&auto=format&fit=crop', colors: [{ hex: '#ffffff' }, { hex: '#000000' }] },
-  { id: 304, name: 'Áo Phông Nữ Ôm Croptop', price: 99000, old_price: null, image: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=600&auto=format&fit=crop' },
-  { id: 305, name: 'Áo Phông Nữ In Creative', price: 299000, old_price: 599000, discount_percent: 50, image: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?q=80&w=600&auto=format&fit=crop' },
-  { id: 306, name: 'Bộ Thể Thao T-Shirt Nữ', price: 299000, old_price: null, image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=600&auto=format&fit=crop' },
-  { id: 307, name: 'Quần Ống Rộng Kaki Thời Trang', price: 420000, old_price: 550000, discount_percent: 23, image: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?q=80&w=600&auto=format&fit=crop' },
-  { id: 308, name: 'Chân Váy Ngắn Chữ A Basic', price: 250000, old_price: null, image: 'https://images.unsplash.com/photo-1583496661160-c588c4af5d4a?q=80&w=600&auto=format&fit=crop' }
 ]);
 
 const collectionProducts = ref([
@@ -427,7 +433,10 @@ const lookbookImages = ref([
   'https://images.unsplash.com/photo-1434389673229-a178bcdaab30?q=80&w=400&auto=format&fit=crop',
 ]);
 
-onMounted(() => { window.scrollTo(0, 0); });
+onMounted(() => { 
+  window.scrollTo(0, 0); 
+  fetchHomeData();
+});
 </script>
 
 <style scoped>

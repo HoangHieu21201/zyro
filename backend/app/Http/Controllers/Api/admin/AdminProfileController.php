@@ -8,13 +8,12 @@ use App\Http\Requests\Profile\UpdateProfilePasswordRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 use App\Events\AdminEvent;
 
 class AdminProfileController extends Controller
 {
-    /**
-     * Cập nhật thông tin cá nhân (Không có chức vụ, Không có trạng thái)
-     */
+    // Cập nhật thông tin cá nhân
     public function updateInfo(UpdateProfileInfoRequest $request): JsonResponse
     {
         try {
@@ -37,22 +36,18 @@ class AdminProfileController extends Controller
             $admin->update($data);
             $admin->load('role');
 
-            // Broadcast để các máy khác cập nhật giao diện
+            // Xóa cache danh sách Admin dùng chung
+            Cache::forget('admin_users_list');
+
             broadcast(new AdminEvent('updated', $admin))->toOthers();
 
-            return response()->json([
-                'success' => true, 
-                'message' => 'Cập nhật hồ sơ thành công!',
-                'data'    => $admin
-            ]);
+            return response()->json(['success' => true, 'message' => 'Cập nhật hồ sơ thành công!', 'data' => $admin]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Lỗi hệ thống: ' . $e->getMessage()], 500);
         }
     }
 
-    /**
-     * Đổi mật khẩu cá nhân (Cần xác thực mật khẩu cũ)
-     */
+    // Đổi mật khẩu cá nhân
     public function updatePassword(UpdateProfilePasswordRequest $request): JsonResponse
     {
         try {
@@ -60,7 +55,6 @@ class AdminProfileController extends Controller
             $admin = $request->user();
             $data = $request->validated();
 
-            // Kiểm tra mật khẩu cũ có đúng không
             if (!Hash::check($data['current_password'], $admin->password)) {
                 return response()->json([
                     'success' => false, 
@@ -68,10 +62,7 @@ class AdminProfileController extends Controller
                 ], 422);
             }
 
-            // Lưu mật khẩu mới
-            $admin->update([
-                'password' => Hash::make($data['password'])
-            ]);
+            $admin->update(['password' => Hash::make($data['password'])]);
 
             return response()->json(['success' => true, 'message' => 'Đổi mật khẩu thành công!']);
         } catch (\Exception $e) {

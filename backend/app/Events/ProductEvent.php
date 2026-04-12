@@ -1,7 +1,5 @@
 <?php
 
-// File: backend/app/Events/ProductEvent.php
-
 namespace App\Events;
 
 use App\Models\Product;
@@ -38,7 +36,6 @@ class ProductEvent implements ShouldBroadcast
 
     public function broadcastWith(): array
     {
-        // Load kèm category và brand để Frontend hiển thị mượt mà trên bảng
         if ($this->action !== 'deleted') {
             $this->product->load(['category:id,name', 'brand:id,name']);
         }

@@ -10,41 +10,52 @@ use App\Events\CategoryEvent;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
-    /**
-     * Hàm nội bộ: Lấy số thứ tự hiển thị tiếp theo
-     */
     private function getNextSortOrder(): int
     {
         $max = Category::max('sort_order');
         return is_numeric($max) ? $max + 1 : 1;
     }
 
+    private function clearCache(Category $category = null): void
+    {
+        Cache::forget('categories_list_all');
+        Cache::forget('categories_list_root');
+        Cache::forget('categories_tree_all');
+        
+        if ($category && $category->parent_id) {
+            Cache::forget('categories_list_' . $category->parent_id);
+        }
+    }
+
     public function index(Request $request): JsonResponse
     {
         try {
-            $query = Category::with('parent')->withCount('children');
+            $parentId = $request->has('parent_id') ? $request->parent_id : 'all';
+            $cacheKey = 'categories_list_' . ($parentId === 'null' || $parentId === '' ? 'root' : $parentId);
 
-            // ĐÃ BỔ SUNG: Lọc theo danh mục cha (parent_id)
-            // Nếu frontend gọi /api/admin/categories?parent_id=null -> Trả về danh mục gốc
-            // Nếu frontend gọi /api/admin/categories?parent_id=1 -> Trả về danh mục con của ID 1
-            if ($request->has('parent_id')) {
-                $parentId = $request->parent_id;
-                if ($parentId === 'null' || $parentId == 0 || $parentId === '') {
-                    $query->whereNull('parent_id');
-                } else {
-                    $query->where('parent_id', $parentId);
+            $categories = Cache::remember($cacheKey, 86400, function () use ($request) {
+                $query = Category::with('parent')->withCount('children');
+
+                if ($request->has('parent_id')) {
+                    $parentId = $request->parent_id;
+                    if ($parentId === 'null' || $parentId == 0 || $parentId === '') {
+                        $query->whereNull('parent_id');
+                    } else {
+                        $query->where('parent_id', $parentId);
+                    }
                 }
-            }
 
-            $categories = $query->orderByRaw('sort_order IS NULL, sort_order ASC')
-                ->orderBy('id', 'desc')
-                ->withTrashed()
-                ->get();
+                return $query->orderByRaw('sort_order IS NULL, sort_order ASC')
+                    ->orderBy('id', 'desc')
+                    ->withTrashed()
+                    ->get();
+            });
 
             return response()->json(['success' => true, 'data' => $categories]);
         } catch (\Exception $e) {
@@ -52,22 +63,18 @@ class CategoryController extends Controller
         }
     }
 
-    /**
-     * ĐÃ BỔ SUNG: Hàm getTree() trả về cấu trúc Cha - Con lồng nhau
-     * Phục vụ cực tốt cho Select Box 2 cấp hoặc Mega Menu
-     */
     public function getTree(): JsonResponse
     {
         try {
-            // Chỉ lấy danh mục gốc (parent_id = null)
-            // Kèm theo eager loading tất cả danh mục con của nó
-            $categories = Category::whereNull('parent_id')
-                ->with(['children' => function ($q) {
-                    $q->orderByRaw('sort_order IS NULL, sort_order ASC')->orderBy('id', 'desc');
-                }])
-                ->orderByRaw('sort_order IS NULL, sort_order ASC')
-                ->orderBy('id', 'desc')
-                ->get();
+            $categories = Cache::remember('categories_tree_all', 86400, function () {
+                return Category::whereNull('parent_id')
+                    ->with(['children' => function ($q) {
+                        $q->orderByRaw('sort_order IS NULL, sort_order ASC')->orderBy('id', 'desc');
+                    }])
+                    ->orderByRaw('sort_order IS NULL, sort_order ASC')
+                    ->orderBy('id', 'desc')
+                    ->get();
+            });
 
             return response()->json(['success' => true, 'data' => $categories]);
         } catch (\Exception $e) {
@@ -82,7 +89,6 @@ class CategoryController extends Controller
             $data['slug'] = $this->generateUniqueSlug($data['name']);
             $data['status'] = $data['status'] ?? 'active';
 
-            // LOGIC SẮP XẾP: Tự động cấp phát nếu đang active
             $data['sort_order'] = ($data['status'] === 'active') ? $this->getNextSortOrder() : null;
 
             if ($request->hasFile('thumbnail')) {
@@ -95,6 +101,7 @@ class CategoryController extends Controller
             $category = Category::create($data);
             $category->load('parent');
 
+            $this->clearCache($category);
             broadcast(new CategoryEvent('created', $category))->toOthers();
 
             return response()->json(['success' => true, 'message' => 'Tạo danh mục thành công!', 'data' => $category], 201);
@@ -127,12 +134,10 @@ class CategoryController extends Controller
                 $data['slug'] = $this->generateUniqueSlug($data['name'], $category->id);
             }
 
-            // LOGIC SẮP XẾP: Cập nhật lại khi thay đổi trạng thái Active/Hidden
             if (isset($data['status']) && $category->status !== $data['status']) {
                 $data['sort_order'] = ($data['status'] === 'active') ? $this->getNextSortOrder() : null;
             }
 
-            // Quản lý Thumbnail & Size Guide
             if ($request->hasFile('thumbnail')) {
                 if ($category->thumbnail) Storage::disk('public')->delete($category->thumbnail);
                 $data['thumbnail'] = $request->file('thumbnail')->store('categories/thumbnails', 'public');
@@ -152,6 +157,7 @@ class CategoryController extends Controller
             $category->update($data);
             $category->load('parent');
 
+            $this->clearCache($category);
             broadcast(new CategoryEvent('updated', $category))->toOthers();
 
             return response()->json(['success' => true, 'message' => 'Cập nhật danh mục thành công!', 'data' => $category]);
@@ -172,15 +178,13 @@ class CategoryController extends Controller
                 return response()->json(['success' => false, 'message' => 'Không thể xóa do danh mục này đang chứa sản phẩm!'], 422);
             }
 
-            // LOGIC SẮP XẾP: Xóa mềm thì tước bỏ vị trí ưu tiên
             $category->sort_order = null;
-
-            // Xóa slug để nhường chỗ cho danh mục khác
             $category->slug = $category->slug . '-deleted-' . time();
             $category->save();
 
             $category->delete();
 
+            $this->clearCache($category);
             broadcast(new CategoryEvent('deleted', $category))->toOthers();
 
             return response()->json(['success' => true, 'message' => 'Đã đưa danh mục vào thùng rác!']);
@@ -205,7 +209,6 @@ class CategoryController extends Controller
 
             $category->slug = $originalSlug;
 
-            // LOGIC SẮP XẾP: Cấp phát lại vị trí mới nhất
             if ($category->status === 'active') {
                 $category->sort_order = $this->getNextSortOrder();
             }
@@ -214,6 +217,7 @@ class CategoryController extends Controller
             $category->restore();
             $category->load('parent');
 
+            $this->clearCache($category);
             broadcast(new CategoryEvent('restored', $category))->toOthers();
 
             return response()->json(['success' => true, 'message' => 'Khôi phục danh mục thành công!']);
@@ -222,9 +226,6 @@ class CategoryController extends Controller
         }
     }
 
-    /**
-     * CẬP NHẬT TỪ KÉO THẢ (DRAG & DROP)
-     */
     public function reorder(Request $request): JsonResponse
     {
         $request->validate([
@@ -239,15 +240,15 @@ class CategoryController extends Controller
                     Category::where('id', $item['id'])->update(['sort_order' => $item['sort_order']]);
                 }
             });
+            
+            $this->clearCache();
+
             return response()->json(['success' => true, 'message' => 'Cập nhật thứ tự hiển thị thành công!']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Lỗi hệ thống: ' . $e->getMessage()], 500);
         }
     }
 
-    /**
-     * Helper: Sinh Slug không trùng lặp
-     */
     private function generateUniqueSlug($name, $ignoreId = null): string
     {
         $slug = Str::slug($name);
@@ -262,9 +263,6 @@ class CategoryController extends Controller
         return $slug;
     }
 
-    /**
-     * Helper: Kiểm tra tham chiếu vòng (Ngăn cản Cha chọn Con làm Cha của nó)
-     */
     private function isCircularReference($categoryId, $parentId): bool
     {
         if ($categoryId == $parentId) return true;

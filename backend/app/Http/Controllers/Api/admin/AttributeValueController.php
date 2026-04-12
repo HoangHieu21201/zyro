@@ -6,10 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\AttributeValue;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Cache;
 
 class AttributeValueController extends Controller
 {
-    // API lưu giá trị biến thể (VD: Lưu chữ "Đỏ" cho thuộc tính "Màu sắc")
+    // Lưu giá trị biến thể
     public function store(Request $request): JsonResponse
     {
         $request->validate([
@@ -18,27 +19,32 @@ class AttributeValueController extends Controller
         ]);
 
         try {
-            // Kiểm tra tránh trùng lặp giá trị trong cùng 1 thuộc tính
             $exists = AttributeValue::where('attribute_id', $request->attribute_id)
                                     ->where('value', $request->value)
                                     ->first();
+                                    
             if ($exists) {
                 return response()->json(['success' => false, 'message' => 'Giá trị này đã tồn tại trong thuộc tính.'], 422);
             }
 
             $attrValue = AttributeValue::create($request->only(['attribute_id', 'value', 'meta_value']));
+            
+            Cache::forget('attributes_list_all');
+
             return response()->json(['success' => true, 'message' => 'Đã thêm giá trị', 'data' => $attrValue], 201);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Lỗi: ' . $e->getMessage()], 500);
         }
     }
 
-    // ĐÃ THÊM: API Xóa giá trị rác
+    // Xóa giá trị
     public function destroy($id): JsonResponse
     {
         try {
             $attrValue = AttributeValue::findOrFail($id);
             $attrValue->delete();
+            
+            Cache::forget('attributes_list_all');
             
             return response()->json(['success' => true, 'message' => 'Đã dọn dẹp giá trị rác thành công.']);
         } catch (\Exception $e) {

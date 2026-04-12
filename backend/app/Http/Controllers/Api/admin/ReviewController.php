@@ -8,27 +8,44 @@ use App\Http\Requests\Review\ReplyReviewRequest;
 use App\Events\ReviewEvent;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Cache;
 
 class ReviewController extends Controller
 {
-    /**
-     * Danh sách đánh giá (Có filter lọc theo Số sao, Trạng thái)
-     */
+    private string $cacheVersionKey = 'reviews_admin_cache_version';
+
+    // Dọn cache phân trang bằng Versioning
+    private function clearCache(): void
+    {
+        Cache::increment($this->cacheVersionKey);
+    }
+
+    // Danh sách đánh giá
     public function index(Request $request): JsonResponse
     {
         try {
-            $query = Review::with(['user:id,full_name,email,avatar_url', 'product:id,name,thumbnail_image'])
-                           ->withTrashed()
-                           ->orderBy('id', 'desc');
+            $version = Cache::rememberForever($this->cacheVersionKey, fn() => 1);
+            $cacheKey = sprintf('reviews_admin_v%s_p%s_r%s_s%s',
+                $version,
+                $request->get('page', 1),
+                $request->get('rating', 'all'),
+                $request->get('status', 'all')
+            );
 
-            if ($request->has('rating') && $request->rating !== '') {
-                $query->where('rating', $request->rating);
-            }
-            if ($request->has('status') && $request->status !== '') {
-                $query->where('status', $request->status);
-            }
+            $reviews = Cache::remember($cacheKey, 86400, function() use ($request) {
+                $query = Review::with(['user:id,full_name,email,avatar_url', 'product:id,name,thumbnail_image'])
+                               ->withTrashed()
+                               ->orderBy('id', 'desc');
 
-            $reviews = $query->paginate(15);
+                if ($request->has('rating') && $request->rating !== '') {
+                    $query->where('rating', $request->rating);
+                }
+                if ($request->has('status') && $request->status !== '') {
+                    $query->where('status', $request->status);
+                }
+
+                return $query->paginate(15);
+            });
             
             return response()->json(['success' => true, 'data' => $reviews]);
         } catch (\Exception $e) {
@@ -36,9 +53,7 @@ class ReviewController extends Controller
         }
     }
 
-    /**
-     * Xem chi tiết 1 đánh giá
-     */
+    // Xem chi tiết
     public function show($id): JsonResponse
     {
         try {
@@ -52,16 +67,14 @@ class ReviewController extends Controller
         }
     }
 
-    /**
-     * Admin phản hồi đánh giá của khách
-     */
+    // Phản hồi
     public function reply(ReplyReviewRequest $request, $id): JsonResponse
     {
         try {
             $review = Review::findOrFail($id);
-            $data = $request->validated();
-            
-            $review->update(['admin_reply' => $data['admin_reply']]);
+            $review->update(['admin_reply' => $request->validated()['admin_reply']]);
+
+            $this->clearCache();
 
             $review->load(['user', 'product']);
             broadcast(new ReviewEvent('updated', $review))->toOthers();
@@ -72,9 +85,7 @@ class ReviewController extends Controller
         }
     }
 
-    /**
-     * Duyệt / Ẩn đánh giá (Kiểm duyệt)
-     */
+    // Duyệt / Ẩn
     public function updateStatus(Request $request, $id): JsonResponse
     {
         $request->validate(['status' => 'required|in:active,hidden']);
@@ -82,22 +93,24 @@ class ReviewController extends Controller
             $review = Review::findOrFail($id);
             $review->update(['status' => $request->status]);
 
+            $this->clearCache();
+
             broadcast(new ReviewEvent('updated', $review))->toOthers();
 
-            return response()->json(['success' => true, 'message' => 'Cập nhật trạng thái hiển thị thành công!']);
+            return response()->json(['success' => true, 'message' => 'Cập nhật trạng thái thành công!']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Lỗi: ' . $e->getMessage()], 500);
         }
     }
 
-    /**
-     * Đưa vào thùng rác (Đánh giá tục tĩu/spam)
-     */
+    // Đưa vào thùng rác
     public function destroy($id): JsonResponse
     {
         try {
             $review = Review::findOrFail($id);
             $review->delete();
+
+            $this->clearCache();
 
             broadcast(new ReviewEvent('deleted', $review))->toOthers();
 
@@ -107,14 +120,14 @@ class ReviewController extends Controller
         }
     }
 
-    /**
-     * Khôi phục
-     */
+    // Khôi phục
     public function restore($id): JsonResponse
     {
         try {
             $review = Review::withTrashed()->findOrFail($id);
             $review->restore();
+
+            $this->clearCache();
 
             broadcast(new ReviewEvent('restored', $review))->toOthers();
 

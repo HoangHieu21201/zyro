@@ -1,7 +1,5 @@
 <?php
 
-// File: backend/app/Http/Controllers/Api/Admin/VoucherController.php
-
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
@@ -11,20 +9,33 @@ use App\Http\Requests\Voucher\UpdateVoucherRequest;
 use App\Events\VoucherEvent;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Cache;
 
 class VoucherController extends Controller
 {
+    private string $cacheVersionKey = 'vouchers_admin_cache_version';
+
+    private function clearCache(): void
+    {
+        Cache::increment($this->cacheVersionKey);
+    }
+
     public function index(Request $request): JsonResponse
     {
         try {
-            $query = Voucher::withTrashed()->orderBy('id', 'desc');
+            $version = Cache::rememberForever($this->cacheVersionKey, fn() => 1);
+            $cacheKey = sprintf('vouchers_admin_v%s_p%s_s%s', $version, $request->get('page', 1), $request->get('status', 'all'));
 
-            // Hỗ trợ bộ lọc Status, Type... trên Frontend
-            if ($request->has('status') && $request->status !== '') {
-                $query->where('status', $request->status);
-            }
+            $vouchers = Cache::remember($cacheKey, 86400, function() use ($request) {
+                $query = Voucher::withTrashed()->orderBy('id', 'desc');
 
-            $vouchers = $query->paginate(15);
+                if ($request->has('status') && $request->status !== '') {
+                    $query->where('status', $request->status);
+                }
+
+                return $query->paginate(15);
+            });
+
             return response()->json(['success' => true, 'data' => $vouchers]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Lỗi tải danh sách: ' . $e->getMessage()], 500);
@@ -35,13 +46,12 @@ class VoucherController extends Controller
     {
         try {
             $data = $request->validated();
-            
-            // Ép mã Code viết hoa
             $data['code'] = strtoupper($data['code']);
-            $data['usage_count'] = 0; // Lúc mới tạo luôn bằng 0
+            $data['usage_count'] = 0; 
 
             $voucher = Voucher::create($data);
 
+            $this->clearCache();
             broadcast(new VoucherEvent('created', $voucher))->toOthers();
 
             return response()->json(['success' => true, 'message' => 'Tạo mã khuyến mãi thành công!', 'data' => $voucher], 201);
@@ -65,11 +75,11 @@ class VoucherController extends Controller
         try {
             $voucher = Voucher::findOrFail($id);
             $data = $request->validated();
-            
             $data['code'] = strtoupper($data['code']);
 
             $voucher->update($data);
 
+            $this->clearCache();
             broadcast(new VoucherEvent('updated', $voucher))->toOthers();
 
             return response()->json(['success' => true, 'message' => 'Cập nhật mã khuyến mãi thành công!', 'data' => $voucher]);
@@ -78,7 +88,6 @@ class VoucherController extends Controller
         }
     }
 
-    // API Cập nhật nhanh trạng thái từ màn Index (Bật/Tắt)
     public function updateStatus(Request $request, $id): JsonResponse
     {
         $request->validate(['status' => 'required|in:active,hidden,expired']);
@@ -87,6 +96,7 @@ class VoucherController extends Controller
             $voucher = Voucher::findOrFail($id);
             $voucher->update(['status' => $request->status]);
 
+            $this->clearCache();
             broadcast(new VoucherEvent('updated', $voucher))->toOthers();
 
             return response()->json(['success' => true, 'message' => 'Cập nhật trạng thái thành công!']);
@@ -100,12 +110,11 @@ class VoucherController extends Controller
         try {
             $voucher = Voucher::findOrFail($id);
 
-            // Gắn hậu tố để giải phóng mã Code cho việc tạo mã mới cùng tên sau này
             $voucher->code = $voucher->code . '_del_' . time();
             $voucher->save();
-
             $voucher->delete();
 
+            $this->clearCache();
             broadcast(new VoucherEvent('deleted', $voucher))->toOthers();
 
             return response()->json(['success' => true, 'message' => 'Đã đưa Voucher vào thùng rác.']);
@@ -119,10 +128,7 @@ class VoucherController extends Controller
         try {
             $voucher = Voucher::withTrashed()->findOrFail($id);
             
-            // Xóa hậu tố '_del_xxx' để lấy lại mã gốc
             $originalCode = preg_replace('/_del_\d+$/', '', $voucher->code);
-            
-            // Kiểm tra xem mã gốc có bị ai chiếm mất chưa
             if (Voucher::where('code', $originalCode)->whereNull('deleted_at')->exists()) {
                 return response()->json(['success' => false, 'message' => 'Mã Code này đã bị sử dụng trong thời gian bị xóa, không thể khôi phục.'], 400);
             }
@@ -131,6 +137,7 @@ class VoucherController extends Controller
             $voucher->save();
             $voucher->restore();
 
+            $this->clearCache();
             broadcast(new VoucherEvent('restored', $voucher))->toOthers();
 
             return response()->json(['success' => true, 'message' => 'Khôi phục Voucher thành công!']);

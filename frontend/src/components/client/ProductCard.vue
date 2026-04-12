@@ -1,6 +1,7 @@
 <!-- File: frontend/src/components/client/ProductCard.vue -->
 <template>
-  <div class="product-card cursor-pointer">
+  <!-- ĐÃ FIX: Thêm sự kiện @click="onOptions" vào thẻ bao ngoài cùng để Click toàn bộ thẻ -->
+  <div class="product-card cursor-pointer" @click="onOptions">
     
     <!-- KHUNG HÌNH ẢNH SẢN PHẨM -->
     <div class="product-img-wrapper position-relative overflow-hidden rounded-3 mb-3 bg-light dark:bg-[#1a2533]">
@@ -21,9 +22,7 @@
       <!-- Màng đen mờ khi Hover -->
       <div class="position-absolute top-0 start-0 w-100 h-100 hover-overlay pe-none"></div>
 
-      <!-- ======================================================= -->
-      <!-- BỘ NÚT BÊN PHẢI ĐÃ FIX Z-INDEX -->
-      <!-- ======================================================= -->
+      <!-- BỘ NÚT BÊN PHẢI -->
       <div class="action-right-panel position-absolute d-flex flex-column gap-2" style="top: 15px; right: 15px;">
         <button class="btn bg-white rounded-circle shadow action-icon-btn d-flex align-items-center justify-content-center" title="Yêu thích" @click.stop="onWishlist">
           <i class="bi bi-heart text-dark fs-6"></i>
@@ -36,12 +35,10 @@
         </button>
       </div>
 
-      <!-- ======================================================= -->
-      <!-- NÚT TÙY CHỌN DƯỚI ĐÁY ĐÃ FIX Z-INDEX -->
-      <!-- ======================================================= -->
+      <!-- NÚT TÙY CHỌN DƯỚI ĐÁY -->
       <div class="action-bottom-panel position-absolute bottom-0 start-0 w-100 px-3 pb-3">
         <button class="btn bg-white w-100 fw-semibold shadow-lg rounded-2 py-2 text-dark action-btn-main d-flex align-items-center justify-content-center gap-2" @click.stop="onOptions">
-          <i class="bi bi-grid text-secondary"></i> Tùy chọn
+          <i class="bi bi-grid text-secondary"></i> Xem Chi Tiết
         </button>
       </div>
       
@@ -49,9 +46,11 @@
 
     <!-- THÔNG TIN SẢN PHẨM -->
     <div class="product-info text-start px-1">
+      
+      <!-- Chấm Màu Sắc (Swatches) -->
       <div class="color-swatches d-flex gap-2 mb-2" v-if="product.colors && product.colors.length > 0">
         <div v-for="(color, index) in product.colors" :key="index" 
-             class="swatch-item rounded-circle cursor-pointer"
+             class="swatch-item rounded-circle cursor-pointer shadow-sm"
              :class="{ 'active': activeColorIndex === index }"
              :style="{ backgroundColor: color.hex }"
              @click.stop="activeColorIndex = index"
@@ -59,10 +58,12 @@
         </div>
       </div>
 
-      <h6 class="product-title text-dark dark:text-gray-200 mb-1 line-clamp-2" :title="product.name" style="font-size: 0.95rem;">
+      <!-- Tên Sản Phẩm -->
+      <h6 class="product-title text-dark dark:text-gray-200 mb-1 line-clamp-2 fw-bold" :title="product.name" style="font-size: 0.95rem;">
         {{ product.name }}
       </h6>
 
+      <!-- Giá Tiền -->
       <div class="product-price d-flex align-items-center gap-2 mt-1">
         <span class="text-danger fw-bold" style="font-size: 1.05rem;">{{ formatCurrency(product.price) }}</span>
         <span v-if="product.old_price && product.old_price > product.price" class="text-muted text-decoration-line-through small fw-medium" style="font-size: 0.8rem;">
@@ -117,15 +118,12 @@ const onOptions = () => emit('options', props.product);
 .product-img-wrapper {
   aspect-ratio: 3 / 4;
   -webkit-mask-image: -webkit-radial-gradient(white, black); 
-  z-index: 1; /* Thiết lập ngữ cảnh xếp lớp (Stacking Context) cho wrapper */
+  z-index: 1;
 }
 
-/* =======================================================
-   PHÂN TẦNG Z-INDEX ĐỂ CHỐNG "CHÌM" NÚT
-======================================================== */
 .product-img {
   position: relative;
-  z-index: 1; /* Nằm dưới cùng */
+  z-index: 1; 
   transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
@@ -135,11 +133,11 @@ const onOptions = () => emit('options', props.product);
   background-color: rgba(0,0,0,0.08);
   opacity: 0;
   transition: opacity 0.3s ease;
-  z-index: 10; /* Đè lên ảnh */
+  z-index: 10; 
 }
 
 .action-right-panel {
-  z-index: 20; /* Layer cao nhất */
+  z-index: 20; 
   opacity: 0;
   visibility: hidden;
   transform: translateX(15px); 
@@ -147,7 +145,7 @@ const onOptions = () => emit('options', props.product);
 }
 
 .action-bottom-panel {
-  z-index: 20; /* Layer cao nhất */
+  z-index: 20; 
   opacity: 0;
   visibility: hidden;
   transform: translateY(15px); 
@@ -159,10 +157,10 @@ const onOptions = () => emit('options', props.product);
 }
 
 /* =======================================================
-   HOVER ACTIONS (Chỉ CSS thuần để bắt sự kiện mượt mà)
+   HOVER ACTIONS CHUYỂN MƯỢT
 ======================================================== */
 .product-card:hover .product-img {
-  transform: scale(1.08); /* Zoom nhẹ 8% */
+  transform: scale(1.08); 
 }
 
 .product-card:hover .hover-overlay {
@@ -212,7 +210,7 @@ const onOptions = () => emit('options', props.product);
   color: var(--color-c-dark, #213448) !important;
 }
 
-/* SWATCHES */
+/* SWATCHES COLOR */
 .swatch-item {
   width: 20px;
   height: 20px;

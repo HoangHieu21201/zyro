@@ -11,20 +11,37 @@ use App\Events\LookbookEvent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\JsonResponse;
 
 class LookbookController extends Controller
 {
+    private string $cacheVersionKey = 'lookbooks_cache_version';
+
+    // Dọn cache phân trang bằng Versioning
+    private function clearCache(): void
+    {
+        Cache::increment($this->cacheVersionKey);
+    }
+
     public function index(Request $request): JsonResponse
     {
         try {
-            $query = Lookbook::withTrashed()->withCount('items');
+            $version = Cache::rememberForever($this->cacheVersionKey, fn () => 1);
 
-            if ($request->has('gender') && $request->gender !== '') {
-                $query->where('gender', $request->gender);
-            }
+            $gender = $request->get('gender', 'all');
+            $page = $request->get('page', 1);
+            $cacheKey = "lookbooks_list_gender_{$gender}_page_{$page}_v{$version}";
 
-            $lookbooks = $query->orderBy('id', 'desc')->paginate(12);
+            $lookbooks = Cache::remember($cacheKey, 86400, function () use ($request) {
+                $query = Lookbook::withTrashed()->withCount('items');
+
+                if ($request->has('gender') && $request->gender !== '') {
+                    $query->where('gender', $request->gender);
+                }
+
+                return $query->orderBy('id', 'desc')->paginate(12);
+            });
 
             return response()->json(['success' => true, 'data' => $lookbooks]);
         } catch (\Exception $e) {
@@ -60,7 +77,6 @@ class LookbookController extends Controller
                 $itemsData = json_decode($request->input('items_data'), true);
                 if (is_array($itemsData)) {
                     foreach ($itemsData as $item) {
-                        // ĐÃ FIX: Nếu thêm tự do không có tọa độ, set mặc định ra giữa ảnh (50,50) và bọc JSON
                         $coords = isset($item['pin_coordinates']) ? $item['pin_coordinates'] : ['x' => 50, 'y' => 50];
                         $coordsJson = is_array($coords) ? json_encode($coords) : $coords;
 
@@ -75,6 +91,8 @@ class LookbookController extends Controller
 
                 return $lookbook;
             });
+
+            $this->clearCache();
 
             $lookbook->load('items');
             broadcast(new LookbookEvent('created', $lookbook))->toOthers();
@@ -101,13 +119,11 @@ class LookbookController extends Controller
 
                 $lookbook->update($data);
 
-                // Xóa toàn bộ ghim cũ và nạp ghim mới (Chống rác tọa độ)
                 LookbookItem::where('lookbook_id', $lookbook->id)->delete();
 
                 $itemsData = json_decode($request->input('items_data'), true);
                 if (is_array($itemsData)) {
                     foreach ($itemsData as $item) {
-                        // ĐÃ FIX TỌA ĐỘ
                         $coords = isset($item['pin_coordinates']) ? $item['pin_coordinates'] : ['x' => 50, 'y' => 50];
                         $coordsJson = is_array($coords) ? json_encode($coords) : $coords;
 
@@ -122,6 +138,8 @@ class LookbookController extends Controller
 
                 return $lookbook;
             });
+
+            $this->clearCache();
 
             $lookbook->load('items');
             broadcast(new LookbookEvent('updated', $lookbook))->toOthers();
@@ -140,6 +158,8 @@ class LookbookController extends Controller
             $lookbook = Lookbook::findOrFail($id);
             $lookbook->update(['status' => $request->status]);
 
+            $this->clearCache();
+
             broadcast(new LookbookEvent('updated', $lookbook))->toOthers();
 
             return response()->json(['success' => true, 'message' => 'Cập nhật trạng thái thành công!']);
@@ -155,6 +175,8 @@ class LookbookController extends Controller
             $lookbook->slug = $lookbook->slug . '-deleted-' . time();
             $lookbook->save();
             $lookbook->delete();
+
+            $this->clearCache();
 
             broadcast(new LookbookEvent('deleted', $lookbook))->toOthers();
 
@@ -177,6 +199,8 @@ class LookbookController extends Controller
             $lookbook->slug = $originalSlug;
             $lookbook->save();
             $lookbook->restore();
+
+            $this->clearCache();
 
             broadcast(new LookbookEvent('restored', $lookbook))->toOthers();
 

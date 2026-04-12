@@ -1,7 +1,5 @@
 <?php
 
-// File: backend/app/Events/ModuleEvent.php
-
 namespace App\Events;
 
 use App\Models\ModulePermission;

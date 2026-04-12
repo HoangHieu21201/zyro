@@ -1,7 +1,5 @@
 <?php
 
-// File: backend/app/Events/VoucherEvent.php
-
 namespace App\Events;
 
 use App\Models\Voucher;

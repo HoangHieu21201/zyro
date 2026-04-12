@@ -36,7 +36,6 @@ class OrderEvent implements ShouldBroadcast
 
     public function broadcastWith(): array
     {
-        // Load kèm thông tin User để hiển thị ngay trên bảng mà không bị lỗi
         if (!$this->order->relationLoaded('user') && $this->action !== 'deleted') {
             $this->order->load('user:id,full_name,email,avatar_url,phone');
         }

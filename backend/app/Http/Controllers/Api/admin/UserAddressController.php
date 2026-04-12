@@ -1,7 +1,5 @@
 <?php
 
-// File: backend/app/Http/Controllers/Api/Admin/UserAddressController.php
-
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
@@ -10,12 +8,18 @@ use App\Models\UserAddress;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
+use App\Events\UserEvent;
 
 class UserAddressController extends Controller
 {
-    /**
-     * Thêm địa chỉ mới cho User
-     */
+    // Dọn dẹp Cache danh sách User vì số lượng địa chỉ (addresses_count) đã thay đổi
+    private function clearUserCache(): void
+    {
+        Cache::forget('users_list_all');
+    }
+
+    // Thêm địa chỉ mới
     public function store(Request $request, $userId): JsonResponse
     {
         $request->validate([
@@ -34,12 +38,10 @@ class UserAddressController extends Controller
             DB::transaction(function () use ($request, $user) {
                 $isDefault = $request->boolean('is_default');
 
-                // Nếu chọn làm mặc định, gỡ mặc định của các địa chỉ cũ
                 if ($isDefault) {
                     $user->addresses()->update(['is_default' => false]);
                 }
 
-                // Nếu user chưa có địa chỉ nào, bắt buộc địa chỉ đầu tiên là mặc định
                 if ($user->addresses()->count() === 0) {
                     $isDefault = true;
                 }
@@ -47,15 +49,17 @@ class UserAddressController extends Controller
                 $user->addresses()->create(array_merge($request->all(), ['is_default' => $isDefault]));
             });
 
+            $this->clearUserCache();
+            $user->load('tier');
+            broadcast(new UserEvent('updated', $user))->toOthers();
+
             return response()->json(['success' => true, 'message' => 'Thêm địa chỉ thành công!']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Lỗi: ' . $e->getMessage()], 500);
         }
     }
 
-    /**
-     * Cập nhật địa chỉ
-     */
+    // Cập nhật địa chỉ
     public function update(Request $request, $id): JsonResponse
     {
         $request->validate([
@@ -78,7 +82,6 @@ class UserAddressController extends Controller
                     UserAddress::where('user_id', $address->user_id)->update(['is_default' => false]);
                 }
 
-                // Không cho bỏ mặc định nếu nó đang là mặc định (Phải set cái khác lên làm mặc định thay thế)
                 if (!$isDefault && $address->is_default) {
                     $isDefault = true; 
                 }
@@ -86,15 +89,17 @@ class UserAddressController extends Controller
                 $address->update(array_merge($request->all(), ['is_default' => $isDefault]));
             });
 
+            $this->clearUserCache();
+            $user = User::with('tier')->find($address->user_id);
+            if ($user) broadcast(new UserEvent('updated', $user))->toOthers();
+
             return response()->json(['success' => true, 'message' => 'Cập nhật địa chỉ thành công!']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Lỗi: ' . $e->getMessage()], 500);
         }
     }
 
-    /**
-     * Đặt làm mặc định nhanh
-     */
+    // Đặt làm mặc định
     public function setDefault($id): JsonResponse
     {
         try {
@@ -105,15 +110,17 @@ class UserAddressController extends Controller
                 $address->update(['is_default' => true]);
             });
 
+            $this->clearUserCache();
+            $user = User::with('tier')->find($address->user_id);
+            if ($user) broadcast(new UserEvent('updated', $user))->toOthers();
+
             return response()->json(['success' => true, 'message' => 'Đã thay đổi địa chỉ mặc định!']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Lỗi: ' . $e->getMessage()], 500);
         }
     }
 
-    /**
-     * Xóa địa chỉ
-     */
+    // Xóa địa chỉ
     public function destroy($id): JsonResponse
     {
         try {
@@ -123,7 +130,12 @@ class UserAddressController extends Controller
                 return response()->json(['success' => false, 'message' => 'Không thể xóa địa chỉ đang được đặt làm Mặc định!'], 400);
             }
 
+            $userId = $address->user_id;
             $address->delete();
+
+            $this->clearUserCache();
+            $user = User::with('tier')->find($userId);
+            if ($user) broadcast(new UserEvent('updated', $user))->toOthers();
 
             return response()->json(['success' => true, 'message' => 'Đã xóa địa chỉ thành công!']);
         } catch (\Exception $e) {
