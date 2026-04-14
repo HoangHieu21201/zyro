@@ -330,7 +330,7 @@ watch(() => form.value.apply_type, (newVal, oldVal) => {
 const fetchData = async () => {
   try {
     const [resDetail, resCats, resProds] = await Promise.all([
-      axios.get(`http://127.0.0.1:8000/api/v1/admin/vouchers/${voucherId}`, { headers: getHeaders() }),
+      axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/vouchers/${voucherId}`, { headers: getHeaders() }),
       axios.get('http://127.0.0.1:8000/api/v1/admin/categories', { headers: getHeaders() }),
       axios.get('http://127.0.0.1:8000/api/v1/admin/products?status=published', { headers: getHeaders() })
     ]);
@@ -381,7 +381,7 @@ const submitVoucher = async () => {
   };
 
   try {
-    const res = await axios.put(`http://127.0.0.1:8000/api/v1/admin/vouchers/${voucherId}`, payload, { headers: getHeaders() });
+    const res = await axios.put(`${import.meta.env.VITE_API_BASE_URL}/admin/vouchers/${voucherId}`, payload, { headers: getHeaders() });
     Swal.fire({ icon: 'success', title: 'Cập nhật thành công', text: res.data.message, timer: 1500, showConfirmButton: false }).then(() => {
       router.push({ name: 'admin-vouchers' });
     });

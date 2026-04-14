@@ -253,6 +253,25 @@ const admin = [
         component: () => import('../pages/admin/order/Edit.vue'),
         meta: { moduleCode: 'admin_orders' },
       },
+      {
+        path: 'flash-sales',
+        name: 'admin-flash-sales',
+        component: () => import('../pages/admin/flash_sales/Index.vue'),
+        meta: { moduleCode: 'admin_flash_sales' },
+      },
+      {
+        path: 'flash-sales/create',
+        name: 'admin-flash-sales-create',
+        component: () => import('../pages/admin/flash_sales/Create.vue'),
+        meta: { moduleCode: 'admin_flash_sales' },
+      },
+      {
+        path: 'flash-sales/:id/edit',
+        name: 'admin-flash-sales-edit',
+        component: () => import('../pages/admin/flash_sales/Edit.vue'),
+        meta: { moduleCode: 'admin_flash_sales' },
+      },
+
 
     ],
   },

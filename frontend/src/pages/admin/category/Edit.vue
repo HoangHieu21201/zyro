@@ -180,7 +180,7 @@ const fetchData = async () => {
   try {
     const [resCats, resDetail] = await Promise.all([
       axios.get('http://127.0.0.1:8000/api/v1/admin/categories', { headers: getHeaders() }),
-      axios.get(`http://127.0.0.1:8000/api/v1/admin/categories/${categoryId}`, { headers: getHeaders() })
+      axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/categories/${categoryId}`, { headers: getHeaders() })
     ]);
 
     const allCats = Array.isArray(resCats.data.data) ? resCats.data.data : [];
@@ -274,7 +274,7 @@ const saveCategory = async () => {
   });
 
   try {
-    await axios.post(`http://127.0.0.1:8000/api/v1/admin/categories/${categoryId}`, formData, { headers: { ...getHeaders(), 'Content-Type': 'multipart/form-data' } });
+    await axios.post(`${import.meta.env.VITE_API_BASE_URL}/admin/categories/${categoryId}`, formData, { headers: { ...getHeaders(), 'Content-Type': 'multipart/form-data' } });
     Swal.fire({ icon: 'success', title: 'Thành công', text: 'Cập nhật danh mục thành công', timer: 1500, showConfirmButton: false });
     router.push({ name: 'admin-categories' });
   } catch (err) {

@@ -265,7 +265,7 @@ const fetchData = async (isSilent = false) => {
     
     if(filters.value.search) params.append('search', filters.value.search);
 
-    const res = await axios.get(`http://127.0.0.1:8000/api/v1/admin/orders?${params.toString()}`, { headers: getHeaders() });
+    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/orders?${params.toString()}`, { headers: getHeaders() });
     
     orders.value = res.data.data.data || [];
     counts.value = res.data.counts || {};

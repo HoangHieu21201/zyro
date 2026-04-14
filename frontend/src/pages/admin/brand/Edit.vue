@@ -125,7 +125,7 @@ const getHeaders = () => ({ 'Authorization': `Bearer ${localStorage.getItem('adm
 
 const fetchData = async () => {
   try {
-    const resDetail = await axios.get(`http://127.0.0.1:8000/api/v1/admin/brands/${brandId}`, { headers: getHeaders() });
+    const resDetail = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/brands/${brandId}`, { headers: getHeaders() });
     const b = resDetail.data.data;
     
     form.value.name = b.name;
@@ -173,7 +173,7 @@ const saveBrand = async () => {
   });
 
   try {
-    await axios.post(`http://127.0.0.1:8000/api/v1/admin/brands/${brandId}`, formData, { headers: { ...getHeaders(), 'Content-Type': 'multipart/form-data' } });
+    await axios.post(`${import.meta.env.VITE_API_BASE_URL}/admin/brands/${brandId}`, formData, { headers: { ...getHeaders(), 'Content-Type': 'multipart/form-data' } });
     Swal.fire({ icon: 'success', title: 'Thành công', text: 'Cập nhật thương hiệu thành công', timer: 1500, showConfirmButton: false });
     router.push({ name: 'admin-brands' });
   } catch (err) {

@@ -469,7 +469,7 @@ const saveUserStatus = async (u) => {
   formData.append('status', u.localStatus); 
 
   try {
-    await axios.post(`http://127.0.0.1:8000/api/v1/admin/users/${u.id}`, formData, { headers: getHeaders() });
+    await axios.post(`${import.meta.env.VITE_API_BASE_URL}/admin/users/${u.id}`, formData, { headers: getHeaders() });
     u.status = u.localStatus; 
     u.isStatusChanged = false;
     Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã cập nhật trạng thái', showConfirmButton: false, timer: 1500 });
@@ -500,7 +500,7 @@ const openQuickView = async (u) => {
   
   isQuickViewLoading.value = true;
   try {
-    const res = await axios.get(`http://127.0.0.1:8000/api/v1/admin/users/${u.id}`, { headers: getHeaders() });
+    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/users/${u.id}`, { headers: getHeaders() });
     selectedUser.value = res.data.data;
   } catch (err) {
     console.error("Lỗi tải chi tiết KH", err);
@@ -545,7 +545,7 @@ const confirmDelete = (id, name) => {
     if (result.isConfirmed) {
       isLoading.value = true;
       try {
-        await axios.delete(`http://127.0.0.1:8000/api/v1/admin/users/${id}`, { headers: getHeaders() });
+        await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/admin/users/${id}`, { headers: getHeaders() });
         Swal.fire({icon: 'success', title: 'Đã xóa', timer: 1500, showConfirmButton: false});
         await fetchData(); 
       } catch(e) {
@@ -561,7 +561,7 @@ const restoreUser = (id) => {
     if (result.isConfirmed) {
       isLoading.value = true;
       try {
-        await axios.post(`http://127.0.0.1:8000/api/v1/admin/users/${id}/restore`, {}, { headers: getHeaders() });
+        await axios.post(`${import.meta.env.VITE_API_BASE_URL}/admin/users/${id}/restore`, {}, { headers: getHeaders() });
         Swal.fire({icon: 'success', title: 'Đã khôi phục', timer: 1500, showConfirmButton: false});
         await fetchData(); 
       } catch(e) {

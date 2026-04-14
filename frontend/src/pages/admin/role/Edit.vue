@@ -132,7 +132,7 @@ const fetchModules = async () => {
 const fetchRole = async () => {
   try {
     const roleId = route.params.id;
-    const res = await axios.get(`http://127.0.0.1:8000/api/v1/admin/roles/${roleId}`, { headers: getHeaders() });
+    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/roles/${roleId}`, { headers: getHeaders() });
     const data = res.data.data;
     roleForm.value = {
         id: data.id,
@@ -153,7 +153,7 @@ const saveRole = async () => {
   isSaving.value = true;
   errors.value = {};
   try {
-    const res = await axios.put(`http://127.0.0.1:8000/api/v1/admin/roles/${roleForm.value.id}`, roleForm.value, { headers: getHeaders() });
+    const res = await axios.put(`${import.meta.env.VITE_API_BASE_URL}/admin/roles/${roleForm.value.id}`, roleForm.value, { headers: getHeaders() });
     Swal.fire({ icon: 'success', title: 'Thành công', text: res.data.message, timer: 1500, showConfirmButton: false });
     router.push({ name: 'admin-roles' });
   } catch (err) { 

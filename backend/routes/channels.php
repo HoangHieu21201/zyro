@@ -80,3 +80,7 @@ Broadcast::channel('admin.reviews', function ($user) {
 Broadcast::channel('admin.orders', function ($user) {
     return $user !== null;
 }, ['guards' => ['sanctum']]);
+
+Broadcast::channel('admin.flash_sales', function ($user) {
+    return $user !== null;
+}, ['guards' => ['sanctum']]);

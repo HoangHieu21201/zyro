@@ -282,7 +282,7 @@ const onDistrictChange = async () => {
 
 const fetchData = async () => {
   try {
-    const resAdmin = await axios.get(`http://127.0.0.1:8000/api/v1/admin/me`, { headers: getHeaders() });
+    const resAdmin = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/me`, { headers: getHeaders() });
     fetchProvinces();
     
     const admin = resAdmin.data.data;
@@ -331,7 +331,7 @@ const saveProfileInfo = async () => {
   });
 
   try {
-    const res = await axios.post(`http://127.0.0.1:8000/api/v1/admin/profile/info`, formData, { headers: { ...getHeaders(), 'Content-Type': 'multipart/form-data' } });
+    const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/admin/profile/info`, formData, { headers: { ...getHeaders(), 'Content-Type': 'multipart/form-data' } });
     Swal.fire({ icon: 'success', title: 'Đã lưu thông tin', timer: 1500, showConfirmButton: false });
     localStorage.setItem('admin_info', JSON.stringify(res.data.data));
     window.location.reload();
@@ -344,7 +344,7 @@ const saveProfileInfo = async () => {
 const savePassword = async () => {
   isSavingPass.value = true; errorsPass.value = {};
   try {
-    await axios.put(`http://127.0.0.1:8000/api/v1/admin/profile/password`, formPass.value, { headers: getHeaders() });
+    await axios.put(`${import.meta.env.VITE_API_BASE_URL}/admin/profile/password`, formPass.value, { headers: getHeaders() });
     Swal.fire({ icon: 'success', title: 'Đổi mật khẩu thành công', text: 'Vui lòng sử dụng mật khẩu mới ở lần đăng nhập sau.', timer: 2000, showConfirmButton: false });
     formPass.value = { current_password: '', password: '', password_confirmation: '' };
   } catch (err) {

@@ -1,4 +1,3 @@
-<!-- File: frontend/src/components/admin/Sidebar.vue -->
 <template>
   <aside class="main-sidebar sidebar-dark-primary d-flex flex-column shadow-lg position-relative"
     :style="{ width: isCollapsed ? '80px' : '260px', backgroundColor: 'var(--color-c-dark)', minHeight: '100vh', transition: 'width 0.3s ease' }">
@@ -158,23 +157,24 @@ const menuItems = ref([
       { name: 'Danh mục', path: '/admin/categories', moduleCode: 'admin_categories' },
       { name: 'Thương hiệu', path: '/admin/brands', moduleCode: 'admin_brands' },
       { name: 'SP & Biến thể', path: '/admin/products', moduleCode: 'admin_products' },
-      { name: 'Lookbook', path: '/admin/lookbooks', moduleCode: 'admin_lookbooks' }
+      { name: 'Lookbook', path: '/admin/lookbooks', moduleCode: 'admin_lookbooks' },
+      { name: 'Flash Sale', path: '/admin/flash-sales', moduleCode: 'admin_flash_sales' }
+
     ]
   },
   {
     name: 'Đơn hàng', icon: 'bi-receipt-cutoff', stateKey: 'orders',
     children: [
       { name: 'Danh sách đơn', path: '/admin/orders', moduleCode: 'admin_orders' },
-      { name: 'Trả hàng', path: '/admin/returns', moduleCode: 'admin_orders' }
+      { name: 'Trả hàng', path: '/admin/returns', moduleCode: 'admin_orders' },
+      { name: 'Đánh giá', path: '/admin/reviews', moduleCode: 'admin_reviews' }
     ]
   },
-  // marketing thẻ cha voucher
   {
     name: 'Marketing', icon: 'bi-megaphone-fill', stateKey: 'marketing',
     children: [
       { name: 'Voucher', path: '/admin/vouchers', moduleCode: 'admin_vouchers' },
       { name: 'Banner', path: '/admin/banners', moduleCode: 'admin_banners' },
-      { name: 'Đánh giá', path: '/admin/reviews', moduleCode: 'admin_reviews' },
       { name: 'Lượt thích', path: '/admin/wishlists', moduleCode: 'admin_wishlists' }
     ]
   },

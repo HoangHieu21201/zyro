@@ -17,7 +17,7 @@ class StoreCategoryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'                => ['required', 'string', 'min:3', 'max:150'],
+            'name'                => ['required', 'string', 'min:2', 'max:150'],
             'parent_id'           => ['nullable', 'integer', 'exists:categories,id'],
             'description'         => ['nullable', 'string', 'max:2000'],
             'thumbnail'           => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:5120'], // Max 5MB
@@ -34,7 +34,7 @@ class StoreCategoryRequest extends FormRequest
     {
         return [
             'name.required'             => 'Tên danh mục không được để trống.',
-            'name.min'                  => 'Tên danh mục quá ngắn (Tối thiểu 3 ký tự).',
+            'name.min'                  => 'Tên danh mục quá ngắn (Tối thiểu 2 ký tự).',
             'name.string'               => 'Tên danh mục phải là chuỗi ký tự.',
             'name.max'                  => 'Tên danh mục không được vượt quá 150 ký tự.',
             

@@ -558,7 +558,7 @@ const fetchData = async () => {
   isPageLoading.value = true;
   try {
     const [resLB, resProd, resCats, resBrands] = await Promise.all([
-      axios.get(`http://127.0.0.1:8000/api/v1/admin/lookbooks/${lookbookId}`, { headers: getHeaders() }),
+      axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/lookbooks/${lookbookId}`, { headers: getHeaders() }),
       axios.get('http://127.0.0.1:8000/api/v1/admin/products?status=published', { headers: getHeaders() }),
       axios.get('http://127.0.0.1:8000/api/v1/admin/categories', { headers: getHeaders() }),
       axios.get('http://127.0.0.1:8000/api/v1/admin/brands', { headers: getHeaders() })
@@ -646,7 +646,7 @@ const submitLookbook = async () => {
   formData.append('items_data', JSON.stringify(itemsData));
 
   try {
-    const res = await axios.post(`http://127.0.0.1:8000/api/v1/admin/lookbooks/${lookbookId}`, formData, { headers: { ...getHeaders(), 'Content-Type': 'multipart/form-data' } });
+    const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/admin/lookbooks/${lookbookId}`, formData, { headers: { ...getHeaders(), 'Content-Type': 'multipart/form-data' } });
     Swal.fire({ icon: 'success', title: 'Cập nhật thành công', text: res.data.message, timer: 2000, showConfirmButton: false }).then(() => {
       router.push({ name: 'admin-lookbooks' });
     });

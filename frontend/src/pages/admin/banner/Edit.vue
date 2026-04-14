@@ -188,7 +188,7 @@ const formatDateForInput = (dateStr) => {
 
 const fetchData = async () => {
   try {
-    const resDetail = await axios.get(`http://127.0.0.1:8000/api/v1/admin/banners/${bannerId}`, { headers: getHeaders() });
+    const resDetail = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/banners/${bannerId}`, { headers: getHeaders() });
     const b = resDetail.data.data;
     
     form.value.title = b.title;
@@ -257,7 +257,7 @@ const saveBanner = async () => {
   });
 
   try {
-    await axios.post(`http://127.0.0.1:8000/api/v1/admin/banners/${bannerId}`, formData, { headers: { ...getHeaders(), 'Content-Type': 'multipart/form-data' } });
+    await axios.post(`${import.meta.env.VITE_API_BASE_URL}/admin/banners/${bannerId}`, formData, { headers: { ...getHeaders(), 'Content-Type': 'multipart/form-data' } });
     Swal.fire({ icon: 'success', title: 'Thành công', text: 'Cập nhật Banner thành công', timer: 1500, showConfirmButton: false });
     router.push({ name: 'admin-banners' });
   } catch (err) {

@@ -214,7 +214,7 @@ const confirmDelete = (id, name) => {
     if (result.isConfirmed) {
       isLoading.value = true;
       try {
-        await axios.delete(`http://127.0.0.1:8000/api/v1/admin/tiers/${id}`, { headers: getHeaders() });
+        await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/admin/tiers/${id}`, { headers: getHeaders() });
         Swal.fire({icon: 'success', title: 'Đã xóa', timer: 1500, showConfirmButton: false});
         await fetchData(); 
       } catch(e) {

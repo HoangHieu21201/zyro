@@ -888,7 +888,7 @@ watch(selectedAttrToManage, (newId) => {
 const updateAttribute = async (id) => {
     if (!manageAttrName.value || !id) return;
     try {
-        await axios.put(`http://127.0.0.1:8000/api/v1/admin/attributes/${id}`, { name: manageAttrName.value }, { headers: getHeaders() });
+        await axios.put(`${import.meta.env.VITE_API_BASE_URL}/admin/attributes/${id}`, { name: manageAttrName.value }, { headers: getHeaders() });
         const attr = systemAttributes.value.find(a => a.id === parseInt(id));
         if (attr) attr.name = manageAttrName.value;
         Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Cập nhật thành công', showConfirmButton: false, timer: 2000 });
@@ -900,7 +900,7 @@ const deleteAttribute = async (id) => {
     Swal.fire({ title: 'Xóa thuộc tính?', icon: 'warning', showCancelButton: true }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                await axios.delete(`http://127.0.0.1:8000/api/v1/admin/attributes/${id}`, { headers: getHeaders() });
+                await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/admin/attributes/${id}`, { headers: getHeaders() });
                 systemAttributes.value = systemAttributes.value.filter(a => a.id !== parseInt(id));
                 selectedAttrToManage.value = '';
                 if (manageAttrModalObj) manageAttrModalObj.hide();
@@ -924,7 +924,7 @@ const deleteAttributeValueModal = async (valueId, attrId) => {
   }).then(async (result) => {
     if (result.isConfirmed) {
       try {
-        await axios.delete(`http://127.0.0.1:8000/api/v1/admin/attribute-values/${valueId}`, { headers: getHeaders() });
+        await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/admin/attribute-values/${valueId}`, { headers: getHeaders() });
 
         const attr = systemAttributes.value.find(a => a.id === parseInt(attrId));
         if (attr && attr.values) {

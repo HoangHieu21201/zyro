@@ -466,7 +466,7 @@ const fetchProvinces = async () => {
 const fetchData = async (isSilent = false) => {
   if (!isSilent) isPageLoading.value = true;
   try {
-    const res = await axios.get(`http://127.0.0.1:8000/api/v1/admin/orders/${orderId}`, { headers: getHeaders() });
+    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/orders/${orderId}`, { headers: getHeaders() });
     order.value = res.data.data;
     shippingInfoParsed.value = typeof order.value.shipping_info === 'string' ? JSON.parse(order.value.shipping_info) : order.value.shipping_info;
 
@@ -506,7 +506,7 @@ const updateShippingInfo = async () => {
   isSavingShipping.value = true;
   const payload = { ...formShipping.value, shipping_info: { ...shippingInfoParsed.value, origin_city: formShipping.value.origin_city } };
   try {
-    await axios.put(`http://127.0.0.1:8000/api/v1/admin/orders/${orderId}`, payload, { headers: getHeaders() });
+    await axios.put(`${import.meta.env.VITE_API_BASE_URL}/admin/orders/${orderId}`, payload, { headers: getHeaders() });
     Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã lưu cấu hình Vận đơn', showConfirmButton: false, timer: 1500 });
     await fetchData(true); // Chỉ cập nhật ngầm, không nháy trang
   } catch(e) {
@@ -534,7 +534,7 @@ const updateOrderStatus = async () => {
 
   isSavingStatus.value = true;
   try {
-    await axios.patch(`http://127.0.0.1:8000/api/v1/admin/orders/${orderId}/status`, formStatus.value, { headers: getHeaders() });
+    await axios.patch(`${import.meta.env.VITE_API_BASE_URL}/admin/orders/${orderId}/status`, formStatus.value, { headers: getHeaders() });
     
     // ĐÃ THÊM: Auto bật Map mô phỏng khi chốt đơn Giao thành công
     Swal.fire({ icon: 'success', title: 'Thành công', text: 'Cập nhật trạng thái đơn hàng & Email đã được gửi!', timer: 2000, showConfirmButton: false }).then(() => {
@@ -586,7 +586,7 @@ const openMapSimulation = async () => {
   isMapLoading.value = true;
 
   try {
-    const res = await axios.get(`http://127.0.0.1:8000/api/v1/admin/orders/${orderId}/simulation`, { headers: getHeaders() });
+    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/orders/${orderId}/simulation`, { headers: getHeaders() });
     mapData.value = res.data.data;
     
     const p1 = [mapData.value.origin.lat, mapData.value.origin.lng];

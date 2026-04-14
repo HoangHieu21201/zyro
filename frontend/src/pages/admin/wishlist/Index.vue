@@ -535,7 +535,7 @@ const fetchData = async (isSilent = false) => {
     if(filters.value.brand_id) params.append('brand_id', filters.value.brand_id);
     if(filters.value.search) params.append('search', filters.value.search);
     
-    const res = await axios.get(`http://127.0.0.1:8000/api/v1/admin/wishlists?${params.toString()}`, { headers: getHeaders() });
+    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/wishlists?${params.toString()}`, { headers: getHeaders() });
     
     // API Cập nhật trả về stats và data
     stats.value = res.data.stats;
@@ -572,7 +572,7 @@ const openQuickView = async (product, likesCount) => {
   // Call API gọi Full data của sản phẩm
   isQuickViewLoading.value = true;
   try {
-    const res = await axios.get(`http://127.0.0.1:8000/api/v1/admin/products/${product.id}`, { headers: getHeaders() });
+    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/products/${product.id}`, { headers: getHeaders() });
     selectedProduct.value = { ...res.data.data, current_likes: likesCount }; // Giữ lại current_likes
   } catch (err) {
     console.error("Lỗi tải chi tiết", err);

@@ -19,7 +19,7 @@ class UpdateCategoryRequest extends FormRequest
         $categoryId = $this->route('category');
 
         return [
-            'name'                => ['required', 'string', 'min:3', 'max:150'],
+            'name'                => ['required', 'string', 'min:2', 'max:150'],
             'parent_id'           => [
                 'nullable', 
                 'integer', 
@@ -43,7 +43,7 @@ class UpdateCategoryRequest extends FormRequest
     {
         return [
             'name.required'             => 'Tên danh mục không được để trống.',
-            'name.min'                  => 'Tên danh mục quá ngắn (Tối thiểu 3 ký tự).',
+            'name.min'                  => 'Tên danh mục quá ngắn (Tối thiểu 2 ký tự).',
             'name.string'               => 'Tên danh mục phải là chuỗi ký tự.',
             'name.max'                  => 'Tên danh mục không được vượt quá 150 ký tự.',
             

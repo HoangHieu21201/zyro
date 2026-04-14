@@ -551,7 +551,7 @@ const cancelStatusChange = (p) => { p.localStatus = p.status; p.isStatusChanged 
 const saveProductStatus = async (p) => {
   p.isUpdatingStatus = true;
   try {
-    await axios.patch(`http://127.0.0.1:8000/api/v1/admin/products/${p.id}/status`, { status: p.localStatus }, { headers: getHeaders() });
+    await axios.patch(`${import.meta.env.VITE_API_BASE_URL}/admin/products/${p.id}/status`, { status: p.localStatus }, { headers: getHeaders() });
     p.status = p.localStatus; 
     p.isStatusChanged = false;
     Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Cập nhật trạng thái thành công', showConfirmButton: false, timer: 1500 });
@@ -590,7 +590,7 @@ const openQuickView = async (p) => {
   
   isQuickViewLoading.value = true;
   try {
-    const res = await axios.get(`http://127.0.0.1:8000/api/v1/admin/products/${p.id}`, { headers: getHeaders() });
+    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/products/${p.id}`, { headers: getHeaders() });
     selectedProduct.value = res.data.data;
   } catch (err) {
     console.error("Lỗi tải chi tiết", err);
@@ -661,7 +661,7 @@ const confirmDelete = (id, name) => {
     if (result.isConfirmed) {
       isLoading.value = true;
       try {
-        await axios.delete(`http://127.0.0.1:8000/api/v1/admin/products/${id}`, { headers: getHeaders() });
+        await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/admin/products/${id}`, { headers: getHeaders() });
         Swal.fire({icon: 'success', title: 'Đã xóa', timer: 1500, showConfirmButton: false});
         fetchData();
       } catch(e) { isLoading.value = false; Swal.fire('Lỗi', e.response?.data?.message || 'Lỗi xóa', 'error'); }
@@ -674,7 +674,7 @@ const restoreProduct = (id) => {
     if (result.isConfirmed) {
       isLoading.value = true;
       try {
-        await axios.post(`http://127.0.0.1:8000/api/v1/admin/products/${id}/restore`, {}, { headers: getHeaders() });
+        await axios.post(`${import.meta.env.VITE_API_BASE_URL}/admin/products/${id}/restore`, {}, { headers: getHeaders() });
         Swal.fire({icon: 'success', title: 'Đã khôi phục', timer: 1500, showConfirmButton: false});
         fetchData();
       } catch(e) { isLoading.value = false; Swal.fire('Lỗi', e.response?.data?.message || 'Lỗi khôi phục', 'error'); }

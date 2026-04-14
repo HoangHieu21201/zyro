@@ -456,7 +456,7 @@ const cancelStatusChange = (p) => { p.localStatus = p.status; p.isStatusChanged 
 const saveStatus = async (p) => {
   p.isUpdatingStatus = true;
   try {
-    await axios.patch(`http://127.0.0.1:8000/api/v1/admin/lookbooks/${p.id}/status`, { status: p.localStatus }, { headers: getHeaders() });
+    await axios.patch(`${import.meta.env.VITE_API_BASE_URL}/admin/lookbooks/${p.id}/status`, { status: p.localStatus }, { headers: getHeaders() });
     p.status = p.localStatus; p.isStatusChanged = false;
     Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Cập nhật thành công', showConfirmButton: false, timer: 1500 });
   } catch (error) { 
@@ -483,7 +483,7 @@ const openQuickView = async (lb) => {
   
   isQuickViewLoading.value = true;
   try {
-    const res = await axios.get(`http://127.0.0.1:8000/api/v1/admin/lookbooks/${lb.id}`, { headers: getHeaders() });
+    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/lookbooks/${lb.id}`, { headers: getHeaders() });
     selectedLookbook.value = res.data.data;
     
     // Parse tọa độ để hiển thị điểm ghim lên ảnh QuickView
@@ -562,7 +562,7 @@ const confirmDelete = (id, name) => {
   Swal.fire({ title: 'Đưa vào thùng rác?', text: `Lookbook "${name}" sẽ bị ẩn đi!`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Đồng ý xóa' }).then(async (result) => {
     if (result.isConfirmed) {
       try {
-        await axios.delete(`http://127.0.0.1:8000/api/v1/admin/lookbooks/${id}`, { headers: getHeaders() });
+        await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/admin/lookbooks/${id}`, { headers: getHeaders() });
         Swal.fire({icon: 'success', title: 'Đã xóa', timer: 1500, showConfirmButton: false});
         fetchData(true);
       } catch(e) { Swal.fire('Lỗi', e.response?.data?.message || 'Lỗi xóa', 'error'); }
@@ -574,7 +574,7 @@ const restoreLookbook = (id) => {
   Swal.fire({ title: 'Khôi phục?', icon: 'info', showCancelButton: true, confirmButtonColor: 'var(--color-c-hover)', confirmButtonText: 'Khôi phục' }).then(async (result) => {
     if (result.isConfirmed) {
       try {
-        await axios.post(`http://127.0.0.1:8000/api/v1/admin/lookbooks/${id}/restore`, {}, { headers: getHeaders() });
+        await axios.post(`${import.meta.env.VITE_API_BASE_URL}/admin/lookbooks/${id}/restore`, {}, { headers: getHeaders() });
         Swal.fire({icon: 'success', title: 'Đã khôi phục', timer: 1500, showConfirmButton: false});
         fetchData(true);
       } catch(e) { Swal.fire('Lỗi', e.response?.data?.message || 'Lỗi khôi phục', 'error'); }

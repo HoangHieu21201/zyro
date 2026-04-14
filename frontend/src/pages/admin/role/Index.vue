@@ -499,7 +499,7 @@ const confirmDeleteRole = (id, roleName) => {
   }).then(async (result) => {
     if (result.isConfirmed) {
       try {
-        const res = await axios.delete(`http://127.0.0.1:8000/api/v1/admin/roles/${id}`, { headers: getHeaders() });
+        const res = await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/admin/roles/${id}`, { headers: getHeaders() });
         Swal.fire({ icon: 'success', title: 'Đã xóa', text: res.data.message, timer: 1500, showConfirmButton: false }); 
         fetchRoles(true);
       } catch (err) { 
@@ -520,7 +520,7 @@ const restoreRole = (id) => {
   }).then(async (result) => {
     if (result.isConfirmed) {
       try {
-        const res = await axios.post(`http://127.0.0.1:8000/api/v1/admin/roles/${id}/restore`, {}, { headers: getHeaders() });
+        const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/admin/roles/${id}/restore`, {}, { headers: getHeaders() });
         Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Thành công', text: res.data.message, showConfirmButton: false, timer: 1500 });
         fetchRoles(true);
       } catch (err) { 
@@ -552,7 +552,7 @@ const saveModuleLevel = async (moduleId) => {
   isSavingLevel.value = true;
   try {
     const payload = { required_level: editLevelValue.value };
-    await axios.put(`http://127.0.0.1:8000/api/v1/admin/modules/${moduleId}/level`, payload, { headers: getHeaders() });
+    await axios.put(`${import.meta.env.VITE_API_BASE_URL}/admin/modules/${moduleId}/level`, payload, { headers: getHeaders() });
     
     const target = systemModules.value.find(m => m.id === moduleId);
     if(target) target.required_level = editLevelValue.value;

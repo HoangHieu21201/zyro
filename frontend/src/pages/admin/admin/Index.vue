@@ -378,7 +378,7 @@ const saveStaffStatus = async (staff) => {
   formData.append('email', staff.email);
   formData.append('role_id', staff.role_id);
   try {
-    await axios.post(`http://127.0.0.1:8000/api/v1/admin/admins/${staff.id}`, formData, { headers: getHeaders() });
+    await axios.post(`${import.meta.env.VITE_API_BASE_URL}/admin/admins/${staff.id}`, formData, { headers: getHeaders() });
     staff.status = staff.localStatus; staff.isStatusChanged = false;
     Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Cập nhật trạng thái thành công', showConfirmButton: false, timer: 1500 });
   } catch (error) { cancelStatusChange(staff); Swal.fire('Lỗi', 'Không thể lưu trạng thái mới', 'error'); } finally { staff.isUpdatingStatus = false; }
@@ -404,10 +404,10 @@ const totalPages = computed(() => Math.ceil(processedStaff.value.length / itemsP
 
 const confirmDelete = (id, name) => {
   Swal.fire({ title: 'Xác nhận xóa?', text: `Nhân sự "${name}" sẽ bị chuyển vào thùng rác.`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Đồng ý xóa' })
-    .then(async (result) => { if (result.isConfirmed) { try { await axios.delete(`http://127.0.0.1:8000/api/v1/admin/admins/${id}`, { headers: getHeaders() }); fetchData(true); } catch (e) { console.error(e); } } });
+    .then(async (result) => { if (result.isConfirmed) { try { await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/admin/admins/${id}`, { headers: getHeaders() }); fetchData(true); } catch (e) { console.error(e); } } });
 };
 
-const restoreStaff = async (id) => { try { await axios.post(`http://127.0.0.1:8000/api/v1/admin/admins/${id}/restore`, {}, { headers: getHeaders() }); fetchData(true); } catch (e) { Swal.fire('Lỗi', e.response?.data?.message || 'Không thể khôi phục', 'error'); } };
+const restoreStaff = async (id) => { try { await axios.post(`${import.meta.env.VITE_API_BASE_URL}/admin/admins/${id}/restore`, {}, { headers: getHeaders() }); fetchData(true); } catch (e) { Swal.fire('Lỗi', e.response?.data?.message || 'Không thể khôi phục', 'error'); } };
 
 const setupRealtime = () => { if (window.Echo) window.Echo.private('admin.admins').listen('.AdminEvent', () => fetchData(true)); };
 const getLevelColor = (l) => { const map = { 1: 'bg-danger text-white border-danger', 2: 'bg-warning text-dark border-warning', 3: 'bg-info text-dark border-info', 4: 'bg-primary bg-opacity-10 text-primary border-primary', 5: 'bg-success bg-opacity-10 text-success border-success' }; return map[l] || 'bg-light text-secondary border-secondary'; };

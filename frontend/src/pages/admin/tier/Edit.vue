@@ -133,7 +133,7 @@ const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currenc
 
 const fetchData = async () => {
   try {
-    const res = await axios.get(`http://127.0.0.1:8000/api/v1/admin/tiers/${tierId}`, { headers: getHeaders() });
+    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/tiers/${tierId}`, { headers: getHeaders() });
     const t = res.data.data;
     form.value.name = t.name;
     form.value.min_spent = t.min_spent;
@@ -170,7 +170,7 @@ const saveTier = async () => {
   Object.keys(form.value).forEach(key => { if(form.value[key] !== null) formData.append(key, form.value[key]); });
 
   try {
-    await axios.post(`http://127.0.0.1:8000/api/v1/admin/tiers/${tierId}`, formData, { headers: { ...getHeaders(), 'Content-Type': 'multipart/form-data' } });
+    await axios.post(`${import.meta.env.VITE_API_BASE_URL}/admin/tiers/${tierId}`, formData, { headers: { ...getHeaders(), 'Content-Type': 'multipart/form-data' } });
     Swal.fire({ icon: 'success', title: 'Thành công', text: 'Cập nhật cấu hình hạng thành công', timer: 1500, showConfirmButton: false });
     router.push({ name: 'admin-tiers' });
   } catch (err) {

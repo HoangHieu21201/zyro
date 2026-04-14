@@ -576,7 +576,7 @@ const fetchData = async (isSilent = false) => {
     if(activeTab.value === 'hidden') params.append('status', 'hidden');
     // Lưu ý: Nếu là Tab Thùng rác (deleted) ta sẽ lọc bằng Frontend dưới đây do Backend API chưa xử lý query 'deleted'
 
-    const resReviews = await axios.get(`http://127.0.0.1:8000/api/v1/admin/reviews?${params.toString()}`, { headers: getHeaders() });
+    const resReviews = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/reviews?${params.toString()}`, { headers: getHeaders() });
     let dataList = resReviews.data.data.data || [];
     
     // LỌC Ở FRONTEND NHỮNG CÁI BACKEND CHƯA XỬ LÝ (Tạm thời)
@@ -616,7 +616,7 @@ const setupRealtime = () => {
 const toggleStatus = async (review) => {
     const newStatus = review.status === 'active' ? 'hidden' : 'active';
     try {
-        await axios.patch(`http://127.0.0.1:8000/api/v1/admin/reviews/${review.id}/status`, { status: newStatus }, { headers: getHeaders() });
+        await axios.patch(`${import.meta.env.VITE_API_BASE_URL}/admin/reviews/${review.id}/status`, { status: newStatus }, { headers: getHeaders() });
         review.status = newStatus;
         // Nếu đang ở Tab khác Tất cả thì filter lại
         if(activeTab.value === 'active' || activeTab.value === 'hidden') applyFilters();
@@ -629,7 +629,7 @@ const toggleStatus = async (review) => {
 const toggleStatusModal = async (e) => {
     const newStatus = e.target.checked ? 'active' : 'hidden';
     try {
-        await axios.patch(`http://127.0.0.1:8000/api/v1/admin/reviews/${selectedReview.value.id}/status`, { status: newStatus }, { headers: getHeaders() });
+        await axios.patch(`${import.meta.env.VITE_API_BASE_URL}/admin/reviews/${selectedReview.value.id}/status`, { status: newStatus }, { headers: getHeaders() });
         selectedReview.value.status = newStatus;
         // Update mảng ngoài
         const target = reviews.value.find(r => r.id === selectedReview.value.id);
@@ -649,7 +649,7 @@ const confirmDelete = (id) => {
   Swal.fire({ title: 'Gỡ Đánh giá?', text: `Đánh giá này sẽ bị chuyển vào thùng rác.`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Đồng ý xóa' }).then(async (result) => {
     if (result.isConfirmed) {
       try {
-        await axios.delete(`http://127.0.0.1:8000/api/v1/admin/reviews/${id}`, { headers: getHeaders() });
+        await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/admin/reviews/${id}`, { headers: getHeaders() });
         Swal.fire({icon: 'success', title: 'Đã xóa', timer: 1500, showConfirmButton: false});
         fetchData(true);
       } catch(e) { Swal.fire('Lỗi', e.response?.data?.message || 'Lỗi xóa', 'error'); }
@@ -661,7 +661,7 @@ const restoreReview = (id) => {
   Swal.fire({ title: 'Khôi phục đánh giá?', icon: 'info', showCancelButton: true, confirmButtonColor: 'var(--color-c-hover, #547792)', confirmButtonText: 'Khôi phục' }).then(async (result) => {
     if (result.isConfirmed) {
       try {
-        await axios.post(`http://127.0.0.1:8000/api/v1/admin/reviews/${id}/restore`, {}, { headers: getHeaders() });
+        await axios.post(`${import.meta.env.VITE_API_BASE_URL}/admin/reviews/${id}/restore`, {}, { headers: getHeaders() });
         Swal.fire({icon: 'success', title: 'Đã khôi phục', timer: 1500, showConfirmButton: false});
         fetchData(true);
       } catch(e) { Swal.fire('Lỗi', e.response?.data?.message || 'Lỗi khôi phục', 'error'); }
@@ -687,7 +687,7 @@ const saveReply = async () => {
 
     isSavingReply.value = true;
     try {
-        await axios.post(`http://127.0.0.1:8000/api/v1/admin/reviews/${selectedReview.value.id}/reply`, { admin_reply: replyContent.value }, { headers: getHeaders() });
+        await axios.post(`${import.meta.env.VITE_API_BASE_URL}/admin/reviews/${selectedReview.value.id}/reply`, { admin_reply: replyContent.value }, { headers: getHeaders() });
         
         // Update mảng
         const target = reviews.value.find(r => r.id === selectedReview.value.id);

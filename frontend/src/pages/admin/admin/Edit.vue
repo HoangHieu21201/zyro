@@ -283,7 +283,7 @@ const fetchData = async () => {
   try {
     const [resRole, resAdmin] = await Promise.all([
       axios.get('http://127.0.0.1:8000/api/v1/admin/roles', { headers: getHeaders() }),
-      axios.get(`http://127.0.0.1:8000/api/v1/admin/admins/${adminId}`, { headers: getHeaders() }),
+      axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/admins/${adminId}`, { headers: getHeaders() }),
       fetchProvinces()
     ]);
     
@@ -357,7 +357,7 @@ const saveAdmin = async () => {
   });
 
   try {
-    await axios.post(`http://127.0.0.1:8000/api/v1/admin/admins/${adminId}`, formData, { 
+    await axios.post(`${import.meta.env.VITE_API_BASE_URL}/admin/admins/${adminId}`, formData, { 
       headers: { ...getHeaders(), 'Content-Type': 'multipart/form-data' } 
     });
     Swal.fire({ icon: 'success', title: 'Cập nhật thành công', timer: 1500, showConfirmButton: false });

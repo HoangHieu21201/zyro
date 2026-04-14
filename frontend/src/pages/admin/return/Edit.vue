@@ -231,7 +231,7 @@ const getRefundActionClass = (action) => {
 const fetchData = async () => {
   isPageLoading.value = true;
   try {
-    const res = await axios.get(`http://127.0.0.1:8000/api/v1/admin/orders/${orderId}`, { headers: getHeaders() });
+    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/orders/${orderId}`, { headers: getHeaders() });
     order.value = res.data.data;
     
     shippingInfoParsed.value = typeof order.value.shipping_info === 'string' ? JSON.parse(order.value.shipping_info) : order.value.shipping_info;
@@ -265,7 +265,7 @@ const submitRefund = async () => {
 
   isSavingRefund.value = true;
   try {
-    await axios.post(`http://127.0.0.1:8000/api/v1/admin/orders/${orderId}/refund`, refundForm.value, { headers: getHeaders() });
+    await axios.post(`${import.meta.env.VITE_API_BASE_URL}/admin/orders/${orderId}/refund`, refundForm.value, { headers: getHeaders() });
     Swal.fire({ icon: 'success', title: 'Đã xử lý', text: 'Giao dịch hoàn tiền đã được ghi nhận hệ thống.', timer: 2000, showConfirmButton: false });
     await fetchData();
   } catch(e) {
