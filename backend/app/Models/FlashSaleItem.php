@@ -5,6 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use Illuminate\Support\Facades\Cache;
+use App\Events\ClientHomeUpdated;
+use App\Events\FlashSaleEvent;
+
 class FlashSaleItem extends Model
 {
     use HasFactory;
@@ -30,6 +34,21 @@ class FlashSaleItem extends Model
             'quantity_limit' => 'integer',
             'sold_quantity' => 'integer',
         ];
+    }
+
+    protected static function booted()
+    {
+        $trigger = function ($model) {
+            if ($model->flashSale) {
+                event(new \App\Events\FlashSaleEvent('updated', $model->flashSale));
+            }
+
+            \Illuminate\Support\Facades\Cache::forget('client_home_data_dev');
+            event(new \App\Events\ClientHomeUpdated());
+        };
+
+        static::saved($trigger);
+        static::deleted($trigger);
     }
 
     public function flashSale()

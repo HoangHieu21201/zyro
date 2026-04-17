@@ -82,20 +82,20 @@
                   <label class="form-label fw-bold text-dark dark:text-gray-200">Địa chỉ liên hệ</label>
                   <div class="row g-2 mb-2">
                     <div class="col-md-4">
-                      <select class="form-select dark:bg-[#212529] dark:text-white dark:border-gray-700" v-model="addressHelper.province" @change="onProvinceChange">
-                        <option value="">-- Chọn Tỉnh/Thành --</option>
+                      <select class="form-select dark:bg-[#212529] dark:text-white dark:border-gray-700" v-model="addressHelper.province" @change="onProvinceChange" :disabled="loadingProvinces">
+                        <option value="">{{ loadingProvinces ? '⏳ Đang tải...' : '-- Chọn Tỉnh/Thành --' }}</option>
                         <option v-for="p in provinces" :key="p.code" :value="p.name">{{ p.name }}</option>
                       </select>
                     </div>
                     <div class="col-md-4">
-                      <select class="form-select dark:bg-[#212529] dark:text-white dark:border-gray-700" v-model="addressHelper.district" @change="onDistrictChange" :disabled="!addressHelper.province">
-                        <option value="">-- Chọn Quận/Huyện --</option>
+                      <select class="form-select dark:bg-[#212529] dark:text-white dark:border-gray-700" v-model="addressHelper.district" @change="onDistrictChange" :disabled="!addressHelper.province || loadingDistricts">
+                        <option value="">{{ loadingDistricts ? '⏳ Đang tải...' : '-- Chọn Quận/Huyện --' }}</option>
                         <option v-for="d in districts" :key="d.code" :value="d.name">{{ d.name }}</option>
                       </select>
                     </div>
                     <div class="col-md-4">
-                      <select class="form-select dark:bg-[#212529] dark:text-white dark:border-gray-700" v-model="addressHelper.ward" :disabled="!addressHelper.district">
-                        <option value="">-- Chọn Phường/Xã --</option>
+                      <select class="form-select dark:bg-[#212529] dark:text-white dark:border-gray-700" v-model="addressHelper.ward" :disabled="!addressHelper.district || loadingWards">
+                        <option value="">{{ loadingWards ? '⏳ Đang tải...' : '-- Chọn Phường/Xã --' }}</option>
                         <option v-for="w in wards" :key="w.code" :value="w.name">{{ w.name }}</option>
                       </select>
                     </div>
@@ -149,6 +149,9 @@ const errors = ref({});
 const provinces = ref([]);
 const districts = ref([]);
 const wards = ref([]);
+const loadingProvinces = ref(false);
+const loadingDistricts = ref(false);
+const loadingWards = ref(false);
 const addressHelper = reactive({ province: '', district: '', ward: '', detail: '' });
 
 const form = ref({ 
@@ -159,18 +162,38 @@ const form = ref({
 const getHeaders = () => ({ 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
 
 const fetchProvinces = async () => {
+  loadingProvinces.value = true;
   try {
-    const res = await axios.get('https://provinces.open-api.vn/api/p/');
-    provinces.value = res.data;
-  } catch (err) { console.error("Lỗi tải Tỉnh thành"); }
+    console.log('🔄 Fetching provinces...');
+    const res = await axios.get('https://provinces.open-api.vn/api/p/', { timeout: 5000 });
+    if (Array.isArray(res.data) && res.data.length > 0) {
+      provinces.value = res.data;
+      console.log('✅ Provinces loaded:', res.data.length);
+    } else {
+      throw new Error('Invalid data format');
+    }
+  } catch (err) { 
+    console.error("❌ Lỗi tải Tỉnh thành:", err.message);
+  } finally {
+    loadingProvinces.value = false;
+  }
 };
 
 const onProvinceChange = async () => {
   addressHelper.district = ''; addressHelper.ward = ''; districts.value = []; wards.value = [];
   const p = provinces.value.find(i => i.name === addressHelper.province);
   if (p) {
-    const res = await axios.get(`https://provinces.open-api.vn/api/p/${p.code}?depth=2`);
-    districts.value = res.data.districts;
+    loadingDistricts.value = true;
+    try {
+      const res = await axios.get(`https://provinces.open-api.vn/api/p/${p.code}?depth=2`, { timeout: 5000 });
+      if (res.data && res.data.districts) {
+        districts.value = res.data.districts;
+      }
+    } catch (err) {
+      console.error("❌ Lỗi tải Quận huyện:", err.message);
+    } finally {
+      loadingDistricts.value = false;
+    }
   }
 };
 
@@ -178,8 +201,17 @@ const onDistrictChange = async () => {
   addressHelper.ward = ''; wards.value = [];
   const d = districts.value.find(i => i.name === addressHelper.district);
   if (d) {
-    const res = await axios.get(`https://provinces.open-api.vn/api/d/${d.code}?depth=2`);
-    wards.value = res.data.wards;
+    loadingWards.value = true;
+    try {
+      const res = await axios.get(`https://provinces.open-api.vn/api/d/${d.code}?depth=2`, { timeout: 5000 });
+      if (res.data && res.data.wards) {
+        wards.value = res.data.wards;
+      }
+    } catch (err) {
+      console.error("❌ Lỗi tải Phường xã:", err.message);
+    } finally {
+      loadingWards.value = false;
+    }
   }
 };
 

@@ -13,13 +13,13 @@ const user = [
     path: '/',
     component: () => import('../layouts/UserLayout.vue'),
     children: [
-      {
+     {
         path: '',
         name: 'home',
         component: () => import('../pages/user/Index.vue'),
       },
       {
-        path: '/category',
+        path: '/category/:slug?', 
         name: 'client-category',
         component: () => import('@/pages/client/category/Index.vue')
       },
@@ -87,7 +87,17 @@ const user = [
         path: '/:pathMatch(.*)*',
         name: 'NotFound',
         component: () => import('@/pages/NotFound.vue')
-      }
+      },
+      {
+        path: '/user/review',
+        name: 'client-review',
+        component: () => import('@/pages/client/review/Index.vue')
+      },
+      {
+        path: '/flash-sale',
+        name: 'client-flash-sale',
+        component: () => import('@/pages/client/flash-sale/Index.vue')
+    },
     ],
   },
 ]

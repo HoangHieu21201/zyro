@@ -1,14 +1,11 @@
-<!-- File: frontend/src/pages/client/auth/Login.vue -->
 <template>
   <div class="auth-wrapper d-flex min-vh-100 bg-white dark:bg-[#121416]">
-    
-    <!-- NỬA TRÁI: HÌNH ẢNH THỜI TRANG (Chỉ hiện trên PC) -->
     <div class="d-none d-lg-flex col-lg-6 position-relative p-0 overflow-hidden auth-cover">
       <img src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=1200&auto=format&fit=crop" class="w-100 h-100 object-fit-cover zoom-anim" alt="ZYRO Fashion">
       <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark opacity-25"></div>
       
       <div class="position-absolute top-50 start-50 translate-middle text-center w-100 p-4 z-index-2">
-         <h2 class="text-white display-4 fw-bold font-script fst-italic text-shadow-lg mb-3">Fall Collection</h2>
+         <h2 class="text-white display-4 fw-bold font-script text-shadow-lg mb-3">Fall Collection</h2>
          <p class="text-white fs-5 text-shadow fw-medium">Định hình phong cách cá nhân của bạn.</p>
       </div>
 
@@ -17,7 +14,6 @@
       </router-link>
     </div>
     
-    <!-- NỬA PHẢI: FORM ĐĂNG NHẬP -->
     <div class="col-12 col-lg-6 d-flex align-items-center justify-content-center p-4 p-md-5 position-relative">
        <div class="w-100 animation-fade-in" style="max-width: 420px;">
           
@@ -32,42 +28,30 @@
           </div>
 
           <form @submit.prevent="handleLogin" autocomplete="off">
-             
-             <!-- INPUT EMAIL: HIỆU ỨNG TRỒI ICON -->
              <div class="custom-auth-group mb-4">
-               <!-- Lưu ý: placeholder=" " (có 1 khoảng trắng) là mẹo cực kỳ quan trọng để CSS :placeholder-shown hoạt động -->
                <input type="email" class="form-control zyro-auth-input" id="emailInput" v-model="form.email" placeholder=" " required>
-               
                <label for="emailInput" class="zyro-auth-label text-muted fw-semibold small text-uppercase tracking-wide">
                  Email đăng nhập <span class="text-danger">*</span>
                </label>
-               
                <div class="zyro-auth-icon text-urban">
                  <i class="bi bi-person-bounding-box"></i>
                </div>
              </div>
 
-             <!-- INPUT PASSWORD: HIỆU ỨNG TRỒI ICON -->
              <div class="custom-auth-group mb-4 position-relative">
                <input :type="showPass ? 'text' : 'password'" class="form-control zyro-auth-input pe-5" id="passInput" v-model="form.password" placeholder=" " required>
-               
                <label for="passInput" class="zyro-auth-label text-muted fw-semibold small text-uppercase tracking-wide">
                  Mật khẩu <span class="text-danger">*</span>
                </label>
-               
                <div class="zyro-auth-icon text-urban">
                  <i class="bi bi-fingerprint"></i>
                </div>
-
-               <!-- Nút ẩn hiện Password -->
                <button type="button" class="btn position-absolute top-50 end-0 translate-middle-y border-0 text-muted hover-text-urban px-3" style="z-index: 5;" @click="showPass = !showPass">
                  <i class="bi" :class="showPass ? 'bi-eye-slash' : 'bi-eye'"></i>
                </button>
              </div>
 
              <div class="d-flex justify-content-between align-items-center mb-5 pb-2 mt-2">
-               
-               <!-- ĐÃ CẬP NHẬT: CUSTOM CHECKBOX ĐẲNG CẤP THỜI TRANG -->
                <label class="custom-checkbox-wrapper d-flex align-items-center cursor-pointer m-0">
                  <input type="checkbox" class="d-none" v-model="form.remember">
                  <span class="custom-checkbox me-2 d-flex align-items-center justify-content-center transition-all">
@@ -75,7 +59,6 @@
                  </span>
                  <span class="text-muted small fw-medium">Ghi nhớ tài khoản</span>
                </label>
-
                <router-link to="#" class="text-urban small fw-bold text-decoration-none hover-underline">Quên mật khẩu?</router-link>
              </div>
 
@@ -98,9 +81,12 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import Swal from 'sweetalert2';
+import api from '@/utils/axios';
+import { useCartStore } from '@/stores/cartStore';
+import { ZyroSwal } from '@/components/client/ZyroSwal';
 
 const router = useRouter();
+const cartStore = useCartStore();
 const showPass = ref(false);
 const isLoading = ref(false);
 
@@ -110,14 +96,36 @@ const form = ref({
   remember: false
 });
 
-const handleLogin = () => {
+const handleLogin = async () => {
   isLoading.value = true;
-  // Giả lập API
-  setTimeout(() => {
+  try {
+    const payload = {
+      email: form.value.email.trim(),
+      password: form.value.password
+    };
+
+    const res = await api.post('/client/login', payload);
+
+    if (res.data.access_token) {
+      localStorage.setItem('access_token', res.data.access_token);
+      localStorage.setItem('user_info', JSON.stringify(res.data.user));
+
+      await cartStore.mergeCartAfterLogin();
+
+      ZyroSwal.toastSuccess(res.data.message || 'Đăng nhập thành công');
+      router.push('/');
+    }
+  } catch (error) {
+    let errorMsg = 'Kết nối máy chủ thất bại.';
+    if (error.response?.data?.errors?.email) {
+        errorMsg = error.response.data.errors.email[0];
+    } else if (error.response?.data?.message) {
+        errorMsg = error.response.data.message;
+    }
+    ZyroSwal.toastError(errorMsg);
+  } finally {
     isLoading.value = false;
-    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đăng nhập thành công', showConfirmButton: false, timer: 1500 });
-    router.push('/');
-  }, 1000);
+  }
 };
 
 onMounted(() => { window.scrollTo(0, 0); });
@@ -125,7 +133,7 @@ onMounted(() => { window.scrollTo(0, 0); });
 
 <style scoped>
 .fw-black { font-weight: 900; }
-.font-script { font-family: 'Georgia', serif; }
+.font-script { font-family: inherit; font-style: normal; }
 .tracking-widest { letter-spacing: 2px; }
 .tracking-wide { letter-spacing: 1px; }
 .text-shadow { text-shadow: 1px 1px 3px rgba(0,0,0,0.5); }
@@ -145,14 +153,10 @@ onMounted(() => { window.scrollTo(0, 0); });
 .cursor-pointer { cursor: pointer; }
 .transition-all { transition: all 0.3s ease; }
 
-/* Image Cover Zoom Anim */
 .auth-cover { height: 100vh; position: sticky; top: 0; }
 .zoom-anim { animation: bg-zoom 20s linear infinite alternate; transform-origin: center; }
 @keyframes bg-zoom { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
 
-/* ========================================================================
-   CỤM CSS DÀNH RIÊNG CHO HIỆU ỨNG TRỒI ICON VÀ TRƯỢT LABEL
-======================================================================== */
 .custom-auth-group {
   position: relative;
   background-color: var(--color-c-effect);
@@ -161,9 +165,7 @@ onMounted(() => { window.scrollTo(0, 0); });
   border: 1.5px solid transparent;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
-html.dark .custom-auth-group {
-  background-color: #212529;
-}
+html.dark .custom-auth-group { background-color: #212529; }
 .custom-auth-group:focus-within {
   border-color: var(--color-c-hover);
   box-shadow: 0 0 0 4px rgba(84, 119, 146, 0.15);
@@ -202,7 +204,6 @@ html.dark .zyro-auth-input { color: #fff; }
   transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55); 
 }
 
-/* KÍCH HOẠT HIỆU ỨNG KHI ĐƯỢC FOCUS HOẶC ĐÃ GÕ CHỮ */
 .zyro-auth-input:focus ~ .zyro-auth-label,
 .zyro-auth-input:not(:placeholder-shown) ~ .zyro-auth-label {
   opacity: 0;
@@ -220,12 +221,7 @@ html.dark .zyro-auth-input { color: #fff; }
   padding-left: 3.2rem; 
 }
 
-/* ========================================================================
-   CUSTOM CHECKBOX ĐẲNG CẤP THỜI TRANG
-======================================================================== */
-.custom-checkbox-wrapper {
-  user-select: none;
-}
+.custom-checkbox-wrapper { user-select: none; }
 .custom-checkbox {
   width: 22px;
   height: 22px;
@@ -233,24 +229,17 @@ html.dark .zyro-auth-input { color: #fff; }
   border-radius: 6px;
   background-color: transparent;
 }
-html.dark .custom-checkbox {
-  border-color: #495057;
-}
+html.dark .custom-checkbox { border-color: #495057; }
 
-/* Style cho Icon check mặc định ẩn */
 .custom-checkbox i {
   font-size: 1.1rem;
   opacity: 0;
-  transform: scale(0.3); /* Thu nhỏ lại để tạo hiệu ứng bật lên */
+  transform: scale(0.3); 
   transition: all 0.25s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
-/* Trạng thái Hover */
-.custom-checkbox-wrapper:hover .custom-checkbox {
-  border-color: var(--color-c-hover, #547792);
-}
+.custom-checkbox-wrapper:hover .custom-checkbox { border-color: var(--color-c-hover, #547792); }
 
-/* Trạng thái được Check */
 .custom-checkbox-wrapper input:checked ~ .custom-checkbox {
   background-color: var(--color-c-dark, #213448);
   border-color: var(--color-c-dark, #213448);
@@ -260,12 +249,10 @@ html.dark .custom-checkbox-wrapper input:checked ~ .custom-checkbox {
   border-color: var(--color-c-hover, #547792);
 }
 
-/* Hiển thị Icon khi Check */
 .custom-checkbox-wrapper input:checked ~ .custom-checkbox i {
   opacity: 1;
   transform: scale(1);
 }
-/* ======================================================================== */
 
 .animation-fade-in { animation: fadeIn 0.6s cubic-bezier(0.165, 0.84, 0.44, 1) forwards; }
 @keyframes fadeIn {

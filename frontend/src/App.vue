@@ -1,9 +1,54 @@
-<!-- File: frontend/src/App.vue -->
 <template>
+  <!-- MÀN HÌNH CHỜ ĐIỆN ẢNH (SPLASH SCREEN) -->
+  <transition name="splash-fade">
+    <div v-if="showSplash" class="global-splash d-flex align-items-center justify-content-center">
+      
+      <!-- Hiệu ứng dải băng vẽ chữ zyro. -->
+      <svg viewBox="0 0 400 120" class="zyro-svg-logo">
+        <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" class="zyro-svg-text">zyro.</text>
+      </svg>
+      
+    </div>
+  </transition>
+
+  <!-- NỘI DUNG WEB CHÍNH -->
   <router-view></router-view>
 </template>
 
 <script setup>
+import { ref, onMounted, watch, nextTick } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
+
+const showSplash = ref(true);
+const router = useRouter();
+const route = useRoute();
+
+onMounted(() => {
+  // Lắng nghe Vue Router: Khi nào tải xong các file giao diện thì bắt đầu đếm giờ tắt Splash
+  router.isReady().then(() => {
+    // Để thời gian 2.2 giây cho hiệu ứng dải băng vẽ xong và đổ màu
+    setTimeout(() => {
+      showSplash.value = false;
+    }, 2200); 
+  });
+});
+
+// ========================================================
+// ĐÃ FIX: GLOBAL AUTO SCROLL TO TOP
+// Lắng nghe mọi sự thay đổi của đường dẫn để cuộn lên đầu trang
+// ========================================================
+watch(() => route.path, () => {
+  nextTick(() => {
+    // Đợi 100ms để DOM của component mới kịp render và có chiều cao thực tế
+    setTimeout(() => {
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: 'smooth'
+      });
+    }, 100);
+  });
+});
 </script>
 
 <style>
@@ -19,14 +64,75 @@
 
 @layer base {
   body {
-    /* Sử dụng biến màu vừa khai báo ở trên */
     @apply bg-c-effect text-c-dark font-sans antialiased;
   }
 }
 
 /* =======================================================
+   HIỆU ỨNG SPLASH SCREEN (ĐIỆN ẢNH)
+======================================================== */
+.global-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background-color: var(--color-c-effect);
+}
+html.dark .global-splash { 
+  background-color: #121416; 
+}
+
+/* Kích thước SVG */
+.zyro-svg-logo {
+  width: 250px;
+  overflow: visible;
+}
+
+/* Chữ zyro dải băng uốn lượn */
+.zyro-svg-text {
+  font-family: 'Georgia', serif;
+  font-style: italic;
+  font-weight: 900;
+  font-size: 6rem;
+  fill: transparent;
+  stroke: var(--color-c-hover);
+  stroke-width: 1.5px;
+  /* Thuộc tính dasharray và dashoffset tạo nên viền chạy (Ribbon) */
+  stroke-dasharray: 600;
+  stroke-dashoffset: 600;
+  /* Vẽ viền trong 1.5s, sau đó đổ màu đầy đặn trong 0.8s */
+  animation: drawRibbon 1.5s cubic-bezier(0.25, 0.1, 0.25, 1) forwards,
+             fillColor 0.8s 1.2s ease forwards;
+}
+html.dark .zyro-svg-text {
+  stroke: #f8f9fa;
+  animation: drawRibbon 1.5s cubic-bezier(0.25, 0.1, 0.25, 1) forwards,
+             fillColorDark 0.8s 1.2s ease forwards;
+}
+
+@keyframes drawRibbon {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes fillColor {
+  from { fill: transparent; }
+  to { fill: var(--color-c-dark); stroke: transparent; }
+}
+@keyframes fillColorDark {
+  from { fill: transparent; }
+  to { fill: #f8f9fa; stroke: transparent; text-shadow: 0 0 15px rgba(255,255,255,0.2); }
+}
+
+/* Hiệu ứng Fade-out mượt mà, phóng to nhẹ để mở không gian */
+.splash-fade-leave-active {
+  transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1), transform 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.splash-fade-leave-to {
+  opacity: 0;
+  transform: scale(1.1); /* Phóng to 10% khi mờ đi tạo cảm giác "mở rèm" */
+  pointer-events: none;
+}
+
+/* =======================================================
    ZYRO GLOBAL CONTAINER (TỶ LỆ VÀNG 1310px)
-   (Trên màn 1650px sẽ tự động chừa margin 170px mỗi bên y như Figma)
 ======================================================== */
 .zyro-container {
   width: 100%;
@@ -145,16 +251,20 @@
     border-color: #373b3e !important;
 }
 
+/* BỘ MÀU SHIMMER CHUẨN ZYRO */
 .logo-shimmer { 
-  font-size: 3.5rem; 
   font-weight: 900; 
-  letter-spacing: -1.5px; 
   background: linear-gradient(120deg, var(--color-c-dark) 30%, var(--color-c-light) 50%, var(--color-c-dark) 70%); 
   background-size: 200% auto; 
   color: transparent; 
   -webkit-background-clip: text; 
   background-clip: text; 
-  animation: shine 1.5s linear infinite; 
+}
+html.dark .logo-shimmer {
+  background: linear-gradient(120deg, #f8f9fa 30%, var(--color-c-light) 50%, #f8f9fa 70%);
+  background-size: 200% auto; 
+  -webkit-background-clip: text; 
+  background-clip: text; 
 }
 @keyframes shine { 
   to { background-position: 200% center; } 

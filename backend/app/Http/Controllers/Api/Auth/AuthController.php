@@ -8,45 +8,35 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
+use App\Http\Requests\Client\Auth\RegisterRequest;
+use App\Http\Requests\Client\Auth\LoginRequest;
+
 class AuthController extends Controller
 {
-    public function register(Request $request)
+    public function register(RegisterRequest $request)
     {
-        // Theo đúng yêu cầu: Họ tên, email, SĐT, mật khẩu, xác nhận mật khẩu
-        $request->validate([
-            'fullName' => 'required|string|max:150',
-            'email' => 'required|string|email|max:150|unique:users',
-            'phone' => 'nullable|string|max:20',
-            'password' => 'required|string|min:6|confirmed', 
-        ]);
-
         $user = User::create([
-            'fullName' => $request->fullName,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'password' => Hash::make($request->password),
-            'status' => 'active',
+            'full_name' => $request->input('full_name') ?? $request->input('fullName'),
+            'email'     => $request->input('email'),
+            'phone'     => $request->input('phone'),
+            'password'  => Hash::make($request->input('password')),
+            'status'    => 'active',
         ]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-            'message' => 'Đăng ký thành công!',
+            'message'      => 'Đăng ký thành công!',
             'access_token' => $token,
-            'user' => $user
+            'user'         => $user
         ], 201);
     }
 
-    public function login(Request $request)
+    public function login(LoginRequest $request)
     {
-        $request->validate([
-            'email' => 'required|string|email',
-            'password' => 'required|string',
-        ]);
+        $user = User::where('email', $request->input('email'))->first();
 
-        $user = User::where('email', $request->email)->first();
-
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (!$user || !Hash::check($request->input('password'), $user->password)) {
             throw ValidationException::withMessages([
                 'email' => ['Thông tin đăng nhập không chính xác.'],
             ]);
@@ -54,16 +44,16 @@ class AuthController extends Controller
 
         if ($user->status !== 'active') {
             throw ValidationException::withMessages([
-                'email' => ['Tài khoản của bạn đã bị khóa.'],
+                'email' => ['Tài khoản của bạn đã bị khóa. Vui lòng liên hệ CSKH.'],
             ]);
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-            'message' => 'Đăng nhập thành công!',
+            'message'      => 'Đăng nhập thành công!',
             'access_token' => $token,
-            'user' => $user
+            'user'         => $user
         ]);
     }
 

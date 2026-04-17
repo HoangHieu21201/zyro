@@ -10,7 +10,8 @@
       <div v-if="isOpen" class="search-panel shadow-lg rounded-4 bg-white dark:bg-[#1a2533] d-flex flex-column"
            style="top: 20px; max-height: calc(100vh - 40px);">
         
-        <div class="search-content custom-scrollbar-y px-4 px-lg-5 pt-4 pb-2 flex-grow-1">
+        <!-- Search Content -->
+        <div class="search-content custom-scrollbar-y px-4 px-lg-5 pt-4 pb-2 flex-grow-1" style="min-height: 60vh;">
           
           <!-- TIÊU ĐỀ & Ô NHẬP LIỆU -->
           <div class="text-center mb-4 mt-2">
@@ -28,36 +29,113 @@
             </div>
           </div>
 
-          <!-- LỊCH SỬ TÌM KIẾM -->
-          <div class="mb-5 mx-auto" style="max-width: 800px;">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <span class="text-muted dark:text-gray-400 small fw-semibold">Tìm kiếm gần đây</span>
-              <button class="btn btn-link text-danger p-0 text-decoration-none small" style="font-size: 0.8rem;" @click="clearHistory">Xoá</button>
-            </div>
-            <div class="d-flex flex-wrap gap-2">
-              <span v-for="kw in recentSearches" :key="kw" 
-                    class="badge bg-light text-dark dark:bg-[#212529] dark:text-gray-300 border dark:border-gray-700 rounded-pill px-3 py-2 fw-normal cursor-pointer hover-bg-effect transition-all"
-                    @click="searchQuery = kw; submitSearch()">
-                {{ kw }}
-              </span>
-            </div>
-          </div>
-
-          <!-- SẢN PHẨM XU HƯỚNG -->
-          <div class="mb-4 mx-auto" style="max-width: 1200px;">
-            <h6 class="text-center text-muted dark:text-gray-400 fw-semibold mb-4">Sản phẩm xu hướng</h6>
+          <transition name="fade-slide" mode="out-in">
             
-            <div class="trending-products-grid custom-scrollbar-x pb-3">
-              <div v-for="product in trendingProducts" :key="product.id" class="product-item flex-shrink-0">
-                <ProductCard 
-                  :product="product" 
-                  @quick-view="handleOpenQuickView" 
-                  @compare="handleAddToCompare" 
-                />
+            <!-- ============================================== -->
+            <!-- TRẠNG THÁI 1: KHI Ô TÌM KIẾM TRỐNG             -->
+            <!-- ============================================== -->
+            <div v-if="!searchQuery.trim()" key="empty-state" class="w-100">
+              <!-- LỊCH SỬ TÌM KIẾM -->
+              <div v-if="recentSearches.length > 0" class="mb-5 mx-auto" style="max-width: 800px;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <span class="text-muted dark:text-gray-400 small fw-semibold">Tìm kiếm gần đây</span>
+                  <button class="btn btn-link text-danger p-0 text-decoration-none small" style="font-size: 0.8rem;" @click="clearHistory">Xoá lịch sử</button>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                  <span v-for="kw in recentSearches" :key="kw" 
+                        class="badge bg-light text-dark dark:bg-[#212529] dark:text-gray-300 border dark:border-gray-700 rounded-pill px-3 py-2 fw-normal cursor-pointer hover-bg-effect transition-all"
+                        @click="clickRecentSearch(kw)">
+                    {{ kw }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- SẢN PHẨM XU HƯỚNG -->
+              <div class="mb-4 mx-auto" style="max-width: 1200px;">
+                <h6 class="text-center text-muted dark:text-gray-400 fw-semibold mb-4">Sản phẩm xu hướng</h6>
+                
+                <div v-if="trendingProducts && trendingProducts.length > 0" class="trending-products-grid custom-scrollbar-x pb-3">
+                  <div v-for="product in trendingProducts.slice(0, 8)" :key="'trend'+product.id" class="product-item flex-shrink-0">
+                    <ProductCard 
+                      :product="product" 
+                      @quick-view="handleOpenQuickView" 
+                      @compare="handleAddToCompare" 
+                      @wishlist="handleAddToWishlist"
+                      @options="handleGoToDetail"
+                    />
+                  </div>
+                </div>
+                
+                <div v-else class="trending-products-grid custom-scrollbar-x pb-3 pe-none overflow-hidden">
+                  <div v-for="i in 5" :key="'trend-skeleton-'+i" class="product-item flex-shrink-0">
+                    <div class="skeleton-card w-100" aria-hidden="true">
+                      <div class="skeleton-img-wrapper shimmer rounded-3 mb-3 w-100"></div>
+                      <div class="product-info px-1 w-100">
+                        <div class="skeleton-price shimmer mb-2"></div>
+                        <div class="skeleton-title shimmer mb-3"></div>
+                        <div class="d-flex gap-2">
+                          <div class="skeleton-swatch shimmer rounded-circle"></div>
+                          <div class="skeleton-swatch shimmer rounded-circle"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
 
+            <!-- ============================================== -->
+            <!-- TRẠNG THÁI 2: ĐANG TÌM KIẾM (LIVE SEARCH)      -->
+            <!-- ============================================== -->
+            <div v-else key="results-state" class="mb-4 mx-auto w-100" style="max-width: 1200px;">
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <h6 class="text-muted dark:text-gray-400 fw-semibold mb-0">
+                  Gợi ý cho "<span class="text-dark dark:text-white fw-bold">{{ searchQuery }}</span>"
+                </h6>
+                <div v-if="isSearching" class="spinner-border spinner-border-sm text-secondary" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+              </div>
+              
+              <div class="transition-all" :class="{ 'opacity-50 pe-none': isSearching && displayResults.length > 0 }">
+                
+                <div v-if="displayResults.length > 0" class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3">
+                  <div v-for="product in displayResults" :key="'search'+product.id" class="col">
+                    <ProductCard 
+                      :product="product" 
+                      @quick-view="handleOpenQuickView" 
+                      @compare="handleAddToCompare" 
+                      @wishlist="handleAddToWishlist"
+                      @options="handleGoToDetail"
+                    />
+                  </div>
+                </div>
+
+                <div v-else-if="isSearching" class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3">
+                  <div class="col" v-for="i in 5" :key="'search-skeleton-'+i">
+                    <div class="skeleton-card w-100" aria-hidden="true">
+                      <div class="skeleton-img-wrapper shimmer rounded-3 mb-3 w-100"></div>
+                      <div class="product-info px-1 w-100">
+                        <div class="skeleton-price shimmer mb-2"></div>
+                        <div class="skeleton-title shimmer mb-3"></div>
+                        <div class="d-flex gap-2">
+                          <div class="skeleton-swatch shimmer rounded-circle"></div>
+                          <div class="skeleton-swatch shimmer rounded-circle"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div v-else class="text-center py-5 w-100 text-muted d-flex flex-column align-items-center">
+                  <i class="bi bi-search fs-1 mb-3 opacity-25"></i>
+                  <span class="fst-italic">Không tìm thấy sản phẩm nào phù hợp.</span>
+                </div>
+
+              </div>
+            </div>
+
+          </transition>
         </div>
 
         <!-- NÚT ĐÓNG DƯỚI CÙNG -->
@@ -76,7 +154,6 @@
       @close="isQuickViewOpen = false" 
     />
 
-    <!-- NHÚNG COMPONENT SO SÁNH -->
     <CompareModal 
       :compare-list="compareList"
       @remove="removeFromCompare"
@@ -86,73 +163,116 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick } from 'vue';
-import Swal from 'sweetalert2'; 
+import { ref, watch, nextTick, onMounted, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import axios from 'axios'; 
+
+// ĐÃ THAY ĐỔI: Import ZyroSwal thay cho Swal mặc định
+import { ZyroSwal } from '@/components/client/ZyroSwal';
 
 import ProductCard from './ProductCard.vue';
 import QuickViewModal from './QuickViewModal.vue';
 import CompareModal from './CompareModal.vue'; 
 
 const props = defineProps({
-  isOpen: { type: Boolean, default: false }
+  isOpen: { type: Boolean, default: false },
+  trendingProducts: { type: Array, default: () => [] } 
 });
 
 const emit = defineEmits(['close']);
+const router = useRouter();
 
 const searchInput = ref(null);
 const searchQuery = ref('');
+const recentSearches = ref([]);
 
-// Trạng thái Quick View
+const isSearching = ref(false);
+const searchResults = ref([]);
+let searchTimeout = null;
+const hasFetchedAPI = ref(false);
+
+onMounted(() => {
+  const savedHistory = localStorage.getItem('zyro_recent_searches');
+  if (savedHistory) {
+    try { recentSearches.value = JSON.parse(savedHistory); } catch(e) {}
+  }
+});
+
+const displayResults = computed(() => {
+  if (hasFetchedAPI.value && searchResults.value.length > 0) {
+    return searchResults.value;
+  }
+  const q = searchQuery.value.trim().toLowerCase();
+  if (q !== '') {
+    return props.trendingProducts.filter(p => 
+      p.name.toLowerCase().includes(q) || (p.slug && p.slug.toLowerCase().includes(q))
+    );
+  }
+  return [];
+});
+
+watch(searchQuery, (newVal) => {
+  const query = newVal.trim();
+  if (query === '') {
+    searchResults.value = [];
+    isSearching.value = false;
+    hasFetchedAPI.value = false;
+    return;
+  }
+  isSearching.value = true;
+  hasFetchedAPI.value = false;
+  if (searchTimeout) clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(async () => {
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/client/products/search?q=${query}`);
+      if (res.data.success) {
+        searchResults.value = res.data.data;
+        hasFetchedAPI.value = true;
+      }
+    } catch (error) {
+      console.error('Lỗi Live Search:', error);
+      searchResults.value = [];
+    } finally {
+      isSearching.value = false;
+    }
+  }, 500); 
+});
+
 const isQuickViewOpen = ref(false);
 const selectedProductData = ref({});
-
 const handleOpenQuickView = (product) => {
   selectedProductData.value = product;
   isQuickViewOpen.value = true;
 };
 
-// ==========================================
-// STATE & LOGIC CHO CHỨC NĂNG SO SÁNH
-// ==========================================
+// ĐÃ ĐỒNG BỘ: Sử dụng ZyroSwal.toastSuccess
+const handleAddToWishlist = (product) => {
+  ZyroSwal.toastSuccess('Đã thêm vào danh sách yêu thích');
+};
+
+const handleGoToDetail = (product) => {
+  closeModal();
+  router.push(`/product/${product.id}`);
+};
+
 const compareList = ref([]);
 
+// ĐÃ ĐỒNG BỘ: Sử dụng ZyroSwal.toastSuccess
 const handleAddToCompare = (product) => {
-  // Kiểm tra trùng lặp
   if (compareList.value.find(p => p.id === product.id)) {
-    Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: 'Sản phẩm đã có trong danh sách', showConfirmButton: false, timer: 2000 });
+    ZyroSwal.toastSuccess('Sản phẩm đã có trong danh sách');
     return;
   }
-  
-  // ĐÃ MỞ KHÓA GIỚI HẠN LÊN 10 (Theo yêu cầu vuốt Swiper linh hoạt)
   if (compareList.value.length >= 10) {
-    Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Chỉ được so sánh tối đa 10 sản phẩm', showConfirmButton: false, timer: 2000 });
+    ZyroSwal.toastSuccess('Chỉ được so sánh tối đa 10 sản phẩm');
     return;
   }
-  
   compareList.value.push(product);
-  Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã thêm vào bảng so sánh', showConfirmButton: false, timer: 1500 });
+  ZyroSwal.toastSuccess('Đã thêm vào bảng so sánh');
 };
 
-const removeFromCompare = (index) => {
-  compareList.value.splice(index, 1);
-};
-
-const clearCompare = () => {
-  compareList.value = [];
-};
-// ==========================================
-
-// Mock Lịch sử tìm kiếm
-const recentSearches = ref(['Áo thun nam', 'Quần Jeans', 'Áo Polo', 'Váy hoa']);
-
-// Mock Dữ liệu sản phẩm xu hướng
-const trendingProducts = ref([
-  { id: 1, name: 'Sơ Mi Tay Dài Nam Siêu Co Giãn', price: 549000, old_price: null, image: 'https://images.unsplash.com/photo-1596755094514-f87e32f85e23?q=80&w=400&auto=format&fit=crop', colors: [{hex: '#8ba6b4'}, {hex: '#000000'}, {hex: '#4b0082'}] },
-  { id: 2, name: 'Sơ Mi Nam Cộc Tay Cafe Túi Ngực', price: 469000, old_price: null, image: 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?q=80&w=400&auto=format&fit=crop', colors: [{hex: '#8ba6b4'}, {hex: '#ffffff'}, {hex: '#00a8ff'}] },
-  { id: 3, name: 'Áo Thun Nam Basic Slimfit Cotton', price: 149000, old_price: 299000, discount_percent: 50, image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=400&auto=format&fit=crop', colors: [{hex: '#bdc3c7'}, {hex: '#00a8ff'}, {hex: '#000000'}] },
-  { id: 4, name: 'Sơ Mi Nam Cộc Tay Nano Kẻ Caro', price: 469000, old_price: null, image: 'https://images.unsplash.com/photo-1588359348347-9bc6cbb6858a?q=80&w=400&auto=format&fit=crop', colors: [{hex: '#dfe6e9'}] },
-  { id: 5, name: 'Áo Phông Tay Raglan Dài Chỉ Ngang', price: 249000, old_price: 539000, discount_percent: 54, image: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?q=80&w=400&auto=format&fit=crop', colors: [{hex: '#34495e'}, {hex: '#bdc3c7'}] },
-]);
+const removeFromCompare = (index) => compareList.value.splice(index, 1);
+const clearCompare = () => compareList.value = [];
 
 const closeModal = () => {
   emit('close');
@@ -160,12 +280,26 @@ const closeModal = () => {
 
 const clearHistory = () => {
   recentSearches.value = [];
+  localStorage.removeItem('zyro_recent_searches');
+};
+
+const clickRecentSearch = (kw) => {
+  searchQuery.value = kw;
 };
 
 const submitSearch = () => {
-  if (searchQuery.value.trim() !== '') {
-    console.log('Searching for:', searchQuery.value);
+  const query = searchQuery.value.trim();
+  if (query !== '') {
+    let history = [...recentSearches.value];
+    history = history.filter(item => item.toLowerCase() !== query.toLowerCase());
+    history.unshift(query);
+    if (history.length > 8) history.pop();
+    recentSearches.value = history;
+    localStorage.setItem('zyro_recent_searches', JSON.stringify(history));
     closeModal();
+    router.push({ path: '/category', query: { search: query } });
+    searchQuery.value = '';
+    searchResults.value = [];
   }
 };
 
@@ -188,7 +322,6 @@ watch(() => props.isOpen, (val) => {
   background-color: rgba(0, 0, 0, 0.5);
   z-index: 1050;
 }
-
 .search-panel {
   position: fixed;
   left: 50%;
@@ -200,49 +333,55 @@ watch(() => props.isOpen, (val) => {
   border: 1px solid rgba(0,0,0,0.08);
 }
 html.dark .search-panel { border: 1px solid rgba(255,255,255,0.05); }
-
 .search-content { overflow-y: auto; }
-
-.search-input {
-  transition: all 0.3s ease;
-}
+.search-input { transition: all 0.3s ease; }
 .search-input:focus {
   border-color: var(--color-c-hover, #547792);
   box-shadow: 0 0 0 0.25rem rgba(84, 119, 146, 0.15);
 }
-
 .hover-bg-effect:hover { background-color: var(--color-c-effect, #EBF1F5) !important; color: var(--color-c-hover, #547792) !important; border-color: var(--color-c-hover, #547792) !important; }
 html.dark .hover-bg-effect:hover { background-color: #343a40 !important; color: #fff !important; }
-
-/* Lưới Sản phẩm Xu hướng (Vuốt ngang) */
 .trending-products-grid {
-  display: flex;
-  gap: 1.5rem;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: 10px;
+  display: flex; gap: 1.5rem; overflow-x: auto;
+  scroll-snap-type: x mandatory; scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch; padding-bottom: 10px;
 }
-.product-item {
-  width: calc(20% - 1.2rem); 
-  min-width: 220px; 
-  scroll-snap-align: start;
+.product-item { width: calc(20% - 1.2rem); min-width: 220px; scroll-snap-align: start; }
+.skeleton-card { width: 100%; }
+.skeleton-img-wrapper { aspect-ratio: 3 / 4; background-color: #f0f0f0; }
+html.dark .skeleton-img-wrapper { background-color: #2b3035; }
+.skeleton-price { height: 22px; width: 45%; border-radius: 4px; background-color: #f0f0f0; }
+html.dark .skeleton-price { background-color: #2b3035; }
+.skeleton-title { height: 16px; width: 90%; border-radius: 4px; background-color: #f0f0f0; }
+html.dark .skeleton-title { background-color: #2b3035; }
+.skeleton-swatch { width: 18px; height: 18px; background-color: #f0f0f0; }
+html.dark .skeleton-swatch { background-color: #2b3035; }
+.shimmer {
+  background: #f6f7f8;
+  background-image: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
+  background-repeat: no-repeat;
+  background-size: 800px 100%;
+  animation: placeholderShimmer 1.5s infinite linear;
 }
-
+html.dark .shimmer {
+  background: #2b3035;
+  background-image: linear-gradient(to right, #2b3035 0%, #343a40 20%, #2b3035 40%, #2b3035 100%);
+}
+@keyframes placeholderShimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
 .shadow-sm-top { box-shadow: 0 -4px 10px rgba(0,0,0,0.03); }
 .tracking-widest { letter-spacing: 2px; }
-
+.transition-all { transition: all 0.3s ease; }
 .custom-scrollbar-y::-webkit-scrollbar { width: 6px; }
 .custom-scrollbar-y::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar-y::-webkit-scrollbar-thumb { background: var(--color-c-light, #94B4C1); border-radius: 10px; }
 .custom-scrollbar-x::-webkit-scrollbar { height: 6px; }
 .custom-scrollbar-x::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar-x::-webkit-scrollbar-thumb { background: var(--color-c-light, #94B4C1); border-radius: 10px; }
-
 .fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
-
 .mega-slide-enter-active, .mega-slide-leave-active { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
 .mega-slide-enter-from, .mega-slide-leave-to { transform: translate(-50%, -20px) scale(0.98); opacity: 0; }
+.fade-slide-enter-active, .fade-slide-leave-active { transition: all 0.25s ease; }
+.fade-slide-enter-from { opacity: 0; transform: translateY(10px); }
+.fade-slide-leave-to { opacity: 0; transform: translateY(-10px); }
 </style>

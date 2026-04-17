@@ -1,4 +1,3 @@
-<!-- File: frontend/src/pages/client/user/Password.vue -->
 <template>
   <div class="user-password-wrapper pb-5 mb-5">
     <div class="pt-5 mt-4">
@@ -12,14 +11,12 @@
         </nav>
 
         <div class="row g-4 g-lg-5">
-          <!-- CỘT TRÁI: SIDEBAR QUẢN LÝ -->
           <div class="col-lg-3">
             <UserSidebar />
           </div>
 
-          <!-- CỘT PHẢI: NỘI DUNG ĐỔI MẬT KHẨU -->
           <div class="col-lg-9">
-            <div class="card border-0 shadow-sm rounded-4 dark:bg-[#1a2533] animation-fade-in p-4 p-md-5">
+            <div class="card border-0 shadow-sm rounded-4 dark:bg-[#1a2533] animation-fade-in pl-4 pb-5 px-3">
               <div class="mb-4 pb-3 border-bottom dark:border-gray-700">
                 <h4 class="fw-bold text-c-dark dark:text-white mb-1">Đổi Mật Khẩu</h4>
                 <p class="text-muted small mb-0">Để bảo mật tài khoản, vui lòng không chia sẻ mật khẩu cho người khác.</p>
@@ -28,6 +25,7 @@
               <div class="row">
                 <div class="col-md-10 col-lg-8 col-xl-7">
                   <form @submit.prevent="updatePassword" autocomplete="off">
+                    
                     <input style="display:none" type="text" name="fakeusernameremembered"/>
                     <input style="display:none" type="password" name="fakepasswordremembered"/>
 
@@ -59,7 +57,11 @@
                           <i class="bi" :class="showPass3 ? 'bi-eye-slash-fill' : 'bi-eye-fill'"></i>
                         </button>
                       </div>
-                      <div class="text-danger small mt-2 fw-bold" v-if="errorMsg">{{ errorMsg }}</div>
+                      
+                      <!-- Hiển thị lỗi Validate phía dưới -->
+                      <div class="text-danger small mt-2 fw-bold" v-if="errorMsg">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i> {{ errorMsg }}
+                      </div>
                     </div>
 
                     <div class="mt-5 pt-3 border-top dark:border-gray-700">
@@ -83,8 +85,12 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import Swal from 'sweetalert2';
+import { useRouter } from 'vue-router';
+import api from '@/utils/axios';
+import { ZyroSwal } from '@/components/client/ZyroSwal';
 import UserSidebar from '@/components/client/UserSidebar.vue';
+
+const router = useRouter();
 
 const isSaving = ref(false);
 const errorMsg = ref('');
@@ -99,8 +105,10 @@ const form = ref({
   new_password_confirmation: ''
 });
 
-const updatePassword = () => {
+const updatePassword = async () => {
   errorMsg.value = '';
+  
+  // Xác thực sơ bộ ở Frontend cho nhanh
   if (form.value.new_password !== form.value.new_password_confirmation) {
     errorMsg.value = 'Xác nhận mật khẩu mới không trùng khớp!';
     return;
@@ -109,22 +117,57 @@ const updatePassword = () => {
     errorMsg.value = 'Mật khẩu mới phải chứa ít nhất 6 ký tự!';
     return;
   }
+  if (form.value.current_password === form.value.new_password) {
+    errorMsg.value = 'Mật khẩu mới không được trùng với mật khẩu cũ!';
+    return;
+  }
 
   isSaving.value = true;
-  // Giả lập gọi API
-  setTimeout(() => {
+  
+  try {
+    const res = await api.put('/client/user/password', {
+       current_password: form.value.current_password,
+       new_password: form.value.new_password,
+       new_password_confirmation: form.value.new_password_confirmation
+    });
+
+    if (res.data.success) {
+       ZyroSwal.toastSuccess(res.data.message);
+       
+       // Xóa sạch Token ở Frontend vì Backend đã hủy Token rồi
+       localStorage.removeItem('access_token');
+       localStorage.removeItem('user_info');
+       
+       // Tự động điều hướng về màn Login sau 1.5s
+       setTimeout(() => {
+          router.push('/login');
+       }, 1500);
+    }
+  } catch (err) {
+    // Xử lý các mã lỗi ném ra từ Controller và Form Request
+    if (err.response?.status === 422) {
+       const errors = err.response.data.errors;
+       if(errors) {
+          // Lấy dòng lỗi đầu tiên
+          errorMsg.value = Object.values(errors).flat()[0];
+       } else {
+          errorMsg.value = err.response.data.message;
+       }
+    } else if (err.response?.status === 400) {
+       errorMsg.value = err.response.data.message; // Sai mật khẩu cũ
+    } else {
+       errorMsg.value = err.response?.data?.message || 'Có lỗi xảy ra khi đổi mật khẩu.';
+    }
+  } finally {
     isSaving.value = false;
-    Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đổi mật khẩu thành công', showConfirmButton: false, timer: 2000 });
-    form.value = { current_password: '', new_password: '', new_password_confirmation: '' };
-    showPass1.value = false; showPass2.value = false; showPass3.value = false;
-  }, 1000);
+  }
 };
 
 onMounted(() => { window.scrollTo(0, 0); });
 </script>
 
 <style scoped>
-.user-password-wrapper { width: 100%; }
+.user-password-wrapper { width: 100%; padding-top: 26px; }
 
 .zyro-container { width: 100%; max-width: 1310px; margin: 0 auto; padding-left: 20px; padding-right: 20px; }
 @media (min-width: 1400px) { .zyro-container { padding-left: 0; padding-right: 0; } }
@@ -165,10 +208,17 @@ html.dark .input-group:focus-within .custom-input, html.dark .input-group:focus-
 }
 
 .input-group:focus-within .border-custom {
-  box-shadow: 2px 0 0 1px rgba(148, 180, 193, 0.2) inset !important; /* Mẹo fake shadow cho viền phải */
+  box-shadow: 2px 0 0 1px rgba(148, 180, 193, 0.2) inset !important; /* fake shadow cho viền phải */
 }
 
 .transition-color { transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease; }
 .animation-fade-in { animation: fadeIn 0.4s ease-in-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear,
+input::-webkit-contacts-auto-fill-button,
+input::-webkit-credentials-auto-fill-button {
+  display: none !important;
+}
 </style>

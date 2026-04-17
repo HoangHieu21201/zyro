@@ -5,6 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use Illuminate\Support\Facades\Cache;
+use App\Events\ClientHomeUpdated;
+use App\Events\LookbookEvent;
+
 class LookbookItem extends Model
 {
     use HasFactory;
@@ -29,6 +33,22 @@ class LookbookItem extends Model
             'sort_order' => 'integer',
         ];
     }
+
+    protected static function booted()
+    {
+        $trigger = function ($model) {
+            if ($model->lookbook) {
+                event(new \App\Events\LookbookEvent('updated', $model->lookbook));
+            }
+
+            \Illuminate\Support\Facades\Cache::forget('client_home_data_dev');
+            event(new \App\Events\ClientHomeUpdated());
+        };
+
+        static::saved($trigger);
+        static::deleted($trigger);
+    }
+
 
     public function lookbook()
     {

@@ -1,7 +1,5 @@
 <?php
 
-// File: backend/app/Models/Review.php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -19,6 +17,7 @@ class Review extends Model
         'variant_name', 
         'user_id',
         'order_id',
+        'order_item_id',
         'rating',
         'comment',
         'images',
@@ -35,6 +34,7 @@ class Review extends Model
             'product_id'      => 'integer',
             'user_id'         => 'integer',
             'order_id'        => 'integer',
+            'order_item_id'   => 'integer',
             'rating'          => 'integer',
             'images'          => 'array',
             'reviewer_height' => 'integer',
@@ -44,19 +44,21 @@ class Review extends Model
 
     public function product()
     {
-        // ĐÃ THÊM withTrashed(): Giữ review sống sót hiển thị được tên SP kể cả khi Admin đã xóa SP đó
         return $this->belongsTo(Product::class)->withTrashed();
     }
     
     public function user()
     {
-        // ĐÃ THÊM withTrashed()
         return $this->belongsTo(User::class)->withTrashed();
     }
     
     public function order()
     {
-        // ĐÃ THÊM withTrashed()
         return $this->belongsTo(Order::class)->withTrashed();
+    }
+
+    public function orderItem()
+    {
+        return $this->belongsTo(OrderItem::class);
     }
 }

@@ -1,4 +1,3 @@
-<!-- File: frontend/src/components/client/CompareModal.vue -->
 <template>
   <Teleport to="body">
     
@@ -20,7 +19,7 @@
               <template v-if="compareList[i-1]">
                 <img :src="getImageUrl(compareList[i-1].thumbnail_image || compareList[i-1].image)" class="w-100 h-100 object-fit-cover p-1">
                 <!-- Nút X góc mảnh, không bo tròn, màu đen -->
-                <button class="btn-close-custom position-absolute top-0 end-0 m-1 text-dark dark:text-gray-300" @click="$emit('remove', i-1)">
+                <button class="btn-close-custom position-absolute top-0 end-0 m-1 text-dark dark:text-gray-300" @click="removeAndCheck(i-1)">
                   <i class="bi bi-x fs-5"></i>
                 </button>
               </template>
@@ -43,7 +42,7 @@
             <div class="d-flex gap-2 w-100">
               <button class="btn btn-danger flex-grow-1 d-flex align-items-center justify-content-center rounded-1 py-1 px-0 shadow-sm" 
                       style="background-color: #dc3545; border-color: #dc3545;" 
-                      @click="$emit('clear')" title="Xóa tất cả">
+                      @click="clearAll" title="Xóa tất cả">
                 <i class="bi bi-trash3"></i>
               </button>
               <button class="btn bg-white dark:bg-[#2b3035] dark:text-gray-300 border border-secondary-subtle dark:border-gray-600 flex-grow-1 d-flex align-items-center justify-content-center rounded-1 py-1 px-0 text-dark shadow-sm hover-bg-light" 
@@ -96,7 +95,6 @@
               <tr>
                 <td class="sticky-col text-center text-dark dark:text-gray-200 fw-bold small text-uppercase">Hình ảnh</td>
                 <td v-for="p in compareList" :key="'img'+p.id" class="product-col text-center py-3">
-                   <!-- Đã tối ưu kích thước ảnh để cân đối hơn -->
                    <img :src="getImageUrl(p.thumbnail_image || p.image)" class="rounded-3 object-fit-cover border shadow-sm dark:border-gray-600 bg-light" style="width: 160px; height: 210px;">
                 </td>
               </tr>
@@ -159,18 +157,12 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import defaultPlaceholder from '@/assets/images/defaults/client_placeholder.png';
+import { ref, computed } from 'vue';
+import { useCompareStore } from '@/stores/compareStore';
+import { ZyroSwal } from '@/components/client/ZyroSwal';
 
-const props = defineProps({
-  compareList: {
-    type: Array,
-    required: true,
-    default: () => []
-  }
-});
-
-const emit = defineEmits(['remove', 'clear']);
+const compareStore = useCompareStore();
+const compareList = computed(() => compareStore.items);
 
 const isMinimized = ref(false);
 const showModal = ref(false);
@@ -179,17 +171,36 @@ const showModal = ref(false);
 const defaultColors = [ { id: 1, name: 'Xám', hex: '#bdc3c7' }, { id: 2, name: 'Trắng', hex: '#ffffff' }, { id: 3, name: 'Xanh', hex: '#00a8ff' }, { id: 4, name: 'Đen', hex: '#000000' } ];
 const defaultSizes = ['S', 'M', 'L', 'XL', '2XL'];
 
-const getImageUrl = (path) => path ? `http://127.0.0.1:8000/storage/${path}` : defaultPlaceholder;
+// ĐÃ CẬP NHẬT: Tự động ghép Base URL cho ảnh
+const getImageUrl = (path) => {
+  if (!path) return '/client_placeholder.png';
+  if (path.startsWith('http')) return path;
+  const baseStorageUrl = import.meta.env.VITE_API_BASE_URL.replace('/api/v1', '/storage/');
+  return baseStorageUrl + path;
+};
 
 const formatCurrency = (val) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0);
 };
 
+// ĐÃ SỬA: Gọi action remove của store và báo Toast
 const removeAndCheck = (index) => {
-  emit('remove', index);
-  if (props.compareList.length <= 2) {
+  compareStore.remove(index);
+  ZyroSwal.toastSuccess('Đã gỡ sản phẩm khỏi so sánh');
+  if (compareList.value.length < 2) {
     showModal.value = false; // Tự đóng bảng nếu xóa còn < 2 SP
   }
+};
+
+// ĐÃ SỬA: Gọi ZyroSwal confirm trước khi clear
+const clearAll = () => {
+  ZyroSwal.confirmDelete('tất cả sản phẩm so sánh').then((result) => {
+    if (result.isConfirmed) {
+      compareStore.clear();
+      showModal.value = false;
+      ZyroSwal.toastSuccess('Đã xóa toàn bộ danh sách so sánh');
+    }
+  });
 };
 </script>
 

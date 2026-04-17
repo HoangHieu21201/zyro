@@ -22,9 +22,15 @@
 
       <!-- BỘ NÚT BÊN PHẢI -->
       <div class="action-right-panel position-absolute d-flex flex-column gap-2" style="top: 15px; right: 15px;">
-        <button class="btn bg-white rounded-circle shadow action-icon-btn d-flex align-items-center justify-content-center" title="Yêu thích" @click.stop="onWishlist">
-          <i class="bi bi-heart text-dark fs-6"></i>
+        
+        <!-- ĐÃ FIX TOOLTIP: Đổi thành "Bỏ yêu thích" hoặc "Thêm vào yêu thích" dựa trên trạng thái -->
+        <button class="btn bg-white rounded-circle shadow action-icon-btn d-flex align-items-center justify-content-center" 
+                :title="isWishlisted ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'" 
+                @click.stop="onWishlist">
+          <!-- Tự động đổi class thành bi-heart-fill màu đỏ nếu sản phẩm nằm trong danh sách yêu thích -->
+          <i class="bi fs-6 transition-all" :class="isWishlisted ? 'bi-heart-fill text-danger' : 'bi-heart text-dark'"></i>
         </button>
+        
         <button class="btn bg-white rounded-circle shadow action-icon-btn d-flex align-items-center justify-content-center" title="Xem nhanh" @click.stop="onQuickView">
           <i class="bi bi-eye text-dark fs-6"></i>
         </button>
@@ -92,6 +98,7 @@
 
 <script setup>
 import { ref, computed } from 'vue';
+import { useWishlistStore } from '@/stores/wishlistStore';
 
 const props = defineProps({
   product: {
@@ -106,11 +113,24 @@ const props = defineProps({
       discount_percent: null,
       colors: []
     })
+  },
+  // Cờ đánh dấu component này đang nằm ở trang Wishlist
+  isWishlistCard: {
+    type: Boolean,
+    default: false
   }
 });
 
-const emit = defineEmits(['quick-view', 'wishlist', 'compare', 'options']);
+const emit = defineEmits(['quick-view', 'compare', 'options']);
 const activeColorIndex = ref(0);
+
+const wishlistStore = useWishlistStore();
+
+// Logic kiểm tra ID sản phẩm có nằm trong danh sách đã thích chưa
+const isWishlisted = computed(() => {
+  if (props.isWishlistCard) return true; // Luôn đỏ nếu đang nằm trong trang Wishlist
+  return wishlistStore.items.includes(props.product.id); // Tự động tra cứu trong Store
+});
 
 // Lấy ảnh hiển thị dựa trên thẻ màu đang được click
 const currentImage = computed(() => {
@@ -126,8 +146,12 @@ const formatCurrency = (val) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
 };
 
+// Gọi trực tiếp API yêu thích thông qua action của Store
+const onWishlist = async () => {
+  await wishlistStore.toggleWishlist(props.product.id);
+};
+
 const onQuickView = () => emit('quick-view', props.product);
-const onWishlist = () => emit('wishlist', props.product);
 const onCompare = () => emit('compare', props.product);
 const onOptions = () => emit('options', props.product);
 </script>
@@ -207,7 +231,6 @@ const onOptions = () => emit('options', props.product);
 .swatch-item { width: 18px; height: 18px; border: 1px solid rgba(0,0,0,0.15); position: relative; transition: transform 0.2s ease; }
 .swatch-item:hover { transform: scale(1.15); }
 
-/* ĐÃ THÊM: Chống tàng hình cho màu trắng */
 .swatch-white { border: 1px solid #d1d5db !important; }
 
 .swatch-item.active::after {
@@ -229,4 +252,6 @@ html.dark .swatch-na { background-color: #2b3035 !important; border-color: #4950
 
 .swatch-na:hover { transform: none !important; }
 .swatch-out-of-stock:hover { transform: none !important; }
+
+.transition-all { transition: all 0.3s ease; }
 </style>

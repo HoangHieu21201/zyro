@@ -1,228 +1,104 @@
 <?php
 
-namespace App\Http\Controllers\Api\client;
+namespace App\Http\Controllers\Api\Client;
 
 use App\Http\Controllers\Controller;
-use App\Models\User; 
-use App\Models\UserAddress; // BẮT BUỘC IMPORT MODEL NÀY
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use App\Models\User;
+
+// KHAI BÁO FORM REQUEST MỚI TẠO Ở ĐÂY
+use App\Http\Requests\Client\User\UpdateProfileRequest;
+use App\Http\Requests\Client\User\ChangePasswordRequest;
 
 class ClientProfileController extends Controller
 {
-    // ==========================================
-    // PHẦN 1: HỒ SƠ CÁ NHÂN & MẬT KHẨU
-    // ==========================================
-
-    public function show()
+    public function getProfile()
     {
-        $user = User::find(Auth::guard('sanctum')->id());
-        if (!$user) return response()->json(['status' => false, 'message' => 'Vui lòng đăng nhập'], 401);
-        
-        $userData = $user->toArray();
-        if ($user->avatar_url && !str_starts_with($user->avatar_url, 'http')) {
-            $userData['avatar_url'] = url('storage/' . $user->avatar_url);
-        }
+        try {
+            /** @var User $user */
+            $user = Auth::user();
+            $user->load('tier');
 
-        return response()->json(['status' => true, 'data' => $userData]);
+            return response()->json(['success' => true, 'data' => $user]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Lỗi Server: ' . $e->getMessage()], 500);
+        }
     }
 
-    public function update(Request $request)
+    // ĐÃ FIX: Dùng Form Request mới để bắt lỗi tự động
+    public function updateProfile(UpdateProfileRequest $request)
     {
-        $user = User::find(Auth::guard('sanctum')->id());
-        if (!$user) return response()->json(['status' => false, 'message' => 'Vui lòng đăng nhập'], 401);
+        try {
+            /** @var User $user */
+            $user = Auth::user();
 
-        $request->validate([
-            'fullName' => 'required|string|max:150',
-            'phone' => 'nullable|string|max:20',
-            'birthday' => 'nullable|date',
-            'gender' => 'nullable|in:Nam,Nữ,Khác',
-            'avatar' => 'nullable|image|max:5120', 
-        ]);
+            // Lấy dữ liệu đã được lọc sạch sẽ
+            $validatedData = $request->validated();
 
-        $user->fullName = $request->fullName;
-        if ($request->has('phone')) $user->phone = $request->phone;
-        if ($request->has('birthday')) $user->birthday = $request->birthday;
-        if ($request->has('gender')) $user->gender = $request->gender;
+            // XỬ LÝ UPLOAD ẢNH AVATAR
+            if ($request->hasFile('avatar')) {
+                // Xóa ảnh cũ nếu có (trừ khi nó là ảnh mặc định không nằm trong storage/users/avatars)
+                if ($user->avatar_url && Storage::disk('public')->exists($user->avatar_url)) {
+                    Storage::disk('public')->delete($user->avatar_url);
+                }
 
-        if ($request->hasFile('avatar')) {
-            if ($user->avatar_url && Storage::disk('public')->exists($user->avatar_url)) {
-                Storage::disk('public')->delete($user->avatar_url);
+                // Lưu ảnh mới vào thư mục storage/app/public/users/avatars
+                $path = $request->file('avatar')->store('users/avatars', 'public');
+                $validatedData['avatar_url'] = $path;
             }
-            $path = $request->file('avatar')->store('avatars', 'public');
-            $user->avatar_url = $path;
-        }
 
-        $user->save();
+            // Cập nhật Database
+            $user->update($validatedData);
+            $user->load('tier');
 
-        $userData = $user->toArray();
-        if ($user->avatar_url && !str_starts_with($user->avatar_url, 'http')) {
-            $userData['avatar_url'] = url('storage/' . $user->avatar_url);
-        }
-
-        return response()->json([
-            'status' => true,
-            'message' => 'Cập nhật hồ sơ thành công!',
-            'data' => $userData
-        ]);
-    }
-
-    public function updatePassword(Request $request)
-    {
-        $user = User::find(Auth::guard('sanctum')->id());
-        if (!$user) return response()->json(['status' => false, 'message' => 'Vui lòng đăng nhập'], 401);
-
-        $request->validate([
-            'current_password' => 'required',
-            'password' => 'required|string|min:6|confirmed', 
-        ]);
-
-        if (empty($user->password) || !Hash::check($request->current_password, $user->password)) {
             return response()->json([
-                'status' => false,
-                'message' => 'Mật khẩu hiện tại không chính xác!'
-            ], 400);
+                'success' => true,
+                'message' => 'Cập nhật thông tin thành công.',
+                'data' => $user
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi CSDL: ' . $e->getMessage()
+            ], 500);
         }
-
-        $user->password = Hash::make($request->password);
-        $user->save();
-
-        return response()->json([
-            'status' => true,
-            'message' => 'Đổi mật khẩu thành công!'
-        ]);
     }
 
-    // ==========================================
-    // PHẦN 2: QUẢN LÝ SỔ ĐỊA CHỈ
-    // ==========================================
-
-    public function getAddresses()
+    public function changePassword(ChangePasswordRequest $request)
     {
-        $user = Auth::guard('sanctum')->user();
-        if (!$user) return response()->json(['status' => false, 'message' => 'Vui lòng đăng nhập'], 401);
+        try {
+            /** @var User $user */
+            $user = Auth::user();
 
-        $addresses = UserAddress::where('user_id', $user->id)
-            ->orderBy('is_default', 'desc') // Mặc định đưa lên đầu
-            ->orderBy('id', 'desc')
-            ->get();
-
-        return response()->json(['status' => true, 'data' => $addresses]);
-    }
-
-    public function storeAddress(Request $request)
-    {
-        $user = Auth::guard('sanctum')->user();
-        if (!$user) return response()->json(['status' => false, 'message' => 'Vui lòng đăng nhập'], 401);
-
-        $request->validate([
-            'customer_name' => 'required|string|max:150',
-            'customer_phone' => 'required|string|max:20',
-            'city' => 'required|string|max:100',
-            'district' => 'required|string|max:100',
-            'ward' => 'required|string|max:100',
-            'shipping_address' => 'required|string|max:255',
-            'is_default' => 'boolean'
-        ]);
-
-        $isDefault = $request->is_default ? 1 : 0;
-
-        // Nếu là địa chỉ đầu tiên của user, ép nó thành mặc định luôn
-        if (UserAddress::where('user_id', $user->id)->count() === 0) {
-            $isDefault = 1;
-        }
-
-        // Nếu chọn làm mặc định, phải gỡ mặc định của các địa chỉ cũ đi
-        if ($isDefault == 1) {
-            UserAddress::where('user_id', $user->id)->update(['is_default' => 0]);
-        }
-
-        $address = UserAddress::create([
-            'user_id' => $user->id,
-            'customer_name' => $request->customer_name,
-            'customer_phone' => $request->customer_phone,
-            'city' => $request->city,
-            'district' => $request->district,
-            'ward' => $request->ward,
-            'shipping_address' => $request->shipping_address,
-            'is_default' => $isDefault
-        ]);
-
-        return response()->json(['status' => true, 'message' => 'Thêm địa chỉ mới thành công!', 'data' => $address]);
-    }
-
-    public function updateAddress(Request $request, $id)
-    {
-        $user = Auth::guard('sanctum')->user();
-        if (!$user) return response()->json(['status' => false, 'message' => 'Vui lòng đăng nhập'], 401);
-
-        $address = UserAddress::where('user_id', $user->id)->where('id', $id)->first();
-        if (!$address) return response()->json(['status' => false, 'message' => 'Không tìm thấy địa chỉ'], 404);
-
-        $request->validate([
-            'customer_name' => 'required|string|max:150',
-            'customer_phone' => 'required|string|max:20',
-            'city' => 'required|string|max:100',
-            'district' => 'required|string|max:100',
-            'ward' => 'required|string|max:100',
-            'shipping_address' => 'required|string|max:255',
-            'is_default' => 'boolean'
-        ]);
-
-        $isDefault = $request->is_default ? 1 : 0;
-
-        if ($isDefault == 1 && $address->is_default == 0) {
-            UserAddress::where('user_id', $user->id)->update(['is_default' => 0]);
-        }
-
-        $address->update([
-            'customer_name' => $request->customer_name,
-            'customer_phone' => $request->customer_phone,
-            'city' => $request->city,
-            'district' => $request->district,
-            'ward' => $request->ward,
-            'shipping_address' => $request->shipping_address,
-            'is_default' => $isDefault
-        ]);
-
-        return response()->json(['status' => true, 'message' => 'Cập nhật địa chỉ thành công!']);
-    }
-
-    public function deleteAddress($id)
-    {
-        $user = Auth::guard('sanctum')->user();
-        if (!$user) return response()->json(['status' => false, 'message' => 'Vui lòng đăng nhập'], 401);
-
-        $address = UserAddress::where('user_id', $user->id)->where('id', $id)->first();
-        if (!$address) return response()->json(['status' => false, 'message' => 'Không tìm thấy địa chỉ'], 404);
-
-        $wasDefault = $address->is_default;
-        $address->delete();
-
-        // Nếu lỡ tay xóa mất địa chỉ mặc định, tự động lấy địa chỉ gần nhất gán làm mặc định
-        if ($wasDefault) {
-            $latest = UserAddress::where('user_id', $user->id)->latest()->first();
-            if ($latest) {
-                $latest->update(['is_default' => 1]);
+            if (! Hash::check($request->current_password, $user->password)) {
+                // Mật khẩu hiện tại gõ sai -> Trả về mã lỗi 400
+                return response()->json(['success' => false, 'message' => 'Mật khẩu hiện tại không chính xác.'], 400);
             }
+
+            // Đổi mật khẩu
+            $user->update([
+                'password' => Hash::make($request->new_password)
+            ]);
+
+            // Cực kỳ quan trọng: Xóa tất cả token cũ để ép thiết bị bị hack phải đăng xuất
+            if (method_exists($user, 'tokens')) {
+                $user->tokens()->delete();
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Đổi mật khẩu thành công. Vui lòng đăng nhập lại.'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi Server: ' . $e->getMessage()
+            ], 500);
         }
-
-        return response()->json(['status' => true, 'message' => 'Đã xóa địa chỉ khỏi sổ tay!']);
     }
-
-    public function setDefaultAddress($id)
-    {
-        $user = Auth::guard('sanctum')->user();
-        if (!$user) return response()->json(['status' => false, 'message' => 'Vui lòng đăng nhập'], 401);
-
-        $address = UserAddress::where('user_id', $user->id)->where('id', $id)->first();
-        if (!$address) return response()->json(['status' => false, 'message' => 'Không tìm thấy địa chỉ'], 404);
-
-        UserAddress::where('user_id', $user->id)->update(['is_default' => 0]);
-        $address->update(['is_default' => 1]);
-
-        return response()->json(['status' => true, 'message' => 'Đã đặt làm địa chỉ mặc định!']);
-    }
+    
 }

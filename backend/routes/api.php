@@ -26,9 +26,18 @@ use App\Http\Controllers\Api\Admin\UserController;
 use App\Http\Controllers\Api\Admin\UserAddressController;
 use App\Http\Controllers\Api\Admin\MembershipTierController;
 use App\Http\Controllers\Api\Admin\FlashSaleController;
+use App\Http\Controllers\Api\Admin\DashboardController;
 
 // --- Client Controllers ---
+use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Client\HomeController;
+use App\Http\Controllers\Api\Client\CartController;
+use App\Http\Controllers\Api\Client\ClientProfileController;
+use App\Http\Controllers\Api\Client\ClientAddressController;
+use App\Http\Controllers\Api\Client\ClientWishlistController;
+use App\Http\Controllers\Api\Client\ClientCheckoutController;
+use App\Http\Controllers\Api\Client\ClientOrderController;
+use App\Http\Controllers\Api\Client\ClientReviewController;
 
 // Khởi tạo các kênh Socket nội bộ (Sanctum Auth)
 Broadcast::routes(['middleware' => ['auth:sanctum']]);
@@ -46,6 +55,8 @@ Route::prefix('v1/admin')->group(function () {
 
     // --- PROTECTED ROUTES (Cần Bearer Token) ---
     Route::middleware('auth:sanctum')->group(function () {
+
+        Route::get('/dashboard/statistics', [DashboardController::class, 'getStatistics']);
 
         // 1.1 Auth & Cá nhân (Mọi Quản trị viên đều được phép)
         Route::get('me', [AdminAuthController::class, 'me']);
@@ -171,10 +182,69 @@ Route::prefix('v1/admin')->group(function () {
 // ==========================================
 Route::prefix('v1/client')->group(function () {
 
-    // Các Data chung (Không cần Login)
+    Route::post('register', [AuthController::class, 'register']);
+    Route::post('login', [AuthController::class, 'login']);
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('logout', [AuthController::class, 'logout']);
+    });
+
+    // CÁC ROUTE DỮ LIỆU (KHÔNG CẦN LOGIN)
     Route::get('home', [HomeController::class, 'index']);
+    Route::get('home/new-arrivals-tab', [HomeController::class, 'getNewArrivalsByCategory']);
+    Route::get('products/search', [HomeController::class, 'searchProducts']);
+    Route::get('category-page', [HomeController::class, 'getCategoryPageData']);
+    Route::get('products/{id}', [HomeController::class, 'getProductDetail']);
 
-    // Các Route giỏ hàng, đặt hàng, user profile sếp sẽ triển khai thêm tại đây...
-    Route::get('/home/new-arrivals-tab', [HomeController::class, 'getNewArrivalsByCategory']);
+    Route::get('/flash-sale-page', [HomeController::class, 'getFlashSalePageData']);
 
+    // CÁC ROUTE GIỎ HÀNG (CẦN LOGIN)
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('cart', [CartController::class, 'index']);
+        Route::post('cart/add', [CartController::class, 'add']);
+        Route::put('cart/{itemId}', [CartController::class, 'updateQuantity']);
+        Route::delete('cart/clear', [CartController::class, 'clear']);
+        Route::delete('cart/{itemId}', [CartController::class, 'remove']);
+        Route::post('cart/merge', [CartController::class, 'merge']);
+    });
+
+
+    Route::middleware('auth:sanctum')->prefix('user')->group(function () {
+        // 1. Profile
+        Route::get('/profile', [ClientProfileController::class, 'getProfile']);
+        Route::put('/profile', [ClientProfileController::class, 'updateProfile']);
+        Route::put('/password', [ClientProfileController::class, 'changePassword']);
+
+        // 2. Address
+        Route::apiResource('/addresses', ClientAddressController::class);
+        Route::put('/addresses/{address}/set-default', [ClientAddressController::class, 'setDefault']);
+
+        // 3. Orders (Dùng ClientOrderController chuẩn)
+        Route::get('/orders', [ClientOrderController::class, 'index']);
+        Route::get('/orders/{id}', [ClientOrderController::class, 'show']);
+        Route::post('/orders/{id}/cancel', [ClientOrderController::class, 'cancel']);
+
+        Route::post('/orders/{id}/return', [ClientOrderController::class, 'requestReturn']);
+        Route::post('/orders/{id}/buy-again', [ClientOrderController::class, 'buyAgain']);
+        Route::get('/orders/{id}/review-items', [ClientReviewController::class, 'getItemsForReview']);
+
+        // 4. Wishlist
+        Route::get('/wishlist', [ClientWishlistController::class, 'index']);
+        Route::post('/wishlist/toggle', [ClientWishlistController::class, 'toggle']);
+
+
+        // 5. Reviews (Đánh giá)
+        Route::get('/reviews/order/{id}', [ClientReviewController::class, 'getItemsForReview']);
+        Route::post('/reviews', [ClientReviewController::class, 'store']);
+    });
+
+    // Checkout 
+    Route::middleware('auth:sanctum')->prefix('checkout')->group(function () {
+        Route::get('/init', [ClientCheckoutController::class, 'initData']);
+        Route::post('/process', [ClientCheckoutController::class, 'processCheckout']);
+    });
+
+    // MoMo Return URL 
+    Route::get('/checkout/momo-return', [ClientCheckoutController::class, 'momoReturn']);
+    Route::post('/checkout/momo-return', [ClientCheckoutController::class, 'momoReturn']);
 });

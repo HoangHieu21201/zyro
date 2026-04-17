@@ -5,6 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use Illuminate\Support\Facades\Cache;
+use App\Events\ClientHomeUpdated;
+use App\Events\MembershipTierEvent;
+
 class MembershipTier extends Model
 {
     use HasFactory;
@@ -23,6 +27,21 @@ class MembershipTier extends Model
             'discount_percent' => 'decimal:2',
             'yearly_service_quota' => 'integer',
         ];
+    }
+
+     protected static function booted()
+    {
+        static::saved(function ($model) {
+            broadcast(new MembershipTierEvent('updated', $model));
+            Cache::forget('client_home_data_dev');
+            broadcast(new ClientHomeUpdated());
+        });
+        static::deleted(function ($model) {
+            broadcast(new MembershipTierEvent('deleted', $model));
+
+            Cache::forget('client_home_data_dev');
+            broadcast(new ClientHomeUpdated());
+        });
     }
 
     public function users()

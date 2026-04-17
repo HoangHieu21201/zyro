@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+use Illuminate\Support\Facades\Cache;
+use App\Events\ClientHomeUpdated;
+use App\Events\ProductEvent;
+
 class Product extends Model
 {
     use HasFactory, SoftDeletes;
@@ -48,6 +52,23 @@ class Product extends Model
             'review_count' => 'integer',
             'rating_avg' => 'decimal:2',
         ];
+    }
+
+    protected static function booted()
+    {
+        static::saved(function ($model) {
+            broadcast(new ProductEvent('updated', $model));
+
+            Cache::forget('client_home_data_dev');
+            broadcast(new ClientHomeUpdated());
+        });
+
+        static::deleted(function ($model) {
+            broadcast(new ProductEvent('deleted', $model));
+            
+            Cache::forget('client_home_data_dev');
+            broadcast(new ClientHomeUpdated());
+        });
     }
 
     public function category()

@@ -2,11 +2,12 @@
   <div class="home-page-wrapper">
     <HeroBanner :banners="homeData.hero_banners" />
 
+    <!-- ĐÃ FIX: Chuyển @compare thành compareStore.add -->
     <FlashSaleSection 
       v-if="homeData.flash_sale" 
       :flashSale="homeData.flash_sale"
       @quick-view="handleOpenQuickView" 
-      @compare="handleAddToCompare" 
+      @compare="compareStore.add" 
       @wishlist="handleAddToWishlist" 
       @options="handleGoToDetail" 
     />
@@ -15,7 +16,7 @@
       :data="homeData.new_arrivals" 
       :isLoading="isLoading"
       @quick-view="handleOpenQuickView" 
-      @compare="handleAddToCompare" 
+      @compare="compareStore.add" 
       @wishlist="handleAddToWishlist" 
       @options="handleGoToDetail" 
     />
@@ -24,7 +25,7 @@
       :data="homeData.most_loved" 
       :isLoading="isLoading"
       @quick-view="handleOpenQuickView" 
-      @compare="handleAddToCompare" 
+      @compare="compareStore.add" 
       @wishlist="handleAddToWishlist" 
       @options="handleGoToDetail" 
     />
@@ -34,7 +35,7 @@
       :lookbooks="homeData.lookbooks" 
       :isLoading="isLoading"
       @quick-view="handleOpenQuickView" 
-      @compare="handleAddToCompare" 
+      @compare="compareStore.add" 
       @wishlist="handleAddToWishlist" 
       @options="handleGoToDetail" 
     />
@@ -43,7 +44,7 @@
       :data="homeData.kids" 
       :isLoading="isLoading"
       @quick-view="handleOpenQuickView" 
-      @compare="handleAddToCompare" 
+      @compare="compareStore.add" 
       @wishlist="handleAddToWishlist" 
       @options="handleGoToDetail" 
     />
@@ -51,16 +52,24 @@
     <GallerySection :images="lookbookImages" />
 
     <QuickViewModal :is-open="isQuickViewOpen" :product="selectedProduct" @close="isQuickViewOpen = false" />
-    <CompareModal :compare-list="compareList" @remove="removeFromCompare" @clear="clearCompare" />
+    
+    <!-- ĐÃ FIX: Truyền data và actions từ Store thẳng vào Modal -->
+    <CompareModal 
+      :compare-list="compareStore.items" 
+      @remove="compareStore.remove" 
+      @clear="compareStore.clear" 
+    />
   </div>
 </template>
 
 <script setup>
-// ĐÃ THÊM: import onUnmounted
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
-import Swal from 'sweetalert2';
+import { ZyroSwal } from '@/components/client/ZyroSwal';
+
+// ĐÃ THÊM: Gọi Store Compare vào
+import { useCompareStore } from '@/stores/compareStore';
 
 import HeroBanner from '@/components/client/home/HeroBanner.vue';
 import FlashSaleSection from '@/components/client/home/FlashSaleSection.vue';
@@ -74,6 +83,7 @@ import QuickViewModal from '@/components/client/QuickViewModal.vue';
 import CompareModal from '@/components/client/CompareModal.vue';
 
 const router = useRouter();
+const compareStore = useCompareStore(); // Khởi tạo Store
 const isLoading = ref(true);
 
 const homeData = ref({
@@ -108,18 +118,8 @@ const handleOpenQuickView = (productData) => {
 };
 
 const handleAddToWishlist = (product) => {
-  Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã thêm vào danh sách yêu thích', showConfirmButton: false, timer: 1500 });
+  ZyroSwal.toastSuccess('Đã thêm vào danh sách yêu thích');
 };
-
-const compareList = ref([]);
-const handleAddToCompare = (product) => {
-  if (compareList.value.find(p => p.id === product.id)) return Swal.fire({ toast: true, position: 'top-end', icon: 'warning', title: 'Sản phẩm đã có trong danh sách', showConfirmButton: false, timer: 2000 });
-  if (compareList.value.length >= 10) return Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Tối đa 10 sản phẩm', showConfirmButton: false, timer: 2000 });
-  compareList.value.push(product);
-  Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã thêm vào bảng so sánh', showConfirmButton: false, timer: 1500 });
-};
-const removeFromCompare = (index) => { compareList.value.splice(index, 1); };
-const clearCompare = () => { compareList.value = []; };
 
 const lookbookImages = ref([
   'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400',
@@ -128,15 +128,10 @@ const lookbookImages = ref([
   'https://images.unsplash.com/photo-1551163943-3f6a855d1153?w=400',
 ]);
 
-// ==========================================
-// ĐÃ THÊM: LẮNG NGHE SỰ KIỆN TỪ BACKEND
-// ==========================================
 const setupRealtime = () => {
   if (window.Echo) {
-    // Lắng nghe trên kênh public 'client.home'
     window.Echo.channel('client.home')
       .listen('.HomeUpdated', () => {
-        // Khi Admin vừa sửa cái gì đó, gọi lại API để load giao diện mới!
         fetchHomeData(); 
       });
   }
@@ -145,11 +140,10 @@ const setupRealtime = () => {
 onMounted(() => { 
   window.scrollTo(0, 0); 
   fetchHomeData();
-  setupRealtime(); // Bật ăng-ten
+  setupRealtime();
 });
 
 onUnmounted(() => {
-  // Dọn dẹp ăng-ten khi chuyển sang trang khác
   if (window.Echo) {
     window.Echo.leaveChannel('client.home');
   }

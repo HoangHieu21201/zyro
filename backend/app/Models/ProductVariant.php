@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+use Illuminate\Support\Facades\Cache;
+use App\Events\ClientHomeUpdated;
+use App\Events\ProductEvent;
+
 class ProductVariant extends Model
 {
     use HasFactory, SoftDeletes;
@@ -35,6 +39,21 @@ class ProductVariant extends Model
             'reserved_stock' => 'integer',
             'is_default' => 'boolean',
         ];
+    }
+
+    protected static function booted()
+    {
+        $trigger = function ($model) {
+            if ($model->product) {
+                event(new \App\Events\ProductEvent('updated', $model->product));
+            }
+
+            \Illuminate\Support\Facades\Cache::forget('client_home_data_dev');
+            event(new \App\Events\ClientHomeUpdated());
+        };
+
+        static::saved($trigger);
+        static::deleted($trigger);
     }
 
     public function product()
