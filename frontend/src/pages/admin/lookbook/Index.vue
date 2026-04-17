@@ -1,4 +1,3 @@
-<!-- File: frontend/src/pages/admin/lookbook/Index.vue -->
 <template>
   <div class="lookbook-index-wrapper pb-5 mb-5">
     
@@ -117,8 +116,8 @@
                 <tr v-else v-for="lb in displayLookbooks" :key="lb.id" :class="{'bg-light opacity-75 dark:bg-[#121416]': lb.deleted_at || lb.status === 'hidden'}">
                   <td class="px-4 py-3">
                     <div class="d-flex align-items-center">
-                      <div class="position-relative me-3 border shadow-sm rounded-3 overflow-hidden dark:border-gray-600 flex-shrink-0 cursor-zoom-in" style="width: 80px; height: 100px;" @click="openImageZoom(getImageUrl(lb.main_image))">
-                         <img :src="getImageUrl(lb.main_image)" @error="handleImageError" class="w-100 h-100 object-fit-cover transition-transform hover-zoom">
+                      <div class="position-relative me-3 border shadow-sm rounded-3 overflow-hidden dark:border-gray-600 flex-shrink-0 cursor-zoom-in" style="width: 80px; height: 100px;" @click="openImageZoom(getThumbnail(lb.main_image))">
+                         <img :src="getThumbnail(lb.main_image)" @error="handleImageError" class="w-100 h-100 object-fit-cover transition-transform hover-zoom">
                          <span class="badge bg-danger position-absolute bottom-0 end-0 m-1 px-1 py-0 shadow-sm" title="Số lượng ghim (sản phẩm)">
                             <i class="bi bi-pin-angle-fill" style="font-size: 0.6rem;"></i> {{ lb.items_count || 0 }}
                          </span>
@@ -132,7 +131,25 @@
                   
                   <td class="px-4">
                     <div class="text-dark dark:text-gray-300 small mb-1"><span class="text-muted">Dành cho:</span> <strong class="text-urban">{{ lb.gender || 'Unisex' }}</strong></div>
-                    <div class="text-dark dark:text-gray-300 small mb-1"><span class="text-muted">Ước tính cả Set:</span> <strong class="text-danger dark:text-red-400">{{ formatCurrency(lb.total_price_estimate) }}</strong></div>
+                    <div class="text-dark dark:text-gray-300 small mb-2"><span class="text-muted">Ước tính cả Set:</span> <strong class="text-danger dark:text-red-400">{{ formatCurrency(lb.total_price_estimate) }}</strong></div>
+                    
+                    <!-- THANH TIẾN ĐỘ BÁN -->
+                    <div class="bg-white dark:bg-[#121416] p-2 rounded-3 border border-light-subtle dark:border-gray-700 shadow-sm">
+                      <div class="d-flex justify-content-between align-items-center mb-1">
+                          <span class="text-muted" style="font-size: 0.7rem;"><i class="bi bi-cart-check text-urban me-1"></i>Đã bán:</span>
+                          <span class="fw-bold" style="font-size: 0.75rem;" :class="lb.usage_limit && (lb.usage_count || 0) >= lb.usage_limit ? 'text-danger' : 'text-success'">
+                              {{ lb.usage_count || 0 }} <span v-if="lb.usage_limit" class="text-muted fw-normal">/ {{ lb.usage_limit }}</span>
+                              <span v-else class="text-muted fw-normal">/ Vô hạn</span>
+                          </span>
+                      </div>
+                      <div class="progress" style="height: 4px;" v-if="lb.usage_limit">
+                          <div class="progress-bar" 
+                               :class="((lb.usage_count || 0) / lb.usage_limit * 100) >= 90 ? 'bg-danger' : 'bg-success'" 
+                               role="progressbar" 
+                               :style="{ width: Math.min(((lb.usage_count || 0) / lb.usage_limit * 100), 100) + '%' }"></div>
+                      </div>
+                    </div>
+
                   </td>
 
                   <td class="px-4 text-center">
@@ -194,8 +211,8 @@
             <div v-else v-for="lb in displayLookbooks" :key="lb.id" class="card border-0 shadow-sm mb-3 rounded-4 dark:bg-[#212529]" :class="{'opacity-75': lb.deleted_at || lb.status === 'hidden'}">
               <div class="card-body p-3">
                 <div class="d-flex mb-3 border-bottom dark:border-gray-700 pb-3">
-                  <div class="position-relative me-3 border shadow-sm rounded-3 overflow-hidden dark:border-gray-600 flex-shrink-0 cursor-zoom-in" style="width: 70px; height: 90px;" @click="openImageZoom(getImageUrl(lb.main_image))">
-                     <img :src="getImageUrl(lb.main_image)" @error="handleImageError" class="w-100 h-100 object-fit-cover transition-transform hover-zoom">
+                  <div class="position-relative me-3 border shadow-sm rounded-3 overflow-hidden dark:border-gray-600 flex-shrink-0 cursor-zoom-in" style="width: 70px; height: 90px;" @click="openImageZoom(getThumbnail(lb.main_image))">
+                     <img :src="getThumbnail(lb.main_image)" @error="handleImageError" class="w-100 h-100 object-fit-cover transition-transform hover-zoom">
                      <span class="badge bg-danger position-absolute bottom-0 end-0 m-1 px-1 py-0 shadow-sm" style="font-size: 0.6rem;">
                         <i class="bi bi-pin-angle-fill"></i> {{ lb.items_count || 0 }}
                      </span>
@@ -204,6 +221,24 @@
                     <h6 class="mb-1 fw-bold dark:text-gray-200 text-truncate">{{ lb.name }}</h6>
                     <div class="text-muted dark:text-gray-400 small text-truncate mt-1">Giới tính: {{ lb.gender || 'Unisex' }}</div>
                     <strong class="text-danger dark:text-red-400 mt-1 d-block">{{ formatCurrency(lb.total_price_estimate) }}</strong>
+                    
+                    <!-- THANH TIẾN ĐỘ BÁN MOBILE -->
+                    <div class="bg-white dark:bg-[#1a2533] p-2 rounded-3 border border-light-subtle dark:border-gray-700 mt-2 shadow-sm">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="text-muted" style="font-size: 0.7rem;"><i class="bi bi-cart-check text-urban me-1"></i>Đã bán:</span>
+                            <span class="fw-bold" style="font-size: 0.7rem;" :class="lb.usage_limit && (lb.usage_count || 0) >= lb.usage_limit ? 'text-danger' : 'text-success'">
+                                {{ lb.usage_count || 0 }} <span v-if="lb.usage_limit" class="text-muted fw-normal">/ {{ lb.usage_limit }}</span>
+                                <span v-else class="text-muted fw-normal">/ ∞</span>
+                            </span>
+                        </div>
+                        <div class="progress" style="height: 3px;" v-if="lb.usage_limit">
+                            <div class="progress-bar" 
+                                 :class="((lb.usage_count || 0) / lb.usage_limit * 100) >= 90 ? 'bg-danger' : 'bg-success'" 
+                                 role="progressbar" 
+                                 :style="{ width: Math.min(((lb.usage_count || 0) / lb.usage_limit * 100), 100) + '%' }"></div>
+                        </div>
+                    </div>
+
                   </div>
                 </div>
                 
@@ -246,7 +281,7 @@
     </div>
 
     <!-- ========================================================= -->
-    <!-- POPUP QUICK VIEW (ĐÃ FIX NỬA TRÊN / NỬA DƯỚI)             -->
+    <!-- POPUP QUICK VIEW                                          -->
     <!-- ========================================================= -->
     <div class="modal fade" id="quickViewModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
       <div class="modal-dialog modal-dialog-centered modal-xl">
@@ -261,10 +296,8 @@
             <!-- NỬA TRÊN: HÌNH ẢNH & THÔNG TIN CƠ BẢN -->
             <div class="row mb-4 pb-4 border-bottom dark:border-gray-700">
               <div class="col-md-5 text-center mb-4 mb-md-0 position-relative">
-                <!-- Vùng ảnh hiển thị cả Ghim (Pins) -->
-                <div class="position-relative d-inline-block rounded-4 shadow-sm border border-light-subtle dark:border-gray-600 bg-white dark:bg-[#121416] overflow-hidden cursor-zoom-in" style="max-height: 400px;" @click="openImageZoom(getImageUrl(selectedLookbook.main_image))">
-                  <img :src="getImageUrl(selectedLookbook.main_image)" class="img-fluid object-fit-contain" style="max-height: 400px; width: auto;" @error="handleImageError">
-                  <!-- Render Pins lên ảnh -->
+                <div class="position-relative d-inline-block rounded-4 shadow-sm border border-light-subtle dark:border-gray-600 bg-white dark:bg-[#121416] overflow-hidden cursor-zoom-in" style="max-height: 400px;" @click="openImageZoom(getThumbnail(selectedLookbook.main_image))">
+                  <img :src="getThumbnail(selectedLookbook.main_image)" class="img-fluid object-fit-contain" style="max-height: 400px; width: auto;" @error="handleImageError">
                   <div v-for="(item, idx) in selectedLookbook.parsed_items" :key="idx" 
                        class="position-absolute translate-middle"
                        :style="{ top: item.coords.y + '%', left: item.coords.x + '%' }">
@@ -294,6 +327,24 @@
                        <span class="text-muted dark:text-gray-400 d-block"><i class="bi bi-cash-stack text-urban me-1"></i>Giá trị Set ước tính:</span>
                        <span class="fw-bold text-danger fs-6">{{ formatCurrency(selectedLookbook.total_price_estimate) }}</span>
                     </div>
+                    
+                    <!-- THANH TIẾN ĐỘ BÁN TRONG QUICK VIEW -->
+                    <div class="col-sm-6">
+                       <span class="text-muted dark:text-gray-400 d-block"><i class="bi bi-cart-check text-urban me-1"></i>Tiến độ bán ra:</span>
+                       <div class="d-flex align-items-center gap-2 mt-1">
+                           <span class="fw-bold fs-6" :class="selectedLookbook.usage_limit && (selectedLookbook.usage_count || 0) >= selectedLookbook.usage_limit ? 'text-danger' : 'text-success'">
+                                {{ selectedLookbook.usage_count || 0 }} 
+                                <span class="text-muted fw-normal fs-6">/ {{ selectedLookbook.usage_limit || 'Vô hạn' }}</span>
+                           </span>
+                       </div>
+                       <div class="progress mt-2" style="height: 5px;" v-if="selectedLookbook.usage_limit">
+                            <div class="progress-bar" 
+                                 :class="((selectedLookbook.usage_count || 0) / selectedLookbook.usage_limit * 100) >= 90 ? 'bg-danger' : 'bg-success'" 
+                                 role="progressbar" 
+                                 :style="{ width: Math.min(((selectedLookbook.usage_count || 0) / selectedLookbook.usage_limit * 100), 100) + '%' }"></div>
+                        </div>
+                    </div>
+
                     <div class="col-12">
                        <span class="text-muted dark:text-gray-400 d-block"><i class="bi bi-info-circle text-urban me-1"></i>Mô tả:</span>
                        <span class="fw-bold text-dark dark:text-gray-200 fst-italic">{{ selectedLookbook.description || 'Chưa có mô tả.' }}</span>
@@ -332,7 +383,7 @@
                       <tr v-for="(item, idx) in selectedLookbook.parsed_items" :key="idx">
                         <td class="fw-bold text-danger">#{{ idx + 1 }}</td>
                         <td>
-                          <img v-if="item.product" :src="getImageUrl(item.product.thumbnail_image)" class="rounded border object-fit-cover dark:border-gray-600 mx-auto cursor-zoom-in" style="width: 40px; height: 40px;" @error="handleImageError" @click="openImageZoom(getImageUrl(item.product.thumbnail_image))">
+                          <img v-if="item.product" :src="getThumbnail(item.product.thumbnail_image)" class="rounded border object-fit-cover dark:border-gray-600 mx-auto cursor-zoom-in" style="width: 40px; height: 40px;" @error="handleImageError" @click="openImageZoom(getThumbnail(item.product.thumbnail_image))">
                           <i v-else class="bi bi-question-square text-muted fs-4"></i>
                         </td>
                         <td class="text-start fw-bold text-dark dark:text-gray-200">
@@ -368,7 +419,7 @@
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1) grayscale(100%) brightness(200%);"></button>
           </div>
           <div class="modal-body text-center p-0">
-            <img :src="zoomedImageUrl" class="img-fluid rounded shadow-lg" style="max-height: 80vh; object-fit: contain;">
+            <img :src="zoomedImageUrl" @error="handleImageError" class="img-fluid rounded shadow-lg" style="max-height: 80vh; object-fit: contain;">
           </div>
         </div>
       </div>
@@ -381,8 +432,7 @@
 import { ref, onMounted, onBeforeUnmount, onUnmounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
-import axios from 'axios';
-import defaultImage from '@/assets/images/defaults/placeholder.png'; 
+import api from '@/utils/axios';
 
 const route = useRoute();
 const router = useRouter();
@@ -409,9 +459,30 @@ let quickViewModalInstance = null;
 const zoomedImageUrl = ref('');
 let imageZoomModalInstance = null;
 
-const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
-const getImageUrl = (path) => path ? `http://127.0.0.1:8000/storage/${path}` : defaultImage;
-const handleImageError = (e) => { e.target.src = defaultImage; };
+// --- LÀM SẠCH LOGIC XỬ LÝ ẢNH "BẤT TỬ" ---
+const defaultImage = '/client_placeholder.png'; // Trỏ thẳng vào public/
+
+const getThumbnail = (path) => {
+  if (!path || String(path).trim() === '') return defaultImage;
+  let cleanPath = String(path).trim();
+
+  if (cleanPath.startsWith('http') || cleanPath.startsWith(defaultImage)) return cleanPath;
+  
+  // Dọn rác storage thừa
+  cleanPath = cleanPath.replace(/^\/+/, '');
+  if (cleanPath.startsWith('storage/')) {
+      cleanPath = cleanPath.replace('storage/', '');
+  }
+
+  let baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1';
+  baseUrl = baseUrl.replace('/api/v1', '');
+  return `${baseUrl}/storage/${cleanPath}`;
+};
+
+const handleImageError = (e) => { 
+  e.target.src = defaultImage; 
+};
+// ------------------------------------------
 
 const formatCurrency = (val) => {
   if (val === null || val === undefined || val === '') return '0 ₫';
@@ -427,8 +498,8 @@ const fetchData = async (isSilent = false) => {
   if (isSilent) isRefreshing.value = true; else isLoading.value = true;
   try {
     const [resLB, resModules] = await Promise.all([
-      axios.get('http://127.0.0.1:8000/api/v1/admin/lookbooks', { headers: getHeaders() }),
-      axios.get('http://127.0.0.1:8000/api/v1/admin/modules', { headers: getHeaders() })
+      api.get('/admin/lookbooks'), // Đã dùng bộ API cấu hình sẵn của hệ thống
+      api.get('/admin/modules')
     ]);
     
     const rawData = Array.isArray(resLB.data.data?.data) ? resLB.data.data.data : (Array.isArray(resLB.data.data) ? resLB.data.data : []);
@@ -456,7 +527,7 @@ const cancelStatusChange = (p) => { p.localStatus = p.status; p.isStatusChanged 
 const saveStatus = async (p) => {
   p.isUpdatingStatus = true;
   try {
-    await axios.patch(`${import.meta.env.VITE_API_BASE_URL}/admin/lookbooks/${p.id}/status`, { status: p.localStatus }, { headers: getHeaders() });
+    await api.patch(`/admin/lookbooks/${p.id}/status`, { status: p.localStatus });
     p.status = p.localStatus; p.isStatusChanged = false;
     Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Cập nhật thành công', showConfirmButton: false, timer: 1500 });
   } catch (error) { 
@@ -475,7 +546,7 @@ const clearFilters = () => {
   filterGender.value = ''; filterDateFrom.value = ''; filterDateTo.value = ''; currentPage.value = 1;
 };
 
-// ĐÃ FIX: Mở khóa Modal Quick View
+// Mở khóa Modal Quick View
 const openQuickView = async (lb) => {
   selectedLookbook.value = lb; 
   if (!quickViewModalInstance) quickViewModalInstance = new window.bootstrap.Modal(document.getElementById('quickViewModal'));
@@ -483,7 +554,7 @@ const openQuickView = async (lb) => {
   
   isQuickViewLoading.value = true;
   try {
-    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/lookbooks/${lb.id}`, { headers: getHeaders() });
+    const res = await api.get(`/admin/lookbooks/${lb.id}`);
     selectedLookbook.value = res.data.data;
     
     // Parse tọa độ để hiển thị điểm ghim lên ảnh QuickView
@@ -562,7 +633,7 @@ const confirmDelete = (id, name) => {
   Swal.fire({ title: 'Đưa vào thùng rác?', text: `Lookbook "${name}" sẽ bị ẩn đi!`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Đồng ý xóa' }).then(async (result) => {
     if (result.isConfirmed) {
       try {
-        await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/admin/lookbooks/${id}`, { headers: getHeaders() });
+        await api.delete(`/admin/lookbooks/${id}`);
         Swal.fire({icon: 'success', title: 'Đã xóa', timer: 1500, showConfirmButton: false});
         fetchData(true);
       } catch(e) { Swal.fire('Lỗi', e.response?.data?.message || 'Lỗi xóa', 'error'); }
@@ -574,7 +645,7 @@ const restoreLookbook = (id) => {
   Swal.fire({ title: 'Khôi phục?', icon: 'info', showCancelButton: true, confirmButtonColor: 'var(--color-c-hover)', confirmButtonText: 'Khôi phục' }).then(async (result) => {
     if (result.isConfirmed) {
       try {
-        await axios.post(`${import.meta.env.VITE_API_BASE_URL}/admin/lookbooks/${id}/restore`, {}, { headers: getHeaders() });
+        await api.post(`/admin/lookbooks/${id}/restore`);
         Swal.fire({icon: 'success', title: 'Đã khôi phục', timer: 1500, showConfirmButton: false});
         fetchData(true);
       } catch(e) { Swal.fire('Lỗi', e.response?.data?.message || 'Lỗi khôi phục', 'error'); }

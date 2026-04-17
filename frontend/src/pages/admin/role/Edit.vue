@@ -1,4 +1,3 @@
-<!-- File: frontend/src/pages/admin/role/Edit.vue -->
 <template>
   <div class="role-edit-wrapper pb-5 mb-5">
     <div class="container-fluid py-4">

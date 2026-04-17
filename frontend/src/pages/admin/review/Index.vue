@@ -1,4 +1,3 @@
-<!-- File: frontend/src/pages/admin/review/Index.vue -->
 <template>
   <div class="review-index-wrapper pb-5 mb-5">
     

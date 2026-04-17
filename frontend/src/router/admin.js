@@ -271,7 +271,13 @@ const admin = [
         component: () => import('../pages/admin/flash_sales/Edit.vue'),
         meta: { moduleCode: 'admin_flash_sales' },
       },
-
+      // inventory
+      {
+        path: 'inventory',
+        name: 'admin-inventory',
+        component: () => import('../pages/admin/inventory/Index.vue'),
+        meta: { moduleCode: 'admin_inventory' },
+      },
 
     ],
   },

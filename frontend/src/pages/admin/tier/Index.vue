@@ -1,4 +1,3 @@
-<!-- File: frontend/src/pages/admin/tier/Index.vue -->
 <template>
   <div class="tier-index-wrapper pb-5 mb-5">
     

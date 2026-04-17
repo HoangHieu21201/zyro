@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
@@ -29,8 +30,9 @@ class OrderController extends Controller
     {
         try {
             $version = Cache::rememberForever($this->cacheVersionKey, fn() => 1);
-            
-            $cacheKey = sprintf('orders_admin_v%s_p%s_s%s_ps%s_df%s_dt%s_ir%s_rt%s_q%s',
+
+            $cacheKey = sprintf(
+                'orders_admin_v%s_p%s_s%s_ps%s_df%s_dt%s_ir%s_rt%s_q%s',
                 $version,
                 $request->get('page', 1),
                 $request->get('status', 'all'),
@@ -135,8 +137,8 @@ class OrderController extends Controller
             });
 
             return response()->json([
-                'success' => true, 
-                'data' => $result['orders'], 
+                'success' => true,
+                'data' => $result['orders'],
                 'counts' => $result['counts']
             ]);
         } catch (\Exception $e) {
@@ -151,9 +153,9 @@ class OrderController extends Controller
                 ->with([
                     'user:id,full_name,email,avatar_url,phone',
                     'voucher',
-                    'items.product:id,name,slug,thumbnail_image', 
+                    'items.product:id,name,slug,thumbnail_image',
                     'items.variant:id,sku,stock_quantity',
-                    'histories.changer' 
+                    'histories.changer'
                 ])
                 ->findOrFail($id);
 
@@ -221,8 +223,8 @@ class OrderController extends Controller
                     'processing' => ['shipping', 'cancelled'],
                     'shipping'   => ['completed', 'returned'],
                     'completed'  => ['returned'],
-                    'cancelled'  => [], 
-                    'returned'   => [], 
+                    'cancelled'  => [],
+                    'returned'   => [],
                     'refunded'   => []
                 ];
 
@@ -270,47 +272,35 @@ class OrderController extends Controller
                 }
             });
 
+            // LOGIC EMAIL ĐƯỢC CẢI TIẾN
             if ($oldStatus !== $newStatus) {
                 try {
                     $shippingInfo = is_string($order->shipping_info) ? json_decode($order->shipping_info, true) : $order->shipping_info;
                     $customerEmail = $order->user ? $order->user->email : ($shippingInfo['email'] ?? null);
-                    $noteMsg = $data['note'] ?? 'Đơn hàng của bạn đã được chuyển qua giai đoạn xử lý tiếp theo.';
 
+                    // 1. CHỈ gửi email cho khách khi Xác Nhận (Confirmed) và Giao Thành Công (Completed)
                     if ($customerEmail) {
-                        $subject = "Cập nhật trạng thái đơn hàng #{$order->order_code}";
-                        $htmlContent = "
-                            <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #EBF1F5; border-radius: 10px;'>
-                                <h2 style='color: #213448; text-align: center; letter-spacing: 2px;'>ZYRO.</h2>
-                                <h3 style='color: #547792; text-align: center;'>Thông báo đơn hàng</h3>
-                                <p style='color: #4a5568;'>Chào bạn,</p>
-                                <p style='color: #4a5568;'>Đơn hàng <strong>{$order->order_code}</strong> của bạn đã được cập nhật trạng thái thành: <strong style='color: #009981; text-transform: uppercase;'>{$newStatus}</strong>.</p>
-                                <p style='color: #4a5568;'>Ghi chú từ hệ thống: {$noteMsg}</p>
-                                <hr style='border: none; border-top: 1px solid #EBF1F5; margin: 30px 0;' />
-                                <p style='color: #a0aec0; font-size: 12px; text-align: center;'>Cảm ơn bạn đã mua sắm tại ZYRO!</p>
-                            </div>
-                        ";
-                        Mail::html($htmlContent, function ($mail) use ($customerEmail, $subject) {
-                            $mail->to($customerEmail)->subject($subject);
-                        });
+                        if ($newStatus === 'confirmed') {
+                            Mail::to($customerEmail)->queue(new \App\Mail\OrderConfirmedMail($order));
+                        } elseif ($newStatus === 'completed') {
+                            Mail::to($customerEmail)->queue(new \App\Mail\OrderCompletedMail($order));
+                        }
                     }
 
+                    // 2. Gửi cảnh báo cho ADMIN khi Hủy (Cancelled) hoặc Hoàn Trả (Returned)
                     if (in_array($newStatus, ['cancelled', 'returned'])) {
                         $adminEmail = config('mail.admin_address', 'admin@zyro.vn');
-                        $adminSubject = "[ZYRO ALERT] Đơn hàng {$order->order_code} - {$newStatus}";
-                        $adminHtml = "
-                            <div style='font-family: Arial, sans-serif; padding: 20px;'>
-                                <h2 style='color: #dc3545;'>CẢNH BÁO ĐƠN HÀNG BẤT THƯỜNG</h2>
-                                <p>Đơn hàng <strong>{$order->order_code}</strong> vừa bị chuyển sang trạng thái <strong style='text-transform: uppercase;'>{$newStatus}</strong>.</p>
-                                <p>Người thực hiện thao tác: <strong>" . ($admin ? $admin->fullname : 'Hệ thống') . "</strong></p>
-                                <p>Lý do hủy / hoàn trả: {$noteMsg}</p>
-                                <p>Vui lòng kiểm tra trên hệ thống quản trị ngay lập tức để xử lý khiếu nại (nếu có) và đối soát kho hàng.</p>
-                            </div>
-                        ";
-                        Mail::html($adminHtml, function ($mail) use ($adminEmail, $adminSubject) {
-                            $mail->to($adminEmail)->subject($adminSubject);
-                        });
+                        $noteMsg = $data['note'] ?? 'Không có ghi chú';
+                        $adminName = $admin ? $admin->fullname : 'Hệ thống';
+
+                        Mail::to($adminEmail)->queue(new \App\Mail\AdminOrderAlertMail($order, $newStatus, $noteMsg, $adminName));
                     }
                 } catch (\Exception $e) {
+                    // 3. Ghi log thay vì nuốt lỗi, không chặn luồng API
+                    Log::error('Lỗi đẩy Email vào Queue (OrderController): ' . $e->getMessage(), [
+                        'order_id' => $order->id,
+                        'status' => $newStatus
+                    ]);
                 }
             }
 
@@ -431,7 +421,7 @@ class OrderController extends Controller
         $transitTime = $pickupTime->copy()->addHours(12);
         $arriveLocalTime = $transitTime->copy()->addHours($isSameCity ? 10 : 36);
         $deliveryTime = $arriveLocalTime->copy()->addHours(6);
-        $completeTime = clone $order->updated_at;
+        $completeTime = \Illuminate\Support\Carbon::parse($order->updated_at ?? now());
 
         $events[] = [
             'time' => $createdAt->format('d/m/Y H:i'),
@@ -445,7 +435,7 @@ class OrderController extends Controller
                 'time' => $confirmTime->format('d/m/Y H:i'),
                 'location' => 'Kho ' . $baseCity,
                 'status' => 'confirmed',
-                'description' => 'Người bán đang chuẩn bị đóng gói hàng hóa.'
+                'description' => 'Kho ZYRO đang chuẩn bị và đóng gói trang phục.'
             ];
         }
 
@@ -459,9 +449,9 @@ class OrderController extends Controller
 
             $events[] = [
                 'time' => $transitTime->format('d/m/Y H:i'),
-                'location' => 'Trung tâm phân loại Trung ương',
+                'location' => 'Trung tâm phân loại',
                 'status' => 'shipping',
-                'description' => 'Đơn hàng đã đến trạm trung chuyển.'
+                'description' => 'Kiện hàng đang được trung chuyển.'
             ];
 
             if ($now->greaterThan($arriveLocalTime) || $order->status === 'completed') {
@@ -469,7 +459,7 @@ class OrderController extends Controller
                     'time' => $arriveLocalTime->format('d/m/Y H:i'),
                     'location' => 'Bưu cục ' . $city,
                     'status' => 'shipping',
-                    'description' => "Kiện hàng đã đến trung tâm giao nhận tại khu vực {$city}."
+                    'description' => "Kiện hàng đã đến bưu cục giao nhận tại {$city}."
                 ];
             }
 
@@ -478,7 +468,7 @@ class OrderController extends Controller
                     'time' => $deliveryTime->format('d/m/Y H:i'),
                     'location' => $city,
                     'status' => 'shipping',
-                    'description' => 'Shipper đang trên đường giao hàng đến bạn. Vui lòng chú ý điện thoại để nhận hàng.'
+                    'description' => 'Shipper đang trên đường giao hàng đến bạn. Vui lòng chú ý điện thoại.'
                 ];
             }
         }
@@ -488,18 +478,18 @@ class OrderController extends Controller
                 'time' => $completeTime->format('d/m/Y H:i'),
                 'location' => $city,
                 'status' => 'completed',
-                'description' => 'Giao hàng thành công. Chúc bạn có trải nghiệm tuyệt vời với sản phẩm của ZYRO!'
+                'description' => 'Giao hàng thành công. Chúc bạn có trải nghiệm thời trang tuyệt vời với ZYRO!'
             ];
         } elseif ($order->status === 'returned') {
             $events[] = [
                 'time' => $completeTime->format('d/m/Y H:i'),
                 'location' => 'Kho ' . $baseCity,
                 'status' => 'returned',
-                'description' => 'Giao hàng thất bại. Đơn hàng đã được hoàn trả về kho người bán.'
+                'description' => 'Giao hàng thất bại. Đơn hàng đã được hoàn trả về kho ZYRO.'
             ];
         } elseif ($order->status === 'cancelled') {
             $events[] = [
-                'time' => clone $order->updated_at->format('d/m/Y H:i'),
+                'time' => \Illuminate\Support\Carbon::parse($order->updated_at ?? now())->format('d/m/Y H:i'),
                 'location' => 'Hệ thống ZYRO',
                 'status' => 'cancelled',
                 'description' => 'Đơn hàng đã bị hủy bỏ.'

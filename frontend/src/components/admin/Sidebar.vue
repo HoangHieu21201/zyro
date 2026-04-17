@@ -158,7 +158,8 @@ const menuItems = ref([
       { name: 'Thương hiệu', path: '/admin/brands', moduleCode: 'admin_brands' },
       { name: 'SP & Biến thể', path: '/admin/products', moduleCode: 'admin_products' },
       { name: 'Lookbook', path: '/admin/lookbooks', moduleCode: 'admin_lookbooks' },
-      { name: 'Flash Sale', path: '/admin/flash-sales', moduleCode: 'admin_flash_sales' }
+      { name: 'Flash Sale', path: '/admin/flash-sales', moduleCode: 'admin_flash_sales' },
+      { name: 'Kho hàng', path: '/admin/inventory', moduleCode: 'admin_inventory' }
 
     ]
   },

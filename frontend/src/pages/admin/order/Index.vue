@@ -1,4 +1,3 @@
-<!-- File: frontend/src/pages/admin/order/Index.vue -->
 <template>
   <div class="order-index-wrapper pb-5 mb-5">
     

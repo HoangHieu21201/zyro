@@ -38,6 +38,8 @@ use App\Http\Controllers\Api\Client\ClientWishlistController;
 use App\Http\Controllers\Api\Client\ClientCheckoutController;
 use App\Http\Controllers\Api\Client\ClientOrderController;
 use App\Http\Controllers\Api\Client\ClientReviewController;
+use App\Http\Controllers\Api\Client\ForgotPasswordController;
+use App\Http\Controllers\Api\Admin\InventoryController;
 
 // Khởi tạo các kênh Socket nội bộ (Sanctum Auth)
 Broadcast::routes(['middleware' => ['auth:sanctum']]);
@@ -174,6 +176,17 @@ Route::prefix('v1/admin')->group(function () {
             Route::patch('flash_sales/{id}/status', [\App\Http\Controllers\Api\Admin\FlashSaleController::class, 'updateStatus']);
             Route::apiResource('flash_sales', \App\Http\Controllers\Api\Admin\FlashSaleController::class);
         });
+
+        Route::prefix('inventory')->group(function () {
+            // Kho biến thể
+            Route::get('variants', [InventoryController::class, 'getVariants']);
+            Route::put('variants/bulk-stock', [InventoryController::class, 'bulkUpdateVariantStock']); // Thêm dòng này
+            Route::put('variants/{id}/stock', [InventoryController::class, 'updateVariantStock']);
+
+            // Kho Lookbooks
+            Route::get('lookbooks', [InventoryController::class, 'getLookbooks']);
+            Route::put('lookbooks/{id}/limit', [InventoryController::class, 'updateLookbookLimit']);
+        });
     });
 });
 
@@ -184,6 +197,12 @@ Route::prefix('v1/client')->group(function () {
 
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login', [AuthController::class, 'login']);
+
+    Route::prefix('forgot-password')->group(function () {
+        Route::post('send-otp', [ForgotPasswordController::class, 'sendOtp']);
+        Route::post('verify-otp', [ForgotPasswordController::class, 'verifyOtp']);
+        Route::post('reset', [ForgotPasswordController::class, 'resetPassword']);
+    });
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);

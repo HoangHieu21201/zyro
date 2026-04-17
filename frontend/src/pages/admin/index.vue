@@ -1,12 +1,12 @@
 <script setup>
-import { ref, onMounted, nextTick } from 'vue';
+import { ref, onMounted, nextTick, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '@/utils/axios'; 
-
-// IMPORT THƯ VIỆN VẼ BIỂU ĐỒ CHUYÊN NGHIỆP
 import Chart from 'chart.js/auto';
 
 const router = useRouter();
+
+const isFirstLoad = ref(true);
 const isLoading = ref(true);
 const timeRange = ref('this_month');
 
@@ -22,7 +22,6 @@ const chartData = ref([]);
 const topProducts = ref([]);
 const recentOrders = ref([]);
 
-// Tham chiếu đến thẻ Canvas vẽ biểu đồ
 const chartCanvas = ref(null);
 let chartInstance = null;
 
@@ -42,20 +41,20 @@ const formatDate = (dateStr) => {
 
 const getStatusBadge = (status) => {
   const map = { 
-      'pending': '<span class="badge bg-warning text-dark">Chờ xác nhận</span>', 
-      'confirmed': '<span class="badge bg-info">Đã xác nhận</span>', 
-      'processing': '<span class="badge bg-primary">Đang xử lý</span>', 
-      'shipping': '<span class="badge bg-primary">Đang giao</span>', 
-      'completed': '<span class="badge bg-success">Thành công</span>', 
-      'cancelled': '<span class="badge bg-danger">Đã hủy</span>', 
-      'returned': '<span class="badge bg-secondary">Hoàn trả</span>' 
+      'pending': '<span class="badge bg-warning text-dark border border-warning shadow-sm">Chờ xác nhận</span>', 
+      'confirmed': '<span class="badge bg-info text-dark border border-info shadow-sm">Đã xác nhận</span>', 
+      'processing': '<span class="badge bg-primary text-white border border-primary shadow-sm">Đang xử lý</span>', 
+      'shipping': '<span class="badge bg-primary text-white border border-primary shadow-sm">Đang giao</span>', 
+      'completed': '<span class="badge bg-success text-white border border-success shadow-sm">Thành công</span>', 
+      'cancelled': '<span class="badge bg-danger text-white border border-danger shadow-sm">Đã hủy</span>', 
+      'returned': '<span class="badge bg-secondary text-white border border-secondary shadow-sm">Hoàn trả</span>' 
   };
-  return map[status] || `<span class="badge bg-secondary">${status}</span>`;
+  return map[status] || `<span class="badge bg-secondary border shadow-sm">${status}</span>`;
 };
 
-// HÀM RENDER BIỂU ĐỒ KẾT HỢP (BAR + LINE)
 const renderChart = () => {
     if (!chartCanvas.value) return;
+    const ctx = chartCanvas.value.getContext('2d');
 
     if (chartInstance) {
         chartInstance.destroy(); 
@@ -65,7 +64,21 @@ const renderChart = () => {
     const revenueData = chartData.value.map(item => item.revenue);
     const profitData = chartData.value.map(item => item.profit);
 
-    chartInstance = new Chart(chartCanvas.value, {
+    // Bắt Dark Mode để chỉnh màu
+    const isDark = document.documentElement.classList.contains('dark');
+    const textColor = isDark ? '#f8f9fa' : '#495057'; // Màu chữ tương phản cực mạnh
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
+
+    // Đổ bóng Gradient dưới đường Line Lợi Nhuận cho sinh động
+    const gradientProfit = ctx.createLinearGradient(0, 0, 0, 400);
+    gradientProfit.addColorStop(0, isDark ? 'rgba(255, 71, 87, 0.4)' : 'rgba(255, 71, 87, 0.2)');
+    gradientProfit.addColorStop(1, 'rgba(255, 71, 87, 0)');
+
+    // Màu sắc cực rực rỡ (Solid Color) để không bị chìm
+    const barColor = isDark ? '#20c997' : '#009981'; // Teal / Urban Green
+    const lineProfit = '#ff4757'; // Coral Red (Đỏ dạ quang)
+
+    chartInstance = new Chart(ctx, {
         type: 'bar', 
         data: {
             labels: labels,
@@ -74,24 +87,25 @@ const renderChart = () => {
                     type: 'bar',
                     label: 'Doanh Thu',
                     data: revenueData,
-                    backgroundColor: 'rgba(0, 153, 129, 0.2)', // Màu nền xanh Urban nhạt
-                    borderColor: 'rgba(0, 153, 129, 1)', // Viền xanh Urban
-                    borderWidth: 2,
-                    borderRadius: 4,
-                    order: 2
+                    backgroundColor: barColor,
+                    borderRadius: { topLeft: 4, topRight: 4 },
+                    order: 2,
+                    barPercentage: 0.6
                 },
                 {
                     type: 'line',
                     label: 'Lợi Nhuận',
                     data: profitData,
-                    borderColor: '#dc3545', // Đỏ danger
-                    backgroundColor: '#dc3545',
-                    borderWidth: 3,
-                    tension: 0.4, // Tạo độ cong mềm mại cho đường Line
-                    pointBackgroundColor: '#fff',
-                    pointBorderColor: '#dc3545',
+                    borderColor: lineProfit,
+                    backgroundColor: gradientProfit,
+                    borderWidth: 3, 
+                    fill: true, // ĐÃ THÊM: Đổ màu vùng dưới đường Line (Sinh động)
+                    tension: 0.4, // Bo cong mềm mại
+                    pointBackgroundColor: isDark ? '#1a2533' : '#fff',
+                    pointBorderColor: lineProfit,
                     pointBorderWidth: 2,
                     pointRadius: 4,
+                    pointHoverRadius: 6,
                     order: 1
                 }
             ]
@@ -99,12 +113,15 @@ const renderChart = () => {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            interaction: {
-                mode: 'index',
-                intersect: false,
-            },
+            interaction: { mode: 'index', intersect: false },
             plugins: {
                 tooltip: {
+                    backgroundColor: isDark ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.95)',
+                    titleColor: isDark ? '#fff' : '#000',
+                    bodyColor: isDark ? '#f8f9fa' : '#212529',
+                    borderColor: isDark ? '#373b3e' : '#dee2e6',
+                    borderWidth: 1, padding: 12, boxPadding: 6,
+                    titleFont: { size: 14 }, bodyFont: { size: 13, weight: 'bold' },
                     callbacks: {
                         label: function(context) {
                             let label = context.dataset.label || '';
@@ -116,19 +133,28 @@ const renderChart = () => {
                         }
                     }
                 },
-                legend: { position: 'top' }
+                legend: { 
+                    position: 'top', 
+                    labels: { color: textColor, font: { family: 'inherit', weight: 'bold', size: 12 }, padding: 20 } 
+                }
             },
             scales: {
+                x: { 
+                    ticks: { color: textColor, font: { family: 'inherit', weight: '500', size: 11 } }, 
+                    grid: { display: false } 
+                },
                 y: {
                     beginAtZero: true,
                     ticks: {
+                        color: textColor, font: { family: 'inherit', weight: '500', size: 11 },
                         callback: function(value) {
                             if (value >= 1000000000) return (value / 1000000000) + ' Tỷ';
                             if (value >= 1000000) return (value / 1000000) + ' Tr';
                             if (value >= 1000) return (value / 1000) + ' K';
                             return value;
                         }
-                    }
+                    },
+                    grid: { color: gridColor, drawBorder: false }
                 }
             }
         }
@@ -136,10 +162,11 @@ const renderChart = () => {
 };
 
 const fetchDashboardData = async () => {
-    isLoading.value = true;
+    if (!isFirstLoad.value) {
+        isLoading.value = true;
+    }
     try {
         const response = await api.get(`/admin/dashboard/statistics?range=${timeRange.value}`);
-        
         let payload = response.data;
         if(payload.data) payload = payload.data; 
         
@@ -147,20 +174,19 @@ const fetchDashboardData = async () => {
         chartData.value = payload.chart.data;
         topProducts.value = payload.top_products;
         recentOrders.value = payload.recent_orders;
-
-        // ĐÃ FIX LỖI BIỂU ĐỒ TRẮNG: 
-        // Phải gán isLoading = false TRƯỚC, để Vue DOM render cái thẻ <canvas> ra
-        isLoading.value = false;
-
-        // Sau đó dùng nextTick đợi DOM vẽ xong thẻ canvas rồi mới nhét Chart.js vào
-        await nextTick();
-        renderChart();
-        
     } catch (error) {
         console.error("Lỗi lấy dữ liệu Dashboard:", error);
-        isLoading.value = false; // Lỗi cũng phải tắt loading
+    } finally {
+        isLoading.value = false;
+        isFirstLoad.value = false; 
+        await nextTick();
+        renderChart();
     }
 };
+
+watch(() => document.documentElement.classList.contains('dark'), () => {
+    if (chartInstance) renderChart();
+});
 
 onMounted(() => {
     if (!localStorage.getItem('admin_token')) {
@@ -172,117 +198,108 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="dashboard-wrapper w-100">
-    <div class="app-content-header mb-4">
-        <div class="container-fluid">
-            <div class="row align-items-center">
-                <div class="col-sm-6">
-                    <h3 class="mb-0 text-brand fw-bold"><i class="bi bi-speedometer2 me-2"></i>Tổng Quan Hệ Thống</h3>
-                </div>
-                <div class="col-sm-6 text-sm-end mt-3 mt-sm-0">
-                    <div class="d-inline-flex bg-white rounded-3 shadow-sm p-1 border">
-                        <select class="form-select border-0 shadow-none fw-semibold text-muted bg-transparent cursor-pointer" v-model="timeRange" @change="fetchDashboardData">
-                            <option value="today">Hôm nay</option>
-                            <option value="this_week">Tuần này</option>
-                            <option value="this_month">Tháng này</option>
-                            <option value="this_year">Năm nay</option>
-                            <option value="all">Toàn thời gian</option>
-                        </select>
+  <div class="dashboard-wrapper w-100 pb-5 mb-5">
+    
+    <!-- ĐÃ FIX: Chỉ hiện đúng LOGO SHIMMER, không có thẻ rác, không có Header -->
+    <div v-if="isFirstLoad" class="d-flex flex-column justify-content-center align-items-center w-100" style="min-height: 70vh;">
+        <h1 class="logo-shimmer mb-3">ZYRO</h1>
+        <p class="text-muted dark:text-gray-400 fw-semibold small text-uppercase tracking-widest" style="letter-spacing: 2px;">Đang tải dữ liệu tổng quan...</p>
+    </div>
+
+    <!-- ĐÃ FIX: Toàn bộ nội dung Header & Body được bọc cẩn thận bên trong v-else -->
+    <div v-else class="animation-fade-in">
+        
+        <!-- HEADER -->
+        <div class="app-content-header mb-4">
+            <div class="container-fluid">
+                <div class="row align-items-center">
+                    <div class="col-sm-6 d-flex align-items-center">
+                        <h3 class="mb-0 text-urban fw-bold"><i class="bi bi-speedometer2 me-2"></i>Tổng Quan Hệ Thống</h3>
+                        <span v-if="isLoading" class="spinner-border spinner-border-sm text-urban ms-3" role="status"></span>
+                    </div>
+                    <div class="col-sm-6 text-sm-end mt-3 mt-sm-0">
+                        <div class="d-inline-flex bg-white dark:bg-[#1a2533] rounded-3 shadow-sm p-1 border dark:border-gray-700 hover-urban-border transition-all">
+                            <select class="form-select border-0 shadow-none fw-semibold text-muted dark:text-gray-300 bg-transparent cursor-pointer px-3" v-model="timeRange" @change="fetchDashboardData" :disabled="isLoading">
+                                <option value="today">Hôm nay</option>
+                                <option value="this_week">Tuần này</option>
+                                <option value="this_month">Tháng này</option>
+                                <option value="this_year">Năm nay</option>
+                                <option value="all">Toàn thời gian</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="app-content">
-        <div class="container-fluid">
-            
-            <!-- SKELETON LOADING -->
-            <div v-if="isLoading" class="row g-4">
-                <div class="col-lg-3 col-sm-6" v-for="i in 4" :key="'skel'+i">
-                    <div class="card border-0 shadow-sm rounded-4 p-4 shimmer h-100" style="min-height: 120px;"></div>
-                </div>
-                <div class="col-lg-8">
-                    <div class="card border-0 shadow-sm rounded-4 p-4 shimmer" style="height: 400px;"></div>
-                </div>
-                <div class="col-lg-4">
-                    <div class="card border-0 shadow-sm rounded-4 p-4 shimmer" style="height: 400px;"></div>
-                </div>
-            </div>
-
-            <!-- NỘI DUNG CHÍNH -->
-            <div v-else class="animation-fade-in">
+        <div class="app-content" :class="{'opacity-50 pe-none': isLoading}">
+            <div class="container-fluid">
                 
                 <!-- ROW 1: SUMMARY CARDS -->
                 <div class="row g-4 mb-4">
-                    <!-- Doanh thu -->
                     <div class="col-xl-3 col-sm-6">
-                        <div class="card border-0 shadow-sm rounded-4 h-100 summary-card bg-primary-subtle">
+                        <div class="card border-0 shadow-sm rounded-4 h-100 summary-card bg-white dark:bg-[#1a2533] transition-all">
                             <div class="card-body p-4 d-flex align-items-center justify-content-between">
                                 <div>
-                                    <h6 class="text-muted fw-bold text-uppercase mb-2" style="font-size: 0.8rem; letter-spacing: 1px;">Tổng Doanh Thu</h6>
-                                    <h4 class="fw-black text-dark m-0">{{ formatCurrency(stats.revenue) }}</h4>
+                                    <h6 class="text-muted dark:text-gray-400 fw-bold text-uppercase mb-2 tracking-wide" style="font-size: 0.75rem;">Tổng Doanh Thu</h6>
+                                    <!-- ĐÃ SỬA: Đổi text-c-dark thành text-dark dark:text-white để tương phản mạnh -->
+                                    <h4 class="fw-black text-dark dark:text-white m-0">{{ formatCurrency(stats.revenue) }}</h4>
                                 </div>
-                                <div class="icon-box bg-white text-primary shadow-sm rounded-circle d-flex align-items-center justify-content-center" style="width: 55px; height: 55px;">
-                                    <i class="bi bi-wallet2 fs-3"></i>
+                                <div class="bg-light dark:bg-[#212529] rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 55px; height: 55px;">
+                                    <i class="bi bi-wallet2 fs-4 text-urban"></i>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <!-- Lợi nhuận -->
                     <div class="col-xl-3 col-sm-6">
-                        <div class="card border-0 shadow-sm rounded-4 h-100 summary-card bg-success bg-opacity-10 border-success border-opacity-25">
+                        <div class="card border-0 shadow-sm rounded-4 h-100 summary-card bg-white dark:bg-[#1a2533] transition-all">
                             <div class="card-body p-4 d-flex align-items-center justify-content-between">
                                 <div>
-                                    <h6 class="text-muted fw-bold text-uppercase mb-2" style="font-size: 0.8rem; letter-spacing: 1px;">Lợi Nhuận Gộp</h6>
-                                    <h4 class="fw-black text-success m-0">{{ formatCurrency(stats.profit) }}</h4>
+                                    <h6 class="text-muted dark:text-gray-400 fw-bold text-uppercase mb-2 tracking-wide" style="font-size: 0.75rem;">Lợi Nhuận Gộp</h6>
+                                    <h4 class="fw-black text-success dark:text-green-400 m-0">{{ formatCurrency(stats.profit) }}</h4>
                                 </div>
-                                <div class="icon-box bg-white text-success shadow-sm rounded-circle d-flex align-items-center justify-content-center" style="width: 55px; height: 55px;">
-                                    <i class="bi bi-graph-up-arrow fs-3"></i>
+                                <div class="bg-light dark:bg-[#212529] rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 55px; height: 55px;">
+                                    <i class="bi bi-graph-up-arrow fs-4 text-success dark:text-green-400"></i>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <!-- Đơn hàng -->
                     <div class="col-xl-3 col-sm-6">
-                        <div class="card border-0 shadow-sm rounded-4 h-100 summary-card bg-info-subtle">
+                        <div class="card border-0 shadow-sm rounded-4 h-100 summary-card bg-white dark:bg-[#1a2533] transition-all">
                             <div class="card-body p-4 d-flex align-items-center justify-content-between">
                                 <div>
-                                    <h6 class="text-muted fw-bold text-uppercase mb-2" style="font-size: 0.8rem; letter-spacing: 1px;">Đơn Hàng (Đã giao)</h6>
-                                    <h4 class="fw-black text-dark m-0">{{ stats.orders }} <span class="fs-6 text-muted fw-normal">đơn</span></h4>
+                                    <h6 class="text-muted dark:text-gray-400 fw-bold text-uppercase mb-2 tracking-wide" style="font-size: 0.75rem;">Đơn Hàng (Đã giao)</h6>
+                                    <h4 class="fw-black text-dark dark:text-white m-0">{{ stats.orders }} <span class="fs-6 text-muted dark:text-gray-400 fw-normal">đơn</span></h4>
                                 </div>
-                                <div class="icon-box bg-white text-info shadow-sm rounded-circle d-flex align-items-center justify-content-center" style="width: 55px; height: 55px;">
-                                    <i class="bi bi-bag-check fs-3"></i>
+                                <div class="bg-light dark:bg-[#212529] rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 55px; height: 55px;">
+                                    <i class="bi bi-bag-check fs-4 text-info dark:text-cyan-400"></i>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <!-- Sản phẩm bán ra -->
                     <div class="col-xl-3 col-sm-6">
-                        <div class="card border-0 shadow-sm rounded-4 h-100 summary-card bg-danger-subtle">
+                        <div class="card border-0 shadow-sm rounded-4 h-100 summary-card bg-white dark:bg-[#1a2533] transition-all">
                             <div class="card-body p-4 d-flex align-items-center justify-content-between">
                                 <div>
-                                    <h6 class="text-muted fw-bold text-uppercase mb-2" style="font-size: 0.8rem; letter-spacing: 1px;">Sản Phẩm Đã Bán</h6>
-                                    <h4 class="fw-black text-dark m-0">{{ stats.products_sold || 0 }} <span class="fs-6 text-muted fw-normal">chiếc</span></h4>
+                                    <h6 class="text-muted dark:text-gray-400 fw-bold text-uppercase mb-2 tracking-wide" style="font-size: 0.75rem;">Sản Phẩm Đã Bán</h6>
+                                    <h4 class="fw-black text-dark dark:text-white m-0">{{ stats.products_sold || 0 }} <span class="fs-6 text-muted dark:text-gray-400 fw-normal">chiếc</span></h4>
                                 </div>
-                                <div class="icon-box bg-white text-danger shadow-sm rounded-circle d-flex align-items-center justify-content-center" style="width: 55px; height: 55px;">
-                                    <i class="bi bi-box-seam fs-3"></i>
+                                <div class="bg-light dark:bg-[#212529] rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 55px; height: 55px;">
+                                    <i class="bi bi-box-seam fs-4 text-warning"></i>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- ROW 2: CHARTS & TOP PRODUCTS -->
                 <div class="row g-4 mb-4">
                     <!-- BIỂU ĐỒ BẰNG CHART.JS -->
                     <div class="col-lg-8">
-                        <div class="card border-0 shadow-sm rounded-4 h-100">
-                            <div class="card-header bg-white border-0 pt-4 pb-0 px-4 d-flex justify-content-between align-items-center">
-                                <h6 class="fw-bold text-dark m-0"><i class="bi bi-bar-chart-line-fill text-brand me-2"></i>Biểu đồ Doanh Thu & Lợi Nhuận</h6>
+                        <div class="card border-0 shadow-sm rounded-4 h-100 bg-white dark:bg-[#1a2533] transition-all">
+                            <div class="card-header bg-white dark:bg-[#1a2533] border-bottom-0 pt-4 pb-0 px-4 rounded-top-4">
+                                <h6 class="fw-bold text-dark dark:text-white m-0"><i class="bi bi-bar-chart-line-fill text-urban me-2"></i>Biểu đồ Thống kê Giao dịch</h6>
                             </div>
-                            <div class="card-body p-4 position-relative" style="min-height: 350px;">
-                                <!-- Canvas để Chart.js vẽ lên -->
+                            <div class="card-body p-4 position-relative" style="min-height: 380px;">
                                 <canvas ref="chartCanvas" class="w-100 h-100"></canvas>
                             </div>
                         </div>
@@ -290,21 +307,22 @@ onMounted(() => {
 
                     <!-- TOP SẢN PHẨM BÁN CHẠY -->
                     <div class="col-lg-4">
-                        <div class="card border-0 shadow-sm rounded-4 h-100">
-                            <div class="card-header bg-white border-bottom-0 pt-4 pb-2 px-4">
-                                <h6 class="fw-bold text-dark m-0"><i class="bi bi-fire text-danger me-2"></i>Top Bán Chạy Nhất</h6>
+                        <div class="card border-0 shadow-sm rounded-4 h-100 bg-white dark:bg-[#1a2533] transition-all">
+                            <div class="card-header bg-white dark:bg-[#1a2533] border-bottom-0 pt-4 pb-2 px-4 rounded-top-4">
+                                <h6 class="fw-bold text-dark dark:text-white m-0"><i class="bi bi-fire text-danger me-2"></i>Top Bán Chạy Nhất</h6>
                             </div>
-                            <div class="card-body p-0 custom-scrollbar-y" style="max-height: 380px; overflow-y: auto;">
+                            <div class="card-body p-0 custom-scrollbar-y" style="max-height: 410px; overflow-y: auto;">
                                 <div v-if="topProducts.length === 0" class="text-center py-5 text-muted fst-italic">Chưa có dữ liệu giao dịch</div>
-                                <ul class="list-group list-group-flush">
-                                    <li v-for="(prod, idx) in topProducts" :key="idx" class="list-group-item px-4 py-3 border-light-subtle d-flex align-items-center gap-3 transition-all hover-bg-light cursor-pointer" @click="router.push(`/admin/products/${prod.product_id}`)">
+                                <ul class="list-group list-group-flush border-0">
+                                    <li v-for="(prod, idx) in topProducts" :key="idx" class="list-group-item px-4 py-3 bg-transparent border-light-subtle dark:border-gray-700 d-flex align-items-center gap-3 transition-all hover-bg-light cursor-pointer" @click="router.push(`/admin/products/${prod.product_id}`)">
                                         <span class="fw-black fs-5" :class="idx === 0 ? 'text-warning' : (idx === 1 ? 'text-secondary' : (idx === 2 ? 'text-danger' : 'text-muted'))">#{{ idx + 1 }}</span>
-                                        <img :src="getImageUrl(prod.variant_image)" class="rounded-3 object-fit-cover shadow-sm border" style="width: 50px; height: 50px;" @error="e => e.target.src='/client_placeholder.png'">
+                                        <img :src="getImageUrl(prod.variant_image)" class="rounded-3 object-fit-cover shadow-sm border dark:border-gray-600 bg-white" style="width: 50px; height: 50px;" @error="e => e.target.src='/client_placeholder.png'">
                                         <div class="flex-grow-1 overflow-hidden">
-                                            <h6 class="mb-1 text-dark fw-bold text-truncate" style="font-size: 0.9rem;">{{ prod.product_name }}</h6>
+                                            <!-- ĐÃ SỬA: Đổi text-c-dark thành text-dark dark:text-white -->
+                                            <h6 class="mb-1 text-dark dark:text-white fw-bold text-truncate" style="font-size: 0.9rem;">{{ prod.product_name }}</h6>
                                             <div class="d-flex justify-content-between align-items-center">
-                                                <span class="text-muted small">Đã bán: <b class="text-dark">{{ prod.total_sold }}</b></span>
-                                                <span class="text-brand fw-bold small">{{ formatCurrency(prod.total_revenue) }}</span>
+                                                <span class="text-muted dark:text-gray-400 small">Đã bán: <b class="text-dark dark:text-white">{{ prod.total_sold }}</b></span>
+                                                <span class="text-urban fw-bold small">{{ formatCurrency(prod.total_revenue) }}</span>
                                             </div>
                                         </div>
                                     </li>
@@ -314,40 +332,40 @@ onMounted(() => {
                     </div>
                 </div>
 
-                <!-- ROW 3: RECENT ORDERS -->
+                <!-- ĐƠN HÀNG MỚI NHẤT -->
                 <div class="row">
                     <div class="col-12">
-                        <div class="card border-0 shadow-sm rounded-4">
-                            <div class="card-header bg-white border-bottom-0 pt-4 pb-3 px-4 d-flex justify-content-between align-items-center">
-                                <h6 class="fw-bold text-dark m-0"><i class="bi bi-clock-history text-brand me-2"></i>Đơn Hàng Gần Đây</h6>
-                                <router-link to="/admin/orders" class="btn btn-sm btn-light border text-primary fw-semibold rounded-pill px-3 hover-brand">Xem tất cả</router-link>
+                        <div class="card border-0 shadow-sm rounded-4 bg-white dark:bg-[#1a2533] transition-all mb-4">
+                            <div class="card-header bg-white dark:bg-[#1a2533] border-bottom-0 pt-4 pb-3 px-4 d-flex justify-content-between align-items-center rounded-top-4">
+                                <h6 class="fw-bold text-dark dark:text-white m-0"><i class="bi bi-clock-history text-urban me-2"></i>Đơn Hàng Mới Nhất</h6>
+                                <router-link to="/admin/orders" class="btn btn-sm btn-light dark:bg-[#2b3035] dark:border-gray-600 dark:text-gray-300 border shadow-sm fw-semibold rounded-pill px-3 transition-all hover-urban-btn">Xem tất cả</router-link>
                             </div>
                             <div class="card-body p-0">
                                 <div class="table-responsive">
-                                    <table class="table table-hover align-middle mb-0 custom-table">
-                                        <thead class="bg-light text-secondary">
+                                    <table class="table table-hover align-middle mb-0 custom-table border-0">
+                                        <thead class="bg-light dark:bg-[#212529]">
                                             <tr>
-                                                <th class="ps-4">Mã Đơn</th>
-                                                <th>Khách hàng</th>
-                                                <th>Thời gian</th>
-                                                <th>Tổng tiền</th>
-                                                <th>PTTT</th>
-                                                <th class="pe-4 text-end">Trạng thái</th>
+                                                <th class="ps-4 text-secondary dark:text-gray-400 border-0">Mã Đơn</th>
+                                                <th class="text-secondary dark:text-gray-400 border-0">Khách hàng</th>
+                                                <th class="text-secondary dark:text-gray-400 border-0">Thời gian</th>
+                                                <th class="text-secondary dark:text-gray-400 border-0">Tổng tiền</th>
+                                                <th class="text-secondary dark:text-gray-400 border-0">PTTT</th>
+                                                <th class="pe-4 text-end text-secondary dark:text-gray-400 border-0">Trạng thái</th>
                                             </tr>
                                         </thead>
-                                        <tbody>
-                                            <tr v-for="order in recentOrders" :key="order.id" class="cursor-pointer transition-all hover-bg-light" @click="router.push(`/admin/orders/${order.id}`)">
-                                                <td class="ps-4 fw-bold font-monospace text-dark">#{{ order.order_code }}</td>
-                                                <td>
-                                                    <div class="fw-semibold text-dark">{{ order.user?.full_name || 'Khách vãng lai' }}</div>
-                                                    <div class="small text-muted">{{ order.user?.email || '' }}</div>
+                                        <tbody class="dark:border-gray-700">
+                                            <tr v-for="order in recentOrders" :key="order.id" class="bg-white dark:bg-[#1a2533] cursor-pointer transition-all hover-bg-light" @click="router.push(`/admin/orders/${order.id}`)">
+                                                <td class="ps-4 fw-bold font-monospace text-dark dark:text-white border-light-subtle dark:border-gray-700">#{{ order.order_code }}</td>
+                                                <td class="border-light-subtle dark:border-gray-700">
+                                                    <div class="fw-semibold text-dark dark:text-white">{{ order.user?.full_name || 'Khách vãng lai' }}</div>
+                                                    <div class="small text-muted dark:text-gray-400">{{ order.user?.email || '' }}</div>
                                                 </td>
-                                                <td class="text-muted small">{{ formatDate(order.created_at) }}</td>
-                                                <td class="text-danger fw-bold">{{ formatCurrency(order.total_amount) }}</td>
-                                                <td class="text-uppercase small fw-semibold text-secondary">{{ order.payment_method }}</td>
-                                                <td class="pe-4 text-end" v-html="getStatusBadge(order.status)"></td>
+                                                <td class="text-muted dark:text-gray-400 small border-light-subtle dark:border-gray-700">{{ formatDate(order.created_at) }}</td>
+                                                <td class="text-danger fw-bold border-light-subtle dark:border-gray-700">{{ formatCurrency(order.total_amount) }}</td>
+                                                <td class="text-uppercase small fw-semibold text-secondary border-light-subtle dark:border-gray-700">{{ order.payment_method }}</td>
+                                                <td class="pe-4 text-end border-light-subtle dark:border-gray-700" v-html="getStatusBadge(order.status)"></td>
                                             </tr>
-                                            <tr v-if="recentOrders.length === 0"><td colspan="6" class="text-center py-4 text-muted fst-italic">Chưa có đơn hàng nào.</td></tr>
+                                            <tr v-if="recentOrders.length === 0"><td colspan="6" class="text-center py-4 text-muted fst-italic bg-white dark:bg-[#1a2533] border-0">Chưa có đơn hàng nào.</td></tr>
                                         </tbody>
                                     </table>
                                 </div>
@@ -363,45 +381,52 @@ onMounted(() => {
 </template>
 
 <style scoped>
-/* COLORS */
-.text-brand { color: #009981 !important; }
-.bg-brand { background-color: #009981 !important; }
-.btn-primary { background-color: #009981 !important; border-color: #009981 !important; color: white !important; }
-.btn-primary:hover { background-color: #007a67 !important; border-color: #007a67 !important; }
-.hover-brand:hover { background-color: #009981 !important; color: white !important; border-color: #009981 !important; }
+/* ZYRO BRAND COLORS */
+.text-urban { color: var(--color-c-hover, #547792) !important; }
+.bg-urban { background-color: var(--color-c-hover, #547792) !important; }
+
+/* Nút Hover Xanh Urban */
+.hover-urban-btn:hover { background-color: var(--color-c-hover, #547792) !important; color: white !important; border-color: var(--color-c-hover, #547792) !important; }
+.hover-urban-border:hover { border-color: var(--color-c-hover, #547792) !important; }
 
 /* UTILS */
 .fw-black { font-weight: 900; }
+.tracking-wide { letter-spacing: 1px; }
+.tracking-widest { letter-spacing: 2px; }
 .cursor-pointer { cursor: pointer; }
-.hover-bg-light:hover { background-color: #f8f9fa; }
 .transition-all { transition: all 0.3s ease; }
-.custom-table th { font-weight: 600; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.5px; border-bottom: none; }
-.custom-table td { border-bottom: 1px solid #f1f5f9; padding-top: 1rem; padding-bottom: 1rem; }
 
-/* SUMMARY CARDS */
-.summary-card { transition: transform 0.2s ease, box-shadow 0.2s ease; border: 1px solid rgba(0,0,0,0.05) !important; }
-.summary-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important; }
+/* HIỆU ỨNG HOVER BẢNG DỮ LIỆU ĐƯỢC FIX TƯƠNG PHẢN DARKMODE */
+.hover-bg-light:hover { background-color: #f8f9fa !important; }
+html.dark .hover-bg-light:hover,
+body[data-bs-theme="dark"] .hover-bg-light:hover,
+[data-bs-theme="dark"] .hover-bg-light:hover { background-color: rgba(255, 255, 255, 0.06) !important; }
 
-/* Nền nhạt cho thẻ */
-.bg-primary-subtle { background-color: #e0f2fe !important; }
-.bg-info-subtle { background-color: #e0f7fa !important; }
-.bg-warning-subtle { background-color: #fff3e0 !important; }
-.bg-danger-subtle { background-color: #fee2e2 !important; }
+.custom-table th { font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; border-bottom: none; }
+.custom-table td { padding-top: 1.2rem; padding-bottom: 1.2rem; }
 
-/* SKELETON & ANIMATION */
+/* THẺ TỔNG QUAN (SUMMARY CARDS) TRẢ VỀ ĐÚNG CONCEPT TRẮNG/ĐEN ZYRO */
+.summary-card { 
+  border: 1px solid rgba(0,0,0,0.05) !important; 
+}
+html.dark .summary-card { 
+  border: 1px solid rgba(255,255,255,0.05) !important; 
+}
+.summary-card:hover { 
+  transform: translateY(-5px); 
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08) !important; 
+}
+html.dark .summary-card:hover {
+  box-shadow: 0 10px 25px rgba(0,0,0,0.4) !important;
+  border-color: rgba(255,255,255,0.15) !important;
+}
+
 .animation-fade-in { animation: fadeIn 0.5s ease-in-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-
-.shimmer {
-  background: #f6f7f8;
-  background-image: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
-  background-repeat: no-repeat;
-  background-size: 800px 100%;
-  animation: placeholderShimmer 1.5s infinite linear;
-}
-@keyframes placeholderShimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
 
 .custom-scrollbar-y::-webkit-scrollbar { width: 5px; }
 .custom-scrollbar-y::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar-y::-webkit-scrollbar-thumb { background: #dee2e6; border-radius: 10px; }
+html.dark .custom-scrollbar-y::-webkit-scrollbar-thumb { background: #495057; }
+
 </style>

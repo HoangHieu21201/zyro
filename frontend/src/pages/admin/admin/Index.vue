@@ -1,4 +1,3 @@
-<!-- File: frontend/src/pages/admin/admin/Index.vue -->
 <template>
   <div class="admin-index-wrapper pb-5 mb-5">
     

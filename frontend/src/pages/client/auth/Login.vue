@@ -59,7 +59,7 @@
                  </span>
                  <span class="text-muted small fw-medium">Ghi nhớ tài khoản</span>
                </label>
-               <router-link to="#" class="text-urban small fw-bold text-decoration-none hover-underline">Quên mật khẩu?</router-link>
+               <router-link to="/password/reset" class="text-urban small fw-bold text-decoration-none hover-underline">Quên mật khẩu?</router-link>
              </div>
 
              <button type="submit" class="btn btn-c-dark w-100 rounded-pill py-3 fw-bold text-uppercase tracking-widest shadow-lg hover-transform mb-4" :disabled="isLoading">

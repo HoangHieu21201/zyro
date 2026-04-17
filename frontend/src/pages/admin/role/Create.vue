@@ -1,4 +1,3 @@
-<!-- File: frontend/src/pages/admin/role/Create.vue -->
 <template>
   <div class="role-create-wrapper pb-5 mb-5">
     <div class="container-fluid py-4">

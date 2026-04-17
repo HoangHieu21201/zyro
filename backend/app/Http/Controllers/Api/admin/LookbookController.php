@@ -68,6 +68,9 @@ class LookbookController extends Controller
             $lookbook = DB::transaction(function () use ($request) {
                 $data = $request->validated();
 
+                // XỬ LÝ ĐIỂM MÙ FORMDATA: Ép tường minh để lưu giá trị (hoặc null nếu vô hạn)
+                $data['usage_limit'] = $request->input('usage_limit', null);
+
                 if ($request->hasFile('main_image')) {
                     $data['main_image'] = $request->file('main_image')->store('lookbooks/main', 'public');
                 }
@@ -109,6 +112,14 @@ class LookbookController extends Controller
             $lookbook = DB::transaction(function () use ($request, $id) {
                 $lookbook = Lookbook::findOrFail($id);
                 $data = $request->validated();
+
+                // XỬ LÝ ĐIỂM MÙ FORMDATA: 
+                // Ép lưu null để gỡ bỏ giới hạn nếu frontend truyền rỗng hoặc không truyền do dùng FormData
+                if ($request->has('usage_limit') || array_key_exists('usage_limit', $data)) {
+                    $data['usage_limit'] = $request->input('usage_limit', null);
+                } else {
+                    $data['usage_limit'] = null; 
+                }
 
                 if ($request->hasFile('main_image')) {
                     if ($lookbook->main_image) {

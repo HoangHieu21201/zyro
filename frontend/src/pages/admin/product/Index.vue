@@ -1,4 +1,3 @@
-<!-- File: frontend/src/pages/admin/product/Index.vue -->
 <template>
   <div class="product-index-wrapper pb-5 mb-5">
     
@@ -82,7 +81,7 @@
               </option>
             </select>
             
-            <select class="form-select form-select-sm border-0 bg-white dark:bg-[#1a2533] dark:text-white shadow-sm" style="width: 160px;" v-model="filterBrand">
+            <select class="form-select form-select-sm border-0 bg-white dark:bg-[#1a2533] dark:text-white shadow-sm" style="width: 180px;" v-model="filterBrand">
               <option value="">Tất cả Thương hiệu</option>
               <option v-for="b in brands" :key="b.id" :value="b.id">{{ b.name }}</option>
             </select>

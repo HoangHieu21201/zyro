@@ -1,4 +1,3 @@
-<!-- File: frontend/src/pages/admin/flash_sales/Create.vue -->
 <template>
   <div class="flash-sale-create-wrapper pb-5 mb-5">
     <div class="container-fluid py-4">

@@ -40,9 +40,9 @@ class ClientOrderController extends Controller
         if (!empty($search)) {
             $query->where(function ($q) use ($search) {
                 $q->where('order_code', 'ilike', "%{$search}%")
-                  ->orWhereHas('items', function ($qItem) use ($search) {
-                      $qItem->where('product_name', 'ilike', "%{$search}%");
-                  });
+                    ->orWhereHas('items', function ($qItem) use ($search) {
+                        $qItem->where('product_name', 'ilike', "%{$search}%");
+                    });
             });
         }
 
@@ -68,7 +68,7 @@ class ClientOrderController extends Controller
         });
 
         return response()->json([
-            'success' => true, 
+            'success' => true,
             'data' => $orders,
             'stats' => $stats
         ]);
@@ -93,12 +93,12 @@ class ClientOrderController extends Controller
 
         if ($order->status !== 'pending') {
             return response()->json([
-                'success' => false, 
+                'success' => false,
                 'message' => 'Bạn không thể hủy vì đơn hàng này đã được xác nhận hoặc đang giao.'
             ], 400);
         }
 
-        $request->validate([ 'reason' => 'required|string|max:255' ]);
+        $request->validate(['reason' => 'required|string|max:255']);
 
         DB::transaction(function () use ($order, $request) {
             $order->update([
@@ -133,12 +133,12 @@ class ClientOrderController extends Controller
             return response()->json(['success' => false, 'message' => 'Chỉ có thể yêu cầu hoàn trả đối với đơn hàng đã hoàn thành.'], 400);
         }
 
-        $request->validate([ 'reason' => 'required|string|max:500' ]);
+        $request->validate(['reason' => 'required|string|max:500']);
 
         OrderStatusHistory::create([
             'order_id' => $order->id,
             'old_status' => $order->status,
-            'new_status' => $order->status, 
+            'new_status' => $order->status,
             'note' => 'KHÁCH HÀNG YÊU CẦU HOÀN TRẢ: ' . $request->reason,
             'changed_by_type' => get_class(Auth::user()),
             'changed_by' => Auth::id()
@@ -202,11 +202,13 @@ class ClientOrderController extends Controller
     private function simulateTracking(Order $order): array
     {
         $events = [];
-        $createdAt = Carbon::parse($order->created_at);
+        $createdAt = \Illuminate\Support\Carbon::parse($order->created_at);
+        $updatedAt = \Illuminate\Support\Carbon::parse($order->updated_at ?? now());
         $now = now();
 
         $shippingInfo = is_string($order->shipping_info) ? json_decode($order->shipping_info, true) : $order->shipping_info;
         $city = $shippingInfo['city'] ?? 'Hà Nội';
+
         $baseCity = $shippingInfo['origin_city'] ?? 'Hà Nội';
         $isSameCity = str_contains($city, $baseCity) || str_contains($city, 'Ha Noi');
 
@@ -215,9 +217,14 @@ class ClientOrderController extends Controller
         $transitTime = $pickupTime->copy()->addHours(12);
         $arriveLocalTime = $transitTime->copy()->addHours($isSameCity ? 10 : 36);
         $deliveryTime = $arriveLocalTime->copy()->addHours(6);
-        $completeTime = clone $order->updated_at;
+        $completeTime = $updatedAt->copy();
 
-        $events[] = ['time' => $createdAt->format('d/m/Y H:i'), 'location' => 'Hệ thống', 'status' => 'pending', 'description' => 'Đã đặt hàng.'];
+        $events[] = [
+            'time' => $createdAt->format('d/m/Y H:i'),
+            'location' => 'Hệ thống ZYRO',
+            'status' => 'pending',
+            'description' => 'Đơn hàng được tạo thành công. Đang chờ hệ thống xác nhận.'
+        ];
 
         if (!in_array($order->status, ['pending', 'cancelled'])) {
             $events[] = ['time' => $confirmTime->format('d/m/Y H:i'), 'location' => 'Kho ' . $baseCity, 'status' => 'confirmed', 'description' => 'Đang chuẩn bị hàng.'];
@@ -234,11 +241,26 @@ class ClientOrderController extends Controller
         }
 
         if ($order->status === 'completed') {
-            $events[] = ['time' => $completeTime->format('d/m/Y H:i'), 'location' => $city, 'status' => 'completed', 'description' => 'Giao thành công.'];
+            $events[] = [
+                'time' => $completeTime->format('d/m/Y H:i'),
+                'location' => $city,
+                'status' => 'completed',
+                'description' => 'Giao hàng thành công. Chúc bạn có trải nghiệm thời trang tuyệt vời với ZYRO!'
+            ];
         } elseif ($order->status === 'returned') {
-            $events[] = ['time' => $completeTime->format('d/m/Y H:i'), 'location' => 'Kho ' . $baseCity, 'status' => 'returned', 'description' => 'Hoàn trả hàng.'];
+            $events[] = [
+                'time' => $completeTime->format('d/m/Y H:i'),
+                'location' => 'Kho ' . $baseCity,
+                'status' => 'returned',
+                'description' => 'Giao hàng thất bại. Đơn hàng đã được hoàn trả về kho ZYRO.'
+            ];
         } elseif ($order->status === 'cancelled') {
-            $events[] = ['time' => Carbon::parse($order->updated_at)->format('d/m/Y H:i'), 'location' => 'Hệ thống', 'status' => 'cancelled', 'description' => 'Đã hủy đơn.'];
+            $events[] = [
+                'time' => $updatedAt->format('d/m/Y H:i'),
+                'location' => 'Hệ thống ZYRO',
+                'status' => 'cancelled',
+                'description' => 'Đơn hàng đã bị hủy bỏ.'
+            ];
         }
 
         return array_reverse($events);

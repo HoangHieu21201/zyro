@@ -1,4 +1,3 @@
-<!-- File: frontend/src/pages/admin/return/Index.vue -->
 <template>
   <div class="return-index-wrapper pb-5 mb-5">
     

@@ -10,6 +10,12 @@ const user = [
     component: () => import('@/pages/client/auth/Register.vue')
   },
   {
+    path: '/password/reset',
+    name: 'forgot-password',
+    component: () => import('@/pages/client/auth/ForgotPassword.vue')
+  },
+
+  {
     path: '/',
     component: () => import('../layouts/UserLayout.vue'),
     children: [

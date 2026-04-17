@@ -1,4 +1,3 @@
-<!-- File: frontend/src/pages/admin/brand/Index.vue -->
 <template>
   <div class="brand-index-wrapper pb-5 mb-5">
     

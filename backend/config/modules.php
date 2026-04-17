@@ -81,4 +81,9 @@ return [
         'module_code' => 'admin_flash_sales',
         'default_level' => 4
     ],
+    [
+        'module_name' => 'Quản lý Tồn kho',
+        'module_code' => 'admin_inventory',
+        'default_level' => 4
+    ],
 ];

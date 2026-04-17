@@ -1,4 +1,3 @@
-<!-- File: frontend/src/pages/admin/role/Index.vue -->
 <template>
   <div class="role-index-wrapper pb-5 mb-5">
     

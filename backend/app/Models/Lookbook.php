@@ -23,13 +23,15 @@ class Lookbook extends Model
         'gender', 
         'main_image',
         'total_price_estimate',
-        'status'
+        'status',
+         'usage_limit'
     ];
 
     protected function casts(): array
     {
         return [
             'total_price_estimate' => 'decimal:2',
+            'usage_limit' => 'integer', 
         ];
     }
 

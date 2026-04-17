@@ -1,4 +1,3 @@
-<!-- File: frontend/src/pages/admin/return/Edit.vue -->
 <template>
   <div class="return-edit-wrapper pb-5 mb-5">
     

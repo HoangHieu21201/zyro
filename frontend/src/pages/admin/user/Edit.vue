@@ -1,4 +1,3 @@
-<!-- File: frontend/src/pages/admin/user/Edit.vue -->
 <template>
   <div class="user-edit-wrapper pb-5 mb-5">
     <div class="container-fluid py-4" v-if="!isLoading">

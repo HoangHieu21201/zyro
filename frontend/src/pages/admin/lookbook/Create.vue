@@ -1,4 +1,3 @@
-<!-- File: frontend/src/pages/admin/lookbook/Create.vue -->
 <template>
   <div class="lookbook-create-wrapper pb-5 mb-5">
     
@@ -9,7 +8,6 @@
 
     <div class="container-fluid py-4" v-else>
       
-      <!-- HEADER CÙNG NÚT LƯU -->
       <div class="row mb-4 align-items-center">
         <div class="col-md-8 d-flex align-items-center mb-3 mb-md-0">
           <router-link :to="{ name: 'admin-lookbooks' }" class="btn btn-light dark:bg-[#2b3035] dark:border-gray-600 dark:text-gray-200 shadow-sm me-3 rounded-circle d-flex align-items-center justify-content-center hover-urban transition-all" style="width: 40px; height: 40px;">
@@ -30,14 +28,12 @@
 
       <form id="lookbookForm" @submit.prevent="submitLookbook" autocomplete="off">
         
-        <!-- ========================================== -->
         <!-- TOP BAR: THÔNG TIN CƠ BẢN VÀ ĐỊNH GIÁ -->
-        <!-- ========================================== -->
         <div class="card border-0 shadow-sm rounded-4 dark:bg-[#1a2533] p-4 mb-4 animation-fade-in">
           <h6 class="fw-bold mb-3 text-urban text-uppercase"><i class="bi bi-info-circle me-2"></i>THÔNG TIN CHUNG</h6>
           
           <div class="row g-3 mb-4">
-            <div class="col-xl-4 col-lg-6">
+            <div class="col-xl-3 col-lg-6">
               <label class="form-label fw-bold text-dark dark:text-gray-200 small text-uppercase">Tên BST <span class="text-danger">*</span></label>
               <input type="text" class="form-control bg-light dark:bg-[#212529] dark:text-white border-0 shadow-sm-hover" v-model="form.name" @input="generateSlug" placeholder="VD: BST Mùa Thu 2026" required>
               <div class="text-danger small mt-1 fw-bold" v-if="errors.name">{{ errors.name[0] }}</div>
@@ -48,8 +44,8 @@
               <input type="text" class="form-control bg-light-subtle dark:bg-[#2b3035] text-muted dark:text-gray-400 font-monospace border-0" v-model="form.slug" readonly>
             </div>
             
-            <div class="col-xl-2 col-lg-6">
-              <label class="form-label fw-bold text-dark dark:text-gray-200 small text-uppercase">Dành cho (Gender)</label>
+            <div class="col-xl-2 col-lg-4">
+              <label class="form-label fw-bold text-dark dark:text-gray-200 small text-uppercase">Dành cho</label>
               <select class="form-select bg-light dark:bg-[#212529] dark:text-white border-0 shadow-sm-hover" v-model="form.gender">
                 <option value="Unisex">Unisex</option>
                 <option value="Men">Nam</option>
@@ -58,12 +54,19 @@
               </select>
             </div>
 
-            <div class="col-xl-3 col-lg-6">
-              <label class="form-label fw-bold text-dark dark:text-gray-200 small text-uppercase mb-2 d-block">Trạng thái xuất bản</label>
+            <!-- TRƯỜNG USAGE LIMIT ĐƯỢC BỔ SUNG -->
+            <div class="col-xl-2 col-lg-4">
+              <label class="form-label fw-bold text-dark dark:text-gray-200 small text-uppercase">Giới hạn bán</label>
+              <input type="number" class="form-control bg-light dark:bg-[#212529] dark:text-white border-0 shadow-sm-hover" v-model.number="form.usage_limit" placeholder="Vô hạn" min="0">
+              <div class="text-danger small mt-1 fw-bold" v-if="errors.usage_limit">{{ errors.usage_limit[0] }}</div>
+            </div>
+
+            <div class="col-xl-2 col-lg-4">
+              <label class="form-label fw-bold text-dark dark:text-gray-200 small text-uppercase mb-2 d-block">Xuất bản</label>
               <div class="d-flex align-items-center px-3 py-1 bg-light dark:bg-[#212529] border border-light-subtle dark:border-gray-700 rounded-3 shadow-sm h-100" style="min-height: 40px;">
                 <div class="form-check form-switch mb-0 d-flex align-items-center gap-2 w-100 ps-0">
                   <input class="form-check-input fs-4 m-0 ms-1 cursor-pointer float-none" type="checkbox" role="switch" id="publishSwitch" v-model="form.isPublished">
-                  <label class="form-check-label fw-bold text-urban m-0 cursor-pointer text-nowrap w-100 no-select" for="publishSwitch">Hiển thị công khai</label>
+                  <label class="form-check-label fw-bold text-urban m-0 cursor-pointer text-nowrap w-100 no-select" for="publishSwitch">Hiển thị</label>
                 </div>
               </div>
             </div>
@@ -206,6 +209,7 @@
                          
                          <!-- Card Hiển thị SP -->
                          <div v-if="pin.product_id" class="d-flex align-items-center bg-white dark:bg-[#1a2533] p-2 border dark:border-gray-700 rounded shadow-sm cursor-pointer" @click="editPin(index)">
+                            <!-- BẮT LỖI TỐI THƯỢNG: Thêm @error -->
                             <img :src="pin.product_image" class="rounded object-fit-cover me-2 border dark:border-gray-600" style="width: 45px; height: 45px;" @error="handleImageError">
                             <div class="overflow-hidden">
                               <div class="fw-bold text-dark dark:text-gray-200 small text-truncate" :title="pin.product_name">{{ pin.product_name }}</div>
@@ -286,6 +290,7 @@
                         :class="{'border-urban bg-urban bg-opacity-10': activePinData?.product_id === prod.id}"
                         @click="selectProductForPin(prod)">
                      <div class="card-body p-3 d-flex flex-column align-items-center text-center">
+                        <!-- BẮT LỖI TỐI THƯỢNG: Thêm @error -->
                         <img :src="getImageUrl(prod.thumbnail_image)" class="rounded-3 border object-fit-cover mb-3 dark:border-gray-600 bg-white" style="width: 80px; height: 80px;" @error="handleImageError">
                         <div class="w-100">
                            <div class="fw-bold text-dark dark:text-white small text-truncate mb-1" :title="prod.name">{{ prod.name }}</div>
@@ -309,8 +314,7 @@
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
-import axios from 'axios';
-import defaultImage from '@/assets/images/defaults/placeholder.png';
+import api from '@/utils/axios'; // Đã đổi sang api
 
 const router = useRouter();
 const isPageLoading = ref(true);
@@ -318,7 +322,8 @@ const isDataLoaded = ref(false);
 const isSaving = ref(false);
 const errors = ref({});
 
-const form = ref({ name: '', slug: '', description: '', gender: 'Unisex', total_price_estimate: 0, isPublished: false });
+// ĐÃ THÊM TRƯỜNG usage_limit
+const form = ref({ name: '', slug: '', description: '', gender: 'Unisex', total_price_estimate: 0, isPublished: false, usage_limit: '' });
 const mainImageFile = ref(null);
 const mainImagePreview = ref(null);
 const hasNewImage = ref(false); 
@@ -359,9 +364,31 @@ watch([pins, discountType, discountValue], () => {
   form.value.total_price_estimate = total > 0 ? Math.round(total) : 0;
 }, { deep: true });
 
-const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
-const getImageUrl = (path) => path ? `http://127.0.0.1:8000/storage/${path}` : defaultImage;
-const handleImageError = (e) => { e.target.src = defaultImage; };
+// --- LÀM SẠCH LOGIC XỬ LÝ ẢNH ---
+const defaultImage = '/client_placeholder.png'; // Trỏ thẳng vào public/
+
+const getImageUrl = (path) => {
+  if (!path || String(path).trim() === '') return defaultImage;
+  let cleanPath = String(path).trim();
+
+  if (cleanPath.startsWith('http') || cleanPath.startsWith(defaultImage)) return cleanPath;
+  
+  // Dọn rác storage thừa
+  cleanPath = cleanPath.replace(/^\/+/, '');
+  if (cleanPath.startsWith('storage/')) {
+      cleanPath = cleanPath.replace('storage/', '');
+  }
+
+  let baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1';
+  baseUrl = baseUrl.replace('/api/v1', '');
+  return `${baseUrl}/storage/${cleanPath}`;
+};
+
+const handleImageError = (e) => { 
+  e.target.src = defaultImage; 
+};
+// -------------------------------
+
 const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0);
 
 const generateSlug = () => {
@@ -416,13 +443,12 @@ const onDragPin = (event) => {
   const clientX = event.clientX || (event.touches && event.touches[0].clientX);
   const clientY = event.clientY || (event.touches && event.touches[0].clientY);
 
-  // Nhích chuột lớn hơn 3px thì mới được tính là đang drag
   if (Math.abs(clientX - startDragX) > 3 || Math.abs(clientY - startDragY) > 3) {
     hasMoved = true;
   }
 
   if (hasMoved) {
-    if (event.type === 'touchmove') event.preventDefault(); // Tránh cuộn trang khi đang kéo trên điện thoại
+    if (event.type === 'touchmove') event.preventDefault(); 
     
     const rect = imageCanvas.value.getBoundingClientRect();
     let x = ((clientX - rect.left) / rect.width) * 100;
@@ -438,7 +464,6 @@ const onDragPin = (event) => {
 
 const endDragPin = (event) => {
   if (draggingPinIndex.value !== null && !hasMoved) {
-    // Nếu chỉ nhấp chuột (click) mà không kéo đi, mở modal sửa
     editPin(draggingPinIndex.value);
   }
 
@@ -449,7 +474,6 @@ const endDragPin = (event) => {
   document.removeEventListener('touchend', endDragPin);
 };
 
-// Vẫn giữ lại tính năng click lên Ảnh để đẻ ra 1 điểm mới
 const handleImageClick = (e) => {
   if (!imageCanvas.value) return;
   const rect = imageCanvas.value.getBoundingClientRect();
@@ -506,7 +530,6 @@ const selectProductForPin = (prod) => {
   productModalInstance.hide();
 };
 
-// LOGIC CÂY DANH MỤC TRỰC QUAN CHO SELECT MODAL
 const hierarchicalCategories = computed(() => {
   const buildTree = (parentId = null, level = 0) => {
     let res = [];
@@ -533,7 +556,6 @@ const getAllCategoryIds = (id) => {
   return ids;
 };
 
-// BỘ LỌC ĐA CẤP
 const filteredProducts = computed(() => {
   let res = allPublishedProducts.value;
 
@@ -556,9 +578,9 @@ const fetchData = async () => {
   isPageLoading.value = true;
   try {
     const [resProds, resCats, resBrands] = await Promise.all([
-      axios.get('http://127.0.0.1:8000/api/v1/admin/products?status=published', { headers: getHeaders() }),
-      axios.get('http://127.0.0.1:8000/api/v1/admin/categories', { headers: getHeaders() }),
-      axios.get('http://127.0.0.1:8000/api/v1/admin/brands', { headers: getHeaders() })
+      api.get('/admin/products?status=published'),
+      api.get('/admin/categories'),
+      api.get('/admin/brands')
     ]);
 
     const payload = resProds.data?.data;
@@ -590,6 +612,12 @@ const submitLookbook = async () => {
   formData.append('gender', form.value.gender); 
   formData.append('total_price_estimate', form.value.total_price_estimate);
   formData.append('status', form.value.isPublished ? 'published' : 'draft');
+  
+  // ĐẨY GIỚI HẠN LÊN BACKEND NẾU CÓ
+  if (form.value.usage_limit !== '' && form.value.usage_limit !== null && form.value.usage_limit !== undefined) {
+      formData.append('usage_limit', form.value.usage_limit);
+  }
+
   formData.append('main_image', mainImageFile.value);
 
   const itemsData = validPins.map((p, index) => ({
@@ -600,7 +628,7 @@ const submitLookbook = async () => {
   formData.append('items_data', JSON.stringify(itemsData));
 
   try {
-    const res = await axios.post('http://127.0.0.1:8000/api/v1/admin/lookbooks', formData, { headers: { ...getHeaders(), 'Content-Type': 'multipart/form-data' } });
+    const res = await api.post('/admin/lookbooks', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
     Swal.fire({ icon: 'success', title: 'Tạo thành công', text: res.data.message, timer: 2000, showConfirmButton: false }).then(() => {
       router.push({ name: 'admin-lookbooks' });
     });

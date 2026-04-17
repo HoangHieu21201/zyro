@@ -1,4 +1,3 @@
-<!-- File: frontend/src/pages/admin/user/Create.vue -->
 <template>
   <div class="user-create-wrapper pb-5 mb-5">
     <div class="container-fluid py-4">

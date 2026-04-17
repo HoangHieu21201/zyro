@@ -27,6 +27,9 @@ class UpdateLookbookRequest extends FormRequest
             'total_price_estimate' => ['required', 'numeric', 'min:0', 'max:9999999999'],
             'status'               => ['required', 'string', Rule::in(['published', 'draft', 'hidden'])],
             
+            // Bổ sung rule cho trường mới
+            'usage_limit'          => ['nullable', 'integer', 'min:0', 'max:10000'], 
+            
             'items_data'           => ['required', 'json'], 
         ];
     }
@@ -44,9 +47,15 @@ class UpdateLookbookRequest extends FormRequest
             'total_price_estimate.required' => 'Vui lòng nhập giá trị ước tính của set đồ.',
             'total_price_estimate.min'      => 'Giá trị ước tính không được là số âm.',
             'total_price_estimate.max'      => 'Giá trị ước tính vượt quá giới hạn hệ thống.',
+            'status.in'                     => 'Trạng thái phát hành không hợp lệ.',
+            
+            // Bổ sung message lỗi cho trường mới
+            'usage_limit.integer'           => 'Giới hạn số lượng phải là số nguyên.',
+            'usage_limit.min'               => 'Giới hạn số lượng không được nhỏ hơn 0.',
+            'usage_limit.max'               => 'Giới hạn số lượng không được vượt quá 10000.',
+            
             'items_data.required'           => 'Lookbook phải có ít nhất 1 sản phẩm được ghim.',
             'items_data.json'               => 'Lỗi cấu trúc: Dữ liệu sản phẩm ghim không đúng chuẩn JSON.',
-            'status.in'                     => 'Trạng thái phát hành không hợp lệ.',
         ];
     }
 }

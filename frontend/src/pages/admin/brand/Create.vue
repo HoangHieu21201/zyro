@@ -1,4 +1,3 @@
-<!-- File: frontend/src/pages/admin/brand/Create.vue -->
 <template>
   <div class="brand-create-wrapper mb-5">
     <div class="container-fluid py-4">

@@ -1,4 +1,3 @@
-<!-- File: frontend/src/pages/admin/voucher/Index.vue -->
 <template>
   <div class="voucher-index-wrapper pb-5 mb-5">
     

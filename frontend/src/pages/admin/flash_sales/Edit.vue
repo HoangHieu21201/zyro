@@ -1,4 +1,3 @@
-<!-- File: frontend/src/pages/admin/flash_sales/Edit.vue -->
 <template>
   <div class="flash-sale-edit-wrapper pb-5 mb-5">
     

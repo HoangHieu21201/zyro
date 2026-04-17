@@ -1,4 +1,3 @@
-<!-- File: frontend/src/pages/admin/voucher/Edit.vue -->
 <template>
   <div class="voucher-edit-wrapper pb-5 mb-5">
     

@@ -1,4 +1,3 @@
-<!-- File: frontend/src/pages/admin/tier/Create.vue -->
 <template>
   <div class="tier-create-wrapper pb-5 mb-5">
     <div class="container-fluid py-4">

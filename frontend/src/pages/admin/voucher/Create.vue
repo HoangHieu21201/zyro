@@ -1,4 +1,3 @@
-<!-- File: frontend/src/pages/admin/voucher/Create.vue -->
 <template>
   <div class="voucher-create-wrapper pb-5 mb-5">
     

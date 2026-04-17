@@ -1,4 +1,3 @@
-<!-- File: frontend/src/pages/admin/wishlist/Index.vue -->
 <template>
   <div class="wishlist-index-wrapper pb-5 mb-5">
     

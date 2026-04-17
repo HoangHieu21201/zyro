@@ -1,4 +1,3 @@
-<!-- File: frontend/src/pages/admin/profile/Index.vue -->
 <template>
   <div class="admin-profile-wrapper pb-5 mb-5">
     <!-- Hiệu ứng Header nền trang -->

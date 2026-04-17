@@ -1,4 +1,3 @@
-<!-- File: frontend/src/pages/admin/flash_sales/Index.vue -->
 <template>
   <div class="flash-sale-index-wrapper pb-5 mb-5">
     
