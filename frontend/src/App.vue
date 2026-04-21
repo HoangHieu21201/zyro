@@ -3,9 +3,11 @@
   <transition name="splash-fade">
     <div v-if="showSplash" class="global-splash d-flex align-items-center justify-content-center">
       
-      <!-- Hiệu ứng dải băng vẽ chữ zyro. -->
+      <!-- Hiệu ứng Sóng Nước (Liquid Wave Ribbon) -->
       <svg viewBox="0 0 400 120" class="zyro-svg-logo">
-        <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" class="zyro-svg-text">zyro.</text>
+        <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" class="zyro-svg-text wave-1">zyro.</text>
+        <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" class="zyro-svg-text wave-2">zyro.</text>
+        <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" class="zyro-svg-text wave-3">zyro.</text>
       </svg>
       
     </div>
@@ -26,15 +28,15 @@ const route = useRoute();
 onMounted(() => {
   // Lắng nghe Vue Router: Khi nào tải xong các file giao diện thì bắt đầu đếm giờ tắt Splash
   router.isReady().then(() => {
-    // Để thời gian 2.2 giây cho hiệu ứng dải băng vẽ xong và đổ màu
+    // Để thời gian 2.5 giây cho hiệu ứng sóng nước chảy mượt mà trước khi fade out
     setTimeout(() => {
       showSplash.value = false;
-    }, 2200); 
+    }, 2500); 
   });
 });
 
 // ========================================================
-// ĐÃ FIX: GLOBAL AUTO SCROLL TO TOP
+// GLOBAL AUTO SCROLL TO TOP
 // Lắng nghe mọi sự thay đổi của đường dẫn để cuộn lên đầu trang
 // ========================================================
 watch(() => route.path, () => {
@@ -69,7 +71,7 @@ watch(() => route.path, () => {
 }
 
 /* =======================================================
-   HIỆU ỨNG SPLASH SCREEN (ĐIỆN ẢNH)
+   HIỆU ỨNG SPLASH SCREEN (SÓNG NƯỚC - LIQUID WAVE)
 ======================================================== */
 .global-splash {
   position: fixed;
@@ -87,38 +89,45 @@ html.dark .global-splash {
   overflow: visible;
 }
 
-/* Chữ zyro dải băng uốn lượn */
+/* Base style cho cả 3 layer sóng */
 .zyro-svg-text {
   font-family: 'Georgia', serif;
   font-style: italic;
   font-weight: 900;
   font-size: 6rem;
-  fill: transparent;
-  stroke: var(--color-c-hover);
-  stroke-width: 1.5px;
-  /* Thuộc tính dasharray và dashoffset tạo nên viền chạy (Ribbon) */
-  stroke-dasharray: 600;
-  stroke-dashoffset: 600;
-  /* Vẽ viền trong 1.5s, sau đó đổ màu đầy đặn trong 0.8s */
-  animation: drawRibbon 1.5s cubic-bezier(0.25, 0.1, 0.25, 1) forwards,
-             fillColor 0.8s 1.2s ease forwards;
-}
-html.dark .zyro-svg-text {
-  stroke: #f8f9fa;
-  animation: drawRibbon 1.5s cubic-bezier(0.25, 0.1, 0.25, 1) forwards,
-             fillColorDark 0.8s 1.2s ease forwards;
+  fill: transparent !important; /* Tuyệt đối không đổ màu đặc */
+  stroke-width: 2.5px; /* Làm nét dày thêm một chút để nhìn rõ ràng, sắc nét hơn */
+  
+  /* ĐÃ SỬA: Kéo dài dải băng (dash) từ 60 lên 120, và rút ngắn khoảng cách (gap) để các sóng gối đầu lên nhau lấp đầy khoảng trống */
+  stroke-dasharray: 120 120; 
+  animation: liquidWave 3s infinite linear;
 }
 
-@keyframes drawRibbon {
-  to { stroke-dashoffset: 0; }
+/* Phối màu và Delay cho từng layer để tạo độ sâu (Ripple effect) */
+.wave-1 {
+  stroke: var(--color-c-light);
+  opacity: 0.5;
+  animation-delay: -1s;
 }
-@keyframes fillColor {
-  from { fill: transparent; }
-  to { fill: var(--color-c-dark); stroke: transparent; }
+.wave-2 {
+  stroke: var(--color-c-hover);
+  opacity: 0.8;
+  animation-delay: -2s;
 }
-@keyframes fillColorDark {
-  from { fill: transparent; }
-  to { fill: #f8f9fa; stroke: transparent; text-shadow: 0 0 15px rgba(255,255,255,0.2); }
+.wave-3 {
+  stroke: var(--color-c-dark);
+  opacity: 1;
+  animation-delay: 0s;
+}
+
+/* Tùy chỉnh màu sóng cho Dark Mode */
+html.dark .wave-1 { stroke: rgba(255, 255, 255, 0.3); }
+html.dark .wave-2 { stroke: rgba(255, 255, 255, 0.6); }
+html.dark .wave-3 { stroke: rgba(255, 255, 255, 1); }
+
+/* Chuyển động chạy liên tục vô tận */
+@keyframes liquidWave {
+  100% { stroke-dashoffset: -240; } /* 120 + 120 = 240 */
 }
 
 /* Hiệu ứng Fade-out mượt mà, phóng to nhẹ để mở không gian */
@@ -127,7 +136,7 @@ html.dark .zyro-svg-text {
 }
 .splash-fade-leave-to {
   opacity: 0;
-  transform: scale(1.1); /* Phóng to 10% khi mờ đi tạo cảm giác "mở rèm" */
+  transform: scale(1.15); /* Phóng to nhẹ khi mờ đi tạo cảm giác "mở không gian" */
   pointer-events: none;
 }
 
