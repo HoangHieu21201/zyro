@@ -146,7 +146,7 @@
                     </div>
                   </td>
                   <td class="px-4">
-                    <span class="badge bg-urban bg-opacity-10 text-urban border border-urban border-opacity-50 mb-1 d-inline-block">{{ getPositionLabel(banner.position) }}</span>
+                    <span class="badge bg-opacity-10 text-urban border border-urban border-opacity-50 mb-1 d-inline-block">{{ getPositionLabel(banner.position) }}</span>
                     <div class="text-muted dark:text-gray-400 small"><i class="bi bi-cursor-fill me-1"></i>{{ banner.click_count || 0 }} lượt click</div>
                   </td>
                   <td class="px-4 small">

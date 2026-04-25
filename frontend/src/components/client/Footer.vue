@@ -19,10 +19,10 @@
         <div class="col-lg-2 col-md-4 col-6">
           <h6 class="text-uppercase fw-bold mb-4 letter-spacing-1 text-white">Về ZYRO</h6>
           <ul class="list-unstyled d-flex flex-column gap-3 small">
-            <li><a href="#" class="text-decoration-none text-white-50 footer-link">Câu chuyện thương hiệu</a></li>
-            <li><a href="#" class="text-decoration-none text-white-50 footer-link">Cửa hàng hệ thống</a></li>
-            <li><a href="#" class="text-decoration-none text-white-50 footer-link">Tuyển dụng</a></li>
-            <li><a href="#" class="text-decoration-none text-white-50 footer-link">Trách nhiệm xã hội</a></li>
+            <li><router-link to="/about-us" class="text-decoration-none text-white-50 footer-link">Câu chuyện thương hiệu</router-link></li>
+            <li><router-link to="/stores" class="text-decoration-none text-white-50 footer-link">Cửa hàng hệ thống</router-link></li>
+            <li><router-link to="/careers" class="text-decoration-none text-white-50 footer-link">Tuyển dụng</router-link></li>
+            <li><router-link to="/social-responsibility" class="text-decoration-none text-white-50 footer-link">Trách nhiệm xã hội</router-link></li>
           </ul>
         </div>
         
@@ -30,10 +30,9 @@
           <h6 class="text-uppercase fw-bold mb-4 letter-spacing-1 text-white">Dịch Vụ</h6>
           <ul class="list-unstyled d-flex flex-column gap-3 small">
             <li><router-link to="/track-order" class="text-decoration-none text-white-50 footer-link">Tra cứu đơn hàng</router-link></li>
-            <li><a href="#" class="text-decoration-none text-white-50 footer-link">Chính sách vận chuyển</a></li>
-            <li><a href="#" class="text-decoration-none text-white-50 footer-link">Chính sách đổi trả</a></li>
-            <li><a href="#" class="text-decoration-none text-white-50 footer-link">Hướng dẫn chọn kích cỡ</a></li>
-            <li><a href="#" class="text-decoration-none text-white-50 footer-link">Câu hỏi thường gặp (FAQ)</a></li>
+            <li><router-link to="/shipping-policy" class="text-decoration-none text-white-50 footer-link">Chính sách vận chuyển</router-link></li>
+            <li><router-link to="/return-policy" class="text-decoration-none text-white-50 footer-link">Chính sách đổi trả</router-link></li>
+            <li><router-link to="/faq" class="text-decoration-none text-white-50 footer-link">Câu hỏi thường gặp (FAQ)</router-link></li>
           </ul>
         </div>
         
@@ -66,8 +65,8 @@
       <!-- Bottom Footer -->
       <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
          <div class="d-flex gap-4 small fw-semibold text-white-50 order-2 order-md-1">
-            <a href="#" class="text-decoration-none text-white-50 footer-link">Điều khoản sử dụng</a>
-            <a href="#" class="text-decoration-none text-white-50 footer-link">Chính sách bảo mật dữ liệu</a>
+            <router-link to="/terms-of-service" class="text-decoration-none text-white-50 footer-link">Điều khoản sử dụng</router-link>
+            <router-link to="/privacy-policy" class="text-decoration-none text-white-50 footer-link">Chính sách bảo mật dữ liệu</router-link>
          </div>
          
          <div class="d-flex gap-3 align-items-center order-1 order-md-2 text-white-50 opacity-75">

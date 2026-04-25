@@ -19,7 +19,7 @@ const user = [
     path: '/',
     component: () => import('../layouts/UserLayout.vue'),
     children: [
-     {
+      {
         path: '',
         name: 'home',
         component: () => import('../pages/user/Index.vue'),
@@ -86,13 +86,8 @@ const user = [
       },
       {
         path: '/stores',
-        name: 'client-stores',
+        name: 'client-stores', // Đã map với "Cửa hàng hệ thống" trong Footer
         component: () => import('@/pages/client/StoreLocator.vue')
-      },
-      {
-        path: '/:pathMatch(.*)*',
-        name: 'NotFound',
-        component: () => import('@/pages/NotFound.vue')
       },
       {
         path: '/user/review',
@@ -103,7 +98,59 @@ const user = [
         path: '/flash-sale',
         name: 'client-flash-sale',
         component: () => import('@/pages/client/flash-sale/Index.vue')
-    },
+      },
+      
+      // ==========================================
+      // NHÓM STATIC PAGES (Thư mục info)
+      // Tổ chức theo dạng Table để dễ scale
+      // ==========================================
+      {
+        path: '/about-us',
+        name: 'client-info-about',
+        component: () => import('@/pages/client/info/AboutUs.vue')
+      },
+      {
+        path: '/return-policy',
+        name: 'client-info-return',
+        component: () => import('@/pages/client/info/ReturnPolicy.vue')
+      },
+      {
+        path: '/privacy-policy',
+        name: 'client-info-privacy',
+        component: () => import('@/pages/client/info/PrivacyPolicy.vue')
+      },
+      {
+        path: '/terms-of-service',
+        name: 'client-info-terms',
+        component: () => import('@/pages/client/info/TermsOfService.vue')
+      },
+      {
+        path: '/shipping-policy',
+        name: 'client-info-shipping',
+        component: () => import('@/pages/client/info/ShippingPolicy.vue')
+      },
+      // Các trang này có thể tạo sau, tạm thời tạo component rỗng hoặc dùng chung template
+      {
+        path: '/careers',
+        name: 'client-info-careers',
+        component: () => import('@/pages/client/info/AboutUs.vue') 
+      },
+      {
+        path: '/social-responsibility',
+        name: 'client-info-social',
+        component: () => import('@/pages/client/info/AboutUs.vue') 
+      },
+      {
+        path: '/faq',
+        name: 'client-info-faq',
+        component: () => import('@/pages/client/info/Faq.vue')
+      },
+
+      {
+        path: '/:pathMatch(.*)*',
+        name: 'NotFound',
+        component: () => import('@/pages/NotFound.vue')
+      },
     ],
   },
 ]

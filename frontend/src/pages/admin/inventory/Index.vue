@@ -168,7 +168,7 @@
               <thead class="bg-light dark:bg-[#212529]">
                 <tr>
                   <th class="py-3 px-4 text-secondary dark:text-gray-400 border-0" style="width: 12%;">Ảnh bìa</th>
-                  <th class="py-3 px-4 text-secondary dark:text-gray-400 border-0" style="width: 43%;">Thông tin Lookbook</th>
+                  <th class="py-3 px-4 text-secondary dark:text-gray-400 border-0" style="width: 43%;">Thông cải Lookbook</th>
                   <th class="py-3 px-4 text-secondary dark:text-gray-400 border-0 text-center" style="width: 45%;">Tiến độ & Giới hạn bán (Limit)</th>
                 </tr>
               </thead>
@@ -372,7 +372,7 @@
             <button type="button" class="btn-close btn-close-white m-3" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1) grayscale(100%) brightness(200%);"></button>
           </div>
           <div class="modal-body text-center p-0 position-relative">
-            <img :src="zoomedImageUrl" class="img-fluid rounded-4 shadow-lg border border-secondary-subtle dark:border-gray-600" style="max-height: 85vh; object-fit: contain; background-color: var(--color-c-effect);">
+            <img :src="zoomedImageUrl" @error="handleImageError" class="img-fluid rounded shadow-lg" style="max-height: 80vh; object-fit: contain;">
           </div>
         </div>
       </div>
@@ -383,16 +383,31 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, onBeforeUnmount, computed, watch } from 'vue';
+import { useRoute } from 'vue-router'; // BẮT BUỘC PHẢI CÓ ĐỂ HỨNG URL PARAMS
 import { ZyroSwal } from '@/components/client/ZyroSwal';
 import api from '@/utils/axios';
 import defaultPlaceholder from '@/assets/images/defaults/client_placeholder.png';
+
+const route = useRoute(); // GỌI ROUTE Ở ĐÂY
 
 const isFirstLoad = ref(true);
 const isSilentLoading = ref(false); 
 const isBulkUpdating = ref(false);
 
 const activeTab = ref('all_variants');
-const searchQuery = ref('');
+
+// BẮT TỪ KHÓA TỪ DASHBOARD NÉM SANG (NẾU CÓ)
+const searchQuery = ref(route.query.search ? String(route.query.search) : '');
+
+// Lắng nghe sự thay đổi của url (để khi đang đứng ở Kho mà vẫn bấm Back/Forward trình duyệt)
+watch(() => route.query.search, (newSearch) => {
+    if (newSearch !== undefined) {
+        searchQuery.value = String(newSearch);
+        // Tự động gạt về tab Tất cả biến thể để đảm bảo thấy được kết quả
+        activeTab.value = 'all_variants';
+    }
+});
+
 const lowStockThreshold = ref(10);
 
 // Thêm State lọc chuyên sâu
@@ -588,7 +603,6 @@ const fetchData = async (silent = false) => {
   if (silent) isSilentLoading.value = true;
   
   try {
-    // Tải thêm Danh mục và Thương hiệu để lọc
     const [resVariants, resLookbooks, resCats, resBrands] = await Promise.all([
       api.get('/admin/inventory/variants'),
       api.get('/admin/inventory/lookbooks'),
@@ -611,8 +625,8 @@ const fetchData = async (silent = false) => {
                 product_name: v.product.name,
                 product_status: v.product.status,
                 product_thumbnail: v.product.thumbnail_image,
-                category_id: v.product.category_id, // Lưu lại ID để lọc
-                brand_id: v.product.brand_id,       // Lưu lại ID để lọc
+                category_id: v.product.category_id, 
+                brand_id: v.product.brand_id,       
                 changeValue: '', 
                 isUpdating: false
             });
@@ -662,29 +676,25 @@ const tableTitle = computed(() => {
 const displayVariants = computed(() => {
     let result = allVariantsData.value;
     
-    // Tab filtering
     if (activeTab.value === 'low_stock') {
        result = result.filter(v => v.stock_quantity <= lowStockThreshold.value);
     }
     
-    // Search
+    // TÌM KIẾM NHỜ TỪ KHÓA TỪ URL NÉM XUỐNG
     if (searchQuery.value) {
         const q = searchQuery.value.toLowerCase();
         result = result.filter(v => v.sku.toLowerCase().includes(q) || v.product_name.toLowerCase().includes(q));
     }
 
-    // Category Filter
     if (filterCategory.value) {
         const targetCategoryIds = getAllCategoryIds(filterCategory.value);
         result = result.filter(v => targetCategoryIds.includes(v.category_id));
     }
 
-    // Brand Filter
     if (filterBrand.value) {
         result = result.filter(v => v.brand_id === filterBrand.value);
     }
 
-    // Sorting Logic
     if (sortStock.value === 'asc') {
         result.sort((a, b) => a.stock_quantity - b.stock_quantity);
     } else if (sortStock.value === 'desc') {

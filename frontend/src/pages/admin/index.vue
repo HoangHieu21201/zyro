@@ -200,13 +200,11 @@ onMounted(() => {
 <template>
   <div class="dashboard-wrapper w-100 pb-5 mb-5">
     
-    <!-- ĐÃ FIX: Chỉ hiện đúng LOGO SHIMMER, không có thẻ rác, không có Header -->
     <div v-if="isFirstLoad" class="d-flex flex-column justify-content-center align-items-center w-100" style="min-height: 70vh;">
         <h1 class="logo-shimmer mb-3">ZYRO</h1>
         <p class="text-muted dark:text-gray-400 fw-semibold small text-uppercase tracking-widest" style="letter-spacing: 2px;">Đang tải dữ liệu tổng quan...</p>
     </div>
 
-    <!-- ĐÃ FIX: Toàn bộ nội dung Header & Body được bọc cẩn thận bên trong v-else -->
     <div v-else class="animation-fade-in">
         
         <!-- HEADER -->
@@ -242,7 +240,6 @@ onMounted(() => {
                             <div class="card-body p-4 d-flex align-items-center justify-content-between">
                                 <div>
                                     <h6 class="text-muted dark:text-gray-400 fw-bold text-uppercase mb-2 tracking-wide" style="font-size: 0.75rem;">Tổng Doanh Thu</h6>
-                                    <!-- ĐÃ SỬA: Đổi text-c-dark thành text-dark dark:text-white để tương phản mạnh -->
                                     <h4 class="fw-black text-dark dark:text-white m-0">{{ formatCurrency(stats.revenue) }}</h4>
                                 </div>
                                 <div class="bg-light dark:bg-[#212529] rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 55px; height: 55px;">
@@ -314,15 +311,26 @@ onMounted(() => {
                             <div class="card-body p-0 custom-scrollbar-y" style="max-height: 410px; overflow-y: auto;">
                                 <div v-if="topProducts.length === 0" class="text-center py-5 text-muted fst-italic">Chưa có dữ liệu giao dịch</div>
                                 <ul class="list-group list-group-flush border-0">
-                                    <li v-for="(prod, idx) in topProducts" :key="idx" class="list-group-item px-4 py-3 bg-transparent border-light-subtle dark:border-gray-700 d-flex align-items-center gap-3 transition-all hover-bg-light cursor-pointer" @click="router.push(`/admin/products/${prod.product_id}`)">
+                                    <!-- ĐÃ FIX: Chặn click và CSS nếu sản phẩm bị xóa -->
+                                    <li v-for="(prod, idx) in topProducts" :key="idx" 
+                                        class="list-group-item px-4 py-3 bg-transparent border-light-subtle dark:border-gray-700 d-flex align-items-center gap-3 transition-all" 
+                                        :class="prod.product_deleted_at ? 'opacity-75' : 'hover-bg-light cursor-pointer'"
+                                        @click="!prod.product_deleted_at ? router.push({ path: '/admin/inventory', query: { search: prod.product_name } }) : null">
+                                        
                                         <span class="fw-black fs-5" :class="idx === 0 ? 'text-warning' : (idx === 1 ? 'text-secondary' : (idx === 2 ? 'text-danger' : 'text-muted'))">#{{ idx + 1 }}</span>
-                                        <img :src="getImageUrl(prod.variant_image)" class="rounded-3 object-fit-cover shadow-sm border dark:border-gray-600 bg-white" style="width: 50px; height: 50px;" @error="e => e.target.src='/client_placeholder.png'">
+                                        
+                                        <div class="position-relative flex-shrink-0">
+                                            <img :src="getImageUrl(prod.variant_image)" class="rounded-3 object-fit-cover shadow-sm border dark:border-gray-600 bg-white" style="width: 50px; height: 50px;" @error="e => e.target.src='/client_placeholder.png'">
+                                        </div>
+                                        
                                         <div class="flex-grow-1 overflow-hidden">
-                                            <!-- ĐÃ SỬA: Đổi text-c-dark thành text-dark dark:text-white -->
-                                            <h6 class="mb-1 text-dark dark:text-white fw-bold text-truncate" style="font-size: 0.9rem;">{{ prod.product_name }}</h6>
+                                            <div class="d-flex align-items-center gap-2 mb-1">
+                                                <h6 class="m-0 text-dark dark:text-white fw-bold text-truncate" style="font-size: 0.9rem;" :class="{'text-decoration-line-through text-muted': prod.product_deleted_at}">{{ prod.product_name }}</h6>
+                                                <span v-if="prod.product_deleted_at" class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary" style="font-size: 0.6rem; padding: 2px 4px;">Đã xóa</span>
+                                            </div>
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <span class="text-muted dark:text-gray-400 small">Đã bán: <b class="text-dark dark:text-white">{{ prod.total_sold }}</b></span>
-                                                <span class="text-urban fw-bold small">{{ formatCurrency(prod.total_revenue) }}</span>
+                                                <span class="text-urban fw-bold small" :class="{'text-muted': prod.product_deleted_at}">{{ formatCurrency(prod.total_revenue) }}</span>
                                             </div>
                                         </div>
                                     </li>

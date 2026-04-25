@@ -132,9 +132,15 @@
            <div class="mb-5">
              <div class="d-flex justify-content-between align-items-end mb-3">
                <label class="fw-bold text-dark dark:text-gray-200 m-0 fs-6">Kích cỡ:</label>
-               <a v-if="product.size_guide_url" :href="product.size_guide_url" target="_blank" class="text-urban text-decoration-none hover-underline small fw-medium">
-                 <i class="bi bi-ruler me-1"></i> Bảng tính Size
-               </a>
+               <div class="d-flex gap-2 align-items-center">
+                 <a v-if="product.size_guide_url" :href="product.size_guide_url" target="_blank" class="text-urban text-decoration-none hover-underline small fw-medium">
+                   <i class="bi bi-ruler me-1"></i> Bảng tính Size
+                 </a>
+                 <!-- Nút bật hướng dẫn chọn Size -->
+                 <button type="button" @click="showSizeGuide = true" class="btn btn-link p-0 text-urban small text-decoration-none hover-underline shadow-none">
+                   Hướng dẫn chọn Size
+                 </button>
+               </div>
              </div>
              
              <div class="d-flex flex-wrap gap-3">
@@ -333,6 +339,7 @@
 
     <CompareModal />
     <QuickViewModal :is-open="isQuickViewOpen" :product="selectedProduct" @close="isQuickViewOpen = false" />
+    <SizeGuideModal :show="showSizeGuide" :product="product" :activeImage="activeImage" @close="showSizeGuide = false" />
 
   </div>
 </template>
@@ -345,6 +352,7 @@ import api from '@/utils/axios';
 import ProductCard from '@/components/client/ProductCard.vue';
 import CompareModal from '@/components/client/CompareModal.vue';
 import QuickViewModal from '@/components/client/QuickViewModal.vue';
+import SizeGuideModal from '@/components/client/SizeGuideModal.vue';
 import GallerySection from '@/components/client/home/GallerySection.vue';
 
 import { useCartStore } from '@/stores/cartStore';
@@ -375,6 +383,7 @@ const isWishlisted = computed(() => {
 
 const zoomedImageUrl = ref('');
 const isZoomOpen = ref(false);
+const showSizeGuide = ref(false);
 
 const isQuickViewOpen = ref(false);
 const selectedProduct = ref({});

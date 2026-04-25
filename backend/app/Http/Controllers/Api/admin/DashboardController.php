@@ -126,15 +126,16 @@ class DashboardController extends Controller
             $chartData = array_values($chartDataRaw);
 
             // 4. TOP 5 SẢN PHẨM BÁN CHẠY NHẤT
-            // Lấy trực tiếp từ các đơn hàng thành công trong range
-            $topProducts = OrderItem::select('product_id', 'product_name', 'variant_image')
-                ->selectRaw('SUM(quantity) as total_sold')
-                ->selectRaw('SUM(total_price) as total_revenue')
+            // ĐÃ NÂNG CẤP: Left Join với bảng products để lấy thông tin deleted_at
+            $topProducts = OrderItem::leftJoin('products', 'order_items.product_id', '=', 'products.id')
+                ->select('order_items.product_id', 'order_items.product_name', 'order_items.variant_image', 'products.deleted_at as product_deleted_at')
+                ->selectRaw('SUM(order_items.quantity) as total_sold')
+                ->selectRaw('SUM(order_items.total_price) as total_revenue')
                 ->whereHas('order', function($q) use ($startDate, $endDate) {
                     $q->where('status', 'completed')
                       ->whereBetween('created_at', [$startDate, $endDate]);
                 })
-                ->groupBy('product_id', 'product_name', 'variant_image')
+                ->groupBy('order_items.product_id', 'order_items.product_name', 'order_items.variant_image', 'products.deleted_at')
                 ->orderByDesc('total_sold')
                 ->limit(5)
                 ->get();
