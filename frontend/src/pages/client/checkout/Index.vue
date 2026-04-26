@@ -1,5 +1,5 @@
 <template>
-  <div class="checkout-page-wrapper pb-5 mb-5">
+  <div class="checkout-page-wrapper pb-5 mb-5" style="padding-top: 30px;">
     
     <div class="pt-5 mt-4">
       <div class="zyro-container">
@@ -17,18 +17,77 @@
           <h2 class="fw-bold text-c-dark dark:text-white m-0 text-uppercase tracking-widest" style="letter-spacing: 2px;">Thanh toán an toàn</h2>
         </div>
 
-        <!-- SKELETON LOADING KHI KHỞI TẠO INIT DATA -->
-        <div v-if="isInitLoading" class="text-center py-5 my-5">
-          <div class="spinner-border text-urban mb-3" style="width: 3rem; height: 3rem;" role="status"></div>
-          <h5 class="text-muted fw-semibold">Đang chuẩn bị môi trường thanh toán...</h5>
+        <!-- ========================================== -->
+        <!-- SKELETON LOADING (ĐỒNG BỘ 100% CẤU TRÚC UI THẬT) -->
+        <!-- ========================================== -->
+        <div v-if="isInitLoading" class="row g-5 mb-5 pe-none animation-fade-in">
+          
+          <!-- Cột trái (Form nhập liệu Skeleton) -->
+          <div class="col-lg-7">
+             <!-- Section 1: Giao hàng -->
+             <div class="bg-white dark:bg-[#1a2533] p-4 rounded-4 shadow-sm border border-light-subtle dark:border-gray-700 mb-4">
+                <div class="d-flex align-items-center mb-4">
+                   <div class="shimmer rounded-circle me-3" style="width: 28px; height: 28px;"></div>
+                   <div class="shimmer rounded-2" style="width: 180px; height: 20px;"></div>
+                </div>
+                <div class="shimmer rounded-4 w-100 mb-4" style="height: 60px;"></div>
+                <div class="row g-3">
+                   <div class="col-12"><div class="shimmer rounded-2 w-100" style="height: 45px;"></div></div>
+                   <div class="col-6"><div class="shimmer rounded-2 w-100" style="height: 45px;"></div></div>
+                   <div class="col-6"><div class="shimmer rounded-2 w-100" style="height: 45px;"></div></div>
+                   <div class="col-4"><div class="shimmer rounded-2 w-100" style="height: 45px;"></div></div>
+                   <div class="col-4"><div class="shimmer rounded-2 w-100" style="height: 45px;"></div></div>
+                   <div class="col-4"><div class="shimmer rounded-2 w-100" style="height: 45px;"></div></div>
+                   <div class="col-12"><div class="shimmer rounded-2 w-100" style="height: 45px;"></div></div>
+                   <div class="col-12"><div class="shimmer rounded-2 w-100" style="height: 60px;"></div></div>
+                </div>
+             </div>
+
+             <!-- Section 2 & 3: Vận chuyển & Thanh toán -->
+             <div class="bg-white dark:bg-[#1a2533] p-4 rounded-4 shadow-sm border border-light-subtle dark:border-gray-700 mb-4">
+                <div class="d-flex align-items-center mb-4">
+                   <div class="shimmer rounded-circle me-3" style="width: 28px; height: 28px;"></div>
+                   <div class="shimmer rounded-2" style="width: 220px; height: 20px;"></div>
+                </div>
+                <div class="shimmer rounded-3 w-100 mb-3" style="height: 70px;"></div>
+                <div class="shimmer rounded-3 w-100" style="height: 70px;"></div>
+             </div>
+          </div>
+
+          <!-- Cột phải (Order Summary Skeleton) -->
+          <div class="col-lg-5">
+             <div class="bg-white dark:bg-[#1a2533] p-4 p-md-5 rounded-4 shadow-sm border border-light-subtle dark:border-gray-700 sticky-top" style="top: 100px;">
+                <div class="shimmer rounded-2 w-50 mb-4" style="height: 24px;"></div>
+                
+                <!-- Mô phỏng sản phẩm -->
+                <div class="shimmer rounded-3 w-100 mb-3" style="height: 90px;"></div>
+                <div class="shimmer rounded-3 w-100 mb-4" style="height: 90px;"></div>
+                
+                <!-- Mô phỏng mã giảm giá -->
+                <div class="shimmer rounded-3 w-100 mb-4" style="height: 45px;"></div>
+                
+                <!-- Mô phỏng tính tiền -->
+                <div class="d-flex justify-content-between mb-3">
+                   <div class="shimmer rounded-2" style="width: 120px; height: 16px;"></div>
+                   <div class="shimmer rounded-2" style="width: 80px; height: 16px;"></div>
+                </div>
+                <div class="d-flex justify-content-between mb-4">
+                   <div class="shimmer rounded-2" style="width: 100px; height: 16px;"></div>
+                   <div class="shimmer rounded-2" style="width: 70px; height: 16px;"></div>
+                </div>
+                
+                <div class="shimmer rounded-pill w-100 mt-2" style="height: 55px;"></div>
+             </div>
+          </div>
         </div>
 
-        <form v-else @submit.prevent="placeOrder" autocomplete="off">
+        <!-- ========================================== -->
+        <!-- FORM CHECKOUT THỰC TẾ -->
+        <!-- ========================================== -->
+        <form v-else @submit.prevent="placeOrder" autocomplete="off" class="animation-fade-in">
           <div class="row g-5">
             
-            <!-- ========================================== -->
             <!-- CỘT TRÁI: THÔNG TIN GIAO HÀNG & THANH TOÁN -->
-            <!-- ========================================== -->
             <div class="col-lg-7">
               
               <!-- 1. THÔNG TIN LIÊN HỆ & GIAO HÀNG -->
@@ -53,7 +112,6 @@
                    </select>
                 </div>
 
-                <!-- ĐÃ FIX: Bỏ readonly & disable, cho phép chỉnh sửa tự do -->
                 <div class="row g-3">
                   <div class="col-md-12">
                     <label class="form-label small fw-bold text-muted text-uppercase">Họ và tên người nhận <span class="text-danger">*</span></label>
@@ -70,7 +128,7 @@
                     <input type="email" class="form-control custom-input" v-model="form.email" required placeholder="Nhập địa chỉ email">
                   </div>
 
-                  <!-- TỈNH THÀNH (SMART DROPDOWN TỪ SỔ ĐỊA CHỈ VUE) -->
+                  <!-- TỈNH THÀNH -->
                   <div class="col-md-4 mt-3 position-relative">
                     <label class="form-label small fw-bold text-muted text-uppercase">Tỉnh/Thành phố <span class="text-danger">*</span></label>
                     <input type="text" class="form-control custom-input dropdown-search-input" 
@@ -154,7 +212,7 @@
                 </label>
               </div>
 
-              <!-- 3. PHƯƠNG THỨC THANH TOÁN (COD & MOMO) -->
+              <!-- 3. PHƯƠNG THỨC THANH TOÁN -->
               <div class="mb-5">
                 <h5 class="fw-bold text-c-dark dark:text-white mb-4 d-flex align-items-center">
                   <span class="step-number rounded-circle d-flex align-items-center justify-content-center me-2 shadow-sm" style="width: 28px; height: 28px; font-size: 0.9rem;">3</span> 
@@ -242,48 +300,115 @@
 
                 <!-- DANH SÁCH SẢN PHẨM CÓ THỂ CHỈNH SỬA ĐƯỢC NHƯ GIỎ HÀNG -->
                 <div class="custom-scrollbar-y p-3 ms-n3 mb-4" style="max-height: 400px; overflow-y: auto; overflow-x: visible;">
-                  <div v-for="(item, index) in cartStore.items" :key="'cartItem'+item.variant_id" 
-                       class="d-flex gap-3 mb-3 pb-3 border-bottom border-light-subtle dark:border-gray-700 position-relative transition-all"
-                       :class="{'pe-none opacity-50': updatingItemId === item.variant_id}">
-                    
-                    <div v-if="updatingItemId === item.variant_id" class="position-absolute top-50 start-50 translate-middle bouncing-loader" style="z-index: 10;">
-                       <span></span><span></span><span></span>
-                    </div>
+                  
+                  <template v-for="(group, gIdx) in cartGroups" :key="'grp'+gIdx">
 
-                    <button type="button" class="btn-delete-circle d-flex align-items-center justify-content-center transition-all" @click="removeItem(item)" title="Xóa khỏi đơn">
-                      <i class="bi bi-x-lg"></i>
-                    </button>
+                    <!-- ===================================== -->
+                    <!-- LOẠI 1: GÓI COMBO LOOKBOOK            -->
+                    <!-- ===================================== -->
+                    <div v-if="group.isLookbook" 
+                         class="mb-3 pb-3 border-bottom border-light-subtle dark:border-gray-700 position-relative transition-all"
+                         :class="{'pe-none opacity-50': updatingItemId === 'combo_' + group.lookbook_id}">
+                      
+                      <div v-if="updatingItemId === 'combo_' + group.lookbook_id" class="position-absolute top-50 start-50 translate-middle bouncing-loader" style="z-index: 10;">
+                         <span></span><span></span><span></span>
+                      </div>
 
-                    <div class="position-relative flex-shrink-0 mt-2 ms-2" style="width: 75px; height: 100px;">
-                      <img :src="item.image || '/client_placeholder.png'" class="rounded-3 border border-light-subtle dark:border-gray-600 object-fit-cover bg-white w-100 h-100" @error="e => e.target.src='/client_placeholder.png'">
-                      <span class="position-absolute badge rounded-pill bg-c-dark text-white border border-white shadow-sm px-2 py-1 lh-1" style="top: -10px; right: -10px; font-size: 0.75rem; z-index: 5;">
-                        {{ item.quantity }}
-                      </span>
-                    </div>
-                    
-                    <div class="flex-grow-1 d-flex flex-column justify-content-between py-1 pe-2 mt-2">
-                      <div>
-                        <h6 class="fw-bold text-c-dark dark:text-gray-200 mb-1 line-clamp-2 pe-4" style="font-size: 0.85rem;">{{ item.product_name }}</h6>
-                        <div class="text-muted small mb-1 d-flex align-items-center gap-2" style="font-size: 0.75rem;">
-                          <span class="bg-white dark:bg-[#2b3035] text-dark dark:text-gray-300 border dark:border-gray-600 px-1 py-0.5 rounded shadow-sm">{{ item.attributes || 'Mặc định' }}</span>
-                        </div>
-                        <div v-if="item.stock_warning" class="text-danger small mt-1 fw-bold" style="font-size: 0.7rem;"><i class="bi bi-exclamation-triangle"></i> Vượt tồn kho</div>
-                        <div v-if="!item.is_available" class="text-danger small mt-1 fw-bold" style="font-size: 0.7rem;"><i class="bi bi-x-circle"></i> Ngừng kinh doanh</div>
+                      <button type="button" class="btn-delete-circle d-flex align-items-center justify-content-center transition-all" @click="removeCombo(group)" title="Xóa khỏi đơn">
+                        <i class="bi bi-x-lg"></i>
+                      </button>
+
+                      <div class="d-flex gap-3">
+                         <div class="position-relative flex-shrink-0 mt-2 ms-2" style="width: 75px; height: 100px;">
+                           <img :src="group.lookbook_image || group.items[0]?.image || '/client_placeholder.png'" 
+                                class="rounded-3 border border-light-subtle dark:border-gray-600 object-fit-cover bg-white w-100 h-100 cursor-pointer" 
+                                @click="toggleGroup(group.lookbook_id)" 
+                                @error="e => e.target.src='/client_placeholder.png'">
+                         </div>
+                         <div class="flex-grow-1 d-flex flex-column justify-content-between py-1 pe-2 mt-2">
+                            <div>
+                              <div class="cursor-pointer d-inline-block" @click="toggleGroup(group.lookbook_id)">
+                                 <span class="badge bg-urban text-white rounded-pill px-2 py-1 shadow-sm font-sans-vn mb-1" style="font-size: 0.65rem;">
+                                   <i class="bi bi-magic me-1"></i> {{ group.lookbook_name }}
+                                 </span>
+                                 <div class="text-muted small fw-bold font-sans-vn mb-1" style="font-size: 0.75rem;">Combo {{ group.items.length }} món đồ</div>
+                              </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                               <div class="quantity-box border dark:border-gray-600 rounded-2 d-flex bg-light dark:bg-[#212529] shadow-sm overflow-hidden" style="height: 28px; width: 75px;">
+                                 <button type="button" class="btn p-0 border-0 text-dark dark:text-gray-300 w-100 h-100 d-flex align-items-center justify-content-center hover-urban" @click="decreaseComboQty(group)"><i class="bi bi-dash small"></i></button>
+                                 <input type="number" class="form-control border-0 text-center fw-bold px-0 h-100 bg-transparent dark:text-white shadow-none p-0 no-spinners" style="font-size: 0.8rem;" :value="group.comboQuantity" @change="onManualComboQtyChange(group, $event.target.value)">
+                                 <button type="button" class="btn p-0 border-0 text-dark dark:text-gray-300 w-100 h-100 d-flex align-items-center justify-content-center hover-urban" @click="increaseComboQty(group)"><i class="bi bi-plus small"></i></button>
+                               </div>
+                               <div class="fw-bold text-c-dark dark:text-gray-300" style="font-size: 0.95rem;">{{ formatCurrency(group.totalPrice) }}</div>
+                            </div>
+                         </div>
                       </div>
                       
-                      <div class="d-flex justify-content-between align-items-center mt-2">
-                         <div class="quantity-box border dark:border-gray-600 rounded-2 d-flex bg-light dark:bg-[#212529] shadow-sm overflow-hidden" style="height: 28px; width: 75px;">
-                           <button type="button" class="btn p-0 border-0 text-dark dark:text-gray-300 w-100 h-100 d-flex align-items-center justify-content-center hover-urban" @click="decreaseQty(item)"><i class="bi bi-dash small"></i></button>
-                           <input type="text" class="form-control border-0 text-center fw-bold px-0 h-100 bg-transparent dark:text-white shadow-none p-0" style="font-size: 0.8rem;" :value="item.quantity" readonly>
-                           <button type="button" class="btn p-0 border-0 text-dark dark:text-gray-300 w-100 h-100 d-flex align-items-center justify-content-center hover-urban" @click="increaseQty(item)"><i class="bi bi-plus small"></i></button>
+                      <!-- DROPDOWN CHI TIẾT COMBO -->
+                      <div v-show="expandedGroups.includes(group.lookbook_id)" class="combo-details mt-3 pt-3 border-top border-light-subtle dark:border-gray-700 ps-2">
+                         <div class="d-flex flex-column gap-2">
+                            <div v-for="item in group.items" :key="'cb_item_'+item.variant_id" class="d-flex align-items-center gap-3">
+                               <img :src="item.image || '/client_placeholder.png'" style="width: 35px; height: 45px;" class="rounded-2 border dark:border-gray-600 object-fit-cover shadow-sm bg-white">
+                               <div class="flex-grow-1">
+                                  <div class="fw-semibold text-dark dark:text-gray-200 line-clamp-1 font-sans-vn" style="font-size: 0.8rem;">{{ item.product_name }}</div>
+                                  <div class="text-secondary dark:text-gray-400 font-sans-vn d-flex justify-content-between pe-1 mt-1" style="font-size: 0.7rem;">
+                                     <span>{{ item.attributes || 'Mặc định' }} <span class="mx-1">|</span> <span class="fw-bold text-dark dark:text-gray-300">{{ formatCurrency(item.current_price) }}</span></span>
+                                     <span class="fw-bold">x{{ item.quantity }}</span>
+                                  </div>
+                               </div>
+                            </div>
                          </div>
-                         <div class="fw-bold text-c-dark dark:text-gray-300" style="font-size: 0.95rem;">{{ formatCurrency(item.current_price * item.quantity) }}</div>
                       </div>
                     </div>
-                  </div>
+
+                    <!-- ===================================== -->
+                    <!-- LOẠI 2: SẢN PHẨM LẺ BÌNH THƯỜNG       -->
+                    <!-- ===================================== -->
+                    <template v-else>
+                      <div v-for="item in group.items" :key="'cartItem'+item.variant_id" 
+                           class="d-flex gap-3 mb-3 pb-3 border-bottom border-light-subtle dark:border-gray-700 position-relative transition-all"
+                           :class="{'pe-none opacity-50': updatingItemId === item.variant_id}">
+                        
+                        <div v-if="updatingItemId === item.variant_id" class="position-absolute top-50 start-50 translate-middle bouncing-loader" style="z-index: 10;">
+                           <span></span><span></span><span></span>
+                        </div>
+
+                        <button type="button" class="btn-delete-circle d-flex align-items-center justify-content-center transition-all" @click="removeItem(item)" title="Xóa khỏi đơn">
+                          <i class="bi bi-x-lg"></i>
+                        </button>
+
+                        <div class="position-relative flex-shrink-0 mt-2 ms-2" style="width: 75px; height: 100px;">
+                          <img :src="item.image || '/client_placeholder.png'" class="rounded-3 border border-light-subtle dark:border-gray-600 object-fit-cover bg-white w-100 h-100" @error="e => e.target.src='/client_placeholder.png'">
+                        </div>
+                        
+                        <div class="flex-grow-1 d-flex flex-column justify-content-between py-1 pe-2 mt-2">
+                          <div>
+                            <h6 class="fw-bold text-c-dark dark:text-gray-200 mb-1 line-clamp-2 pe-4" style="font-size: 0.85rem;">{{ item.product_name }}</h6>
+                            <div class="text-muted small mb-1 d-flex align-items-center gap-2" style="font-size: 0.75rem;">
+                              <span class="bg-white dark:bg-[#2b3035] text-dark dark:text-gray-300 border dark:border-gray-600 px-1 py-0.5 rounded shadow-sm">{{ item.attributes || 'Mặc định' }}</span>
+                            </div>
+                            <div v-if="item.stock_warning" class="text-danger small mt-1 fw-bold" style="font-size: 0.7rem;"><i class="bi bi-exclamation-triangle"></i> Vượt tồn kho</div>
+                            <div v-if="!item.is_available" class="text-danger small mt-1 fw-bold" style="font-size: 0.7rem;"><i class="bi bi-x-circle"></i> Ngừng kinh doanh</div>
+                          </div>
+                          
+                          <div class="d-flex justify-content-between align-items-center mt-2">
+                             <div class="quantity-box border dark:border-gray-600 rounded-2 d-flex bg-light dark:bg-[#212529] shadow-sm overflow-hidden" style="height: 28px; width: 75px;">
+                               <button type="button" class="btn p-0 border-0 text-dark dark:text-gray-300 w-100 h-100 d-flex align-items-center justify-content-center hover-urban" @click="decreaseQty(item)"><i class="bi bi-dash small"></i></button>
+                               <input type="number" class="form-control border-0 text-center fw-bold px-0 h-100 bg-transparent dark:text-white shadow-none p-0 no-spinners" style="font-size: 0.8rem;" :value="item.quantity" @change="onManualQtyChange(item, $event.target.value)">
+                               <button type="button" class="btn p-0 border-0 text-dark dark:text-gray-300 w-100 h-100 d-flex align-items-center justify-content-center hover-urban" @click="increaseQty(item)"><i class="bi bi-plus small"></i></button>
+                             </div>
+                             <div class="fw-bold text-c-dark dark:text-gray-300" style="font-size: 0.95rem;">{{ formatCurrency(item.current_price * item.quantity) }}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </template>
+
+                  </template>
                 </div>
 
-                <!-- ĐÃ FIX DROPDOWN VOUCHER: Hiện mượt mà bằng Vue State -->
+                <!-- DROPDOWN VOUCHER -->
                 <div class="mb-4">
                   <div class="d-flex justify-content-between align-items-center mb-2 voucher-dropdown-container position-relative">
                     <label class="form-label small fw-bold text-muted text-uppercase tracking-wide m-0">Mã ưu đãi / Khuyến mãi</label>
@@ -343,7 +468,6 @@
                     </transition>
                   </div>
                   
-                  <!-- Khung nhập Voucher thủ công -->
                   <div class="input-group custom-input-group rounded-3 overflow-hidden bg-white dark:bg-[#212529]" :class="{'border-success': appliedCouponValid}">
                     <span class="input-group-text bg-transparent border-0 text-muted"><i class="bi bi-ticket-perforated"></i></span>
                     <input type="text" class="form-control bg-transparent border-0 dark:text-white font-monospace text-uppercase shadow-none" v-model="selectedCouponCode" placeholder="NHẬP MÃ ZYRO..." :readonly="appliedCouponValid">
@@ -454,7 +578,16 @@ const showWardDrop = ref(false);
 const availableCoupons = ref([]);
 const selectedCouponCode = ref('');
 const appliedCouponValid = ref(false);
-const isVoucherDropdownOpen = ref(false); // Xử lý dropdown thông qua Vue State
+const isVoucherDropdownOpen = ref(false);
+
+const FREESHIP_THRESHOLD = 1000000;
+const SHIPPING_COST = 30000;
+
+// KHÔI PHỤC KHAI BÁO BIẾN VAT
+const requireVAT = ref(false);
+const vatInfo = ref({ company_name: '', tax_code: '', email: '', address: '' });
+
+const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0);
 
 const removeAccents = (str) => {
   if (!str) return '';
@@ -498,8 +631,6 @@ const initCheckoutData = async () => {
     }
   } catch (err) {
     console.error('Lỗi Init Checkout', err);
-  } finally {
-    isInitLoading.value = false;
   }
 };
 
@@ -519,7 +650,6 @@ const toggleAddressMode = () => {
   }
 };
 
-// ĐÃ CẬP NHẬT: Cho phép khách hàng chỉnh sửa tự do dù đang chọn sổ địa chỉ
 const handleAddressEdit = () => {
   if (useSavedAddress.value) {
     useSavedAddress.value = false;
@@ -599,6 +729,124 @@ const handleBlur = (type) => {
   }, 200);
 };
 
+// ========================================================
+// THUẬT TOÁN GOM NHÓM ĐÃ ĐƯỢC CHUẨN HÓA CHO CHECKOUT
+// ========================================================
+const expandedGroups = ref([]);
+
+const cartGroups = computed(() => {
+  const result = [];
+  const normalGroup = { isLookbook: false, items: [] };
+
+  cartStore.items.forEach(item => {
+    if (item.lookbook_id) {
+      let group = result.find(g => g.isLookbook && g.lookbook_id === item.lookbook_id);
+      if (!group) {
+        group = { 
+          isLookbook: true, 
+          lookbook_id: item.lookbook_id, 
+          lookbook_name: item.lookbook_name || 'Combo Phong Cách',
+          lookbook_image: item.lookbook_image,
+          items: [],
+          comboQuantity: item.quantity, 
+          totalPrice: 0 
+        };
+        result.push(group);
+      }
+      group.items.push(item);
+      group.totalPrice += (item.current_price * item.quantity);
+    } else {
+      normalGroup.items.push(item);
+    }
+  });
+
+  if (normalGroup.items.length > 0) {
+    result.push(normalGroup);
+  }
+
+  return result;
+});
+
+const toggleGroup = (id) => {
+  if (expandedGroups.value.includes(id)) {
+    expandedGroups.value = expandedGroups.value.filter(gId => gId !== id);
+  } else {
+    expandedGroups.value.push(id);
+  }
+};
+
+// ========================================================
+// ACTIONS COMBO (BULK)
+// ========================================================
+const increaseComboQty = async (group) => {
+  const newQty = group.comboQuantity + 1;
+  if (newQty > 50) return;
+  
+  updatingItemId.value = 'combo_' + group.lookbook_id;
+  try {
+    for (const item of group.items) {
+      await cartStore.updateQuantity(item.item_id, item.variant_id, newQty);
+    }
+  } finally {
+    updatingItemId.value = null;
+  }
+};
+
+const decreaseComboQty = async (group) => {
+  if (group.comboQuantity <= 1) return;
+  const newQty = group.comboQuantity - 1;
+  
+  updatingItemId.value = 'combo_' + group.lookbook_id;
+  try {
+    for (const item of group.items) {
+      await cartStore.updateQuantity(item.item_id, item.variant_id, newQty);
+    }
+  } finally {
+    updatingItemId.value = null;
+  }
+};
+
+const onManualComboQtyChange = async (group, newQty) => {
+  let qty = parseInt(newQty);
+  if (isNaN(qty) || qty < 1) qty = 1;
+  if (qty > 50) qty = 50;
+
+  if (qty === group.comboQuantity) {
+     const input = document.activeElement;
+     if (input && input.tagName === 'INPUT') input.value = qty;
+     return; 
+  }
+
+  updatingItemId.value = 'combo_' + group.lookbook_id;
+  try {
+    for (const item of group.items) {
+      await cartStore.updateQuantity(item.item_id, item.variant_id, qty);
+    }
+  } finally {
+    updatingItemId.value = null;
+  }
+};
+
+const removeCombo = (group) => {
+  ZyroSwal.confirmDelete(group.lookbook_name).then(async (result) => {
+    if (result.isConfirmed) {
+      updatingItemId.value = 'combo_' + group.lookbook_id;
+      try {
+        for (const item of group.items) {
+          await cartStore.removeItem(item.item_id, item.variant_id);
+        }
+        ZyroSwal.toastSuccess('Đã xóa bộ sưu tập khỏi đơn');
+        if (cartStore.items.length === 0) router.push('/cart');
+      } finally {
+        updatingItemId.value = null;
+      }
+    }
+  });
+};
+
+// ========================================================
+// ACTIONS SẢN PHẨM LẺ
+// ========================================================
 const increaseQty = async (item) => {
   const maxStock = item.current_stock !== undefined ? item.current_stock : 50; 
   if (item.quantity >= maxStock) return;
@@ -615,6 +863,28 @@ const decreaseQty = async (item) => {
   }
 };
 
+const onManualQtyChange = async (item, newQty) => {
+  let qty = parseInt(newQty);
+  if (isNaN(qty) || qty < 1) qty = 1;
+  
+  const maxStock = item.current_stock !== undefined ? item.current_stock : 50;
+  const limit = Math.min(50, maxStock);
+  if (qty > limit) qty = limit;
+
+  if (qty === item.quantity) {
+     const input = document.activeElement;
+     if (input && input.tagName === 'INPUT') input.value = qty;
+     return;
+  }
+
+  updatingItemId.value = item.variant_id;
+  try {
+    await cartStore.updateQuantity(item.item_id, item.variant_id, qty);
+  } finally {
+    updatingItemId.value = null;
+  }
+};
+
 const removeItem = (item) => {
   ZyroSwal.confirmDelete(item.product_name).then(async (result) => {
     if (result.isConfirmed) {
@@ -628,13 +898,6 @@ const removeItem = (item) => {
   });
 };
 
-const FREESHIP_THRESHOLD = 1000000;
-const SHIPPING_COST = 30000;
-
-const requireVAT = ref(false);
-const vatInfo = ref({ company_name: '', tax_code: '', email: '', address: '' });
-
-const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0);
 const formatDiscount = (coupon) => {
   if (coupon.discount_type === 'percent' || coupon.discount_type === 'percentage') {
     return `${parseFloat(coupon.discount_value)}%`;
@@ -785,21 +1048,33 @@ const placeOrder = async () => {
   }
 };
 
+// ĐÃ FIX: CHẠY ĐỒNG BỘ PROMISE.ALL VỚI TIMEOUT ĐỂ SKELETON LUÔN HIỂN THỊ TỐI THIỂU 800MS
 onMounted(async () => {
   window.scrollTo(0, 0);
   document.addEventListener('click', closeVoucherDropdown);
-  await cartStore.initCart();
-  if (cartStore.items.length === 0) {
-      router.push('/cart');
-      return;
-  }
-  fetchProvinces();
   
-  const token = localStorage.getItem('access_token');
-  if (token) {
-     await initCheckoutData();
-  } else {
-     isInitLoading.value = false;
+  isInitLoading.value = true;
+
+  try {
+    await cartStore.initCart();
+    if (cartStore.items.length === 0) {
+        router.push('/cart');
+        return;
+    }
+    
+    fetchProvinces();
+    
+    const token = localStorage.getItem('access_token');
+    
+    const minDelay = new Promise(resolve => setTimeout(resolve, 800)); // Ép thời gian chờ tối thiểu 800ms
+    const initTask = token ? initCheckoutData() : Promise.resolve();
+
+    await Promise.all([initTask, minDelay]);
+
+  } catch (error) {
+    console.error("Lỗi:", error);
+  } finally {
+    isInitLoading.value = false; // Chỉ tắt khi đã hoàn thành cả fetch data VÀ chờ đủ 800ms
   }
 });
 
@@ -829,6 +1104,7 @@ html.dark .border-urban-soft { border-color: rgba(255, 255, 255, 0.1) !important
 .btn-outline-urban { color: var(--color-c-hover, #547792); border-color: var(--color-c-hover, #547792); background: transparent; transition: 0.2s; }
 .btn-outline-urban:hover { background-color: var(--color-c-hover, #547792); color: white; }
 .bg-urban { background-color: var(--color-c-hover, #547792) !important; }
+.font-sans-vn { font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif !important; }
 
 .step-number { background-color: var(--color-c-dark); color: white; }
 
@@ -876,6 +1152,16 @@ select.custom-input option:disabled { color: #aaa; font-style: italic; }
 .btn-delete-circle:hover { background: #dc3545; color: #fff; transform: scale(1.1); box-shadow: 0 4px 8px rgba(220, 53, 69, 0.2); }
 html.dark .btn-delete-circle { border-color: #ef4444; color: #ef4444; }
 html.dark .btn-delete-circle:hover { background: #ef4444; color: #fff; }
+
+/* ẨN NÚT MŨI TÊN TRONG Ô INPUT NUMBER */
+.no-spinners::-webkit-outer-spin-button,
+.no-spinners::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.no-spinners {
+  -moz-appearance: textfield;
+}
 
 /* HIỆU ỨNG 3 CHẤM */
 .bouncing-loader { display: flex; align-items: center; justify-content: center; gap: 6px; z-index: 10; }
@@ -929,4 +1215,18 @@ html.dark .summary-box, html.dark .vat-box { background-color: #1a2533; border-c
 
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
+
+/* SKELETON CSS CHUẨN XÁC */
+.shimmer {
+  background: #e2e8f0;
+  background-image: linear-gradient(to right, #e2e8f0 0%, #f1f5f9 20%, #e2e8f0 40%, #e2e8f0 100%);
+  background-repeat: no-repeat;
+  background-size: 800px 100%;
+  animation: placeholderShimmer 1.5s infinite linear;
+}
+html.dark .shimmer {
+  background: #2b3035;
+  background-image: linear-gradient(to right, #2b3035 0%, #343a40 20%, #2b3035 40%, #2b3035 100%);
+}
+@keyframes placeholderShimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
 </style>

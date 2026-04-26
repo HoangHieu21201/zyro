@@ -26,7 +26,7 @@ class Voucher extends Model
         'usage_limit_per_user',
         'start_time',
         'end_time',
-        'is_public', // Bổ sung cờ Công khai/Bí mật
+        'is_public', 
         'status'
     ];
 
@@ -36,7 +36,7 @@ class Voucher extends Model
             'discount_value'       => 'decimal:2',
             'max_discount_amount'  => 'decimal:2',
             'min_spend'            => 'decimal:2',
-            'conditions'           => 'array', // Lưu JSON các ID sản phẩm/danh mục được áp dụng
+            'conditions'           => 'array',
             'usage_limit'          => 'integer',
             'usage_count'          => 'integer',
             'usage_limit_per_user' => 'integer',
@@ -44,5 +44,10 @@ class Voucher extends Model
             'start_time'           => 'datetime',
             'end_time'             => 'datetime',
         ];
+    }
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
     }
 }

@@ -133,27 +133,28 @@ class ClientCheckoutController extends Controller
                         $itemTotal = $itemPrice * $item->quantity;
                         $subTotal += $itemTotal;
 
-                        // ĐÃ FIX: Giá gốc (cost_price) lấy từ biến thể hoặc lấy từ sản phẩm cha
                         $costPrice = $variant->cost_price ?? ($variant->product->cost_price ?? 0);
 
-                        // ĐÃ FIX: Chuyển attrs thành Mảng (Array) vì OrderItem Cast variant_attributes => 'array'
                         $attrs = ['Mặc định'];
                         if ($variant->attributeValues && $variant->attributeValues->count() > 0) {
                             $attrs = $variant->attributeValues->pluck('value')->toArray();
                         }
 
-                        // ĐÃ FIX: Chỉnh tên cột khớp 100% với Model OrderItem của sếp
+                        // ĐÃ FIX: CHÈN THÊM DỮ LIỆU LOOKBOOK TỪ CART SANG ORDER
                         $orderItemsData[] = [
                             'product_id'         => $item->product_id,
                             'variant_id'         => $variant->id, 
                             'product_name'       => $variant->product ? $variant->product->name : 'Sản phẩm ZYRO',
                             'variant_sku'        => $variant->sku,
-                            'variant_attributes' => $attrs, // Mảng thuần, Laravel tự encode json
+                            'variant_attributes' => $attrs, 
                             'variant_image'      => $variant->image_url ?? ($variant->product ? $variant->product->thumbnail_image : null),
                             'purchased_price'    => $itemPrice,
                             'cost_price'         => $costPrice, 
                             'quantity'           => $item->quantity,
                             'total_price'        => $itemTotal,
+                            // LUÂN CHUYỂN THÔNG TIN COMBO Ở ĐÂY!!!
+                            'lookbook_id'        => $item->lookbook_id,
+                            'lookbook_selections'=> $item->lookbook_selections
                         ];
                     }
                 }
@@ -180,7 +181,7 @@ class ClientCheckoutController extends Controller
                         $discountAmount = $voucher->discount_value;
                     }
                     
-                    $voucherId = $voucher->id; // ĐÃ FIX: Lấy id của voucher để lưu vào Order
+                    $voucherId = $voucher->id; 
                     DB::table('vouchers')->where('id', $voucherId)->increment('usage_count');
                 }
 
@@ -189,8 +190,6 @@ class ClientCheckoutController extends Controller
 
                 $orderCode = 'ZYRO' . strtoupper(Str::random(8));
 
-                // ĐÃ FIX: Bảng Order không có các cột customer_name, đưa hết vào mảng shipping_info
-                // ĐÃ FIX: Đổi coupon_code thành voucher_id
                 $order = Order::create([
                     'order_code'       => $orderCode,
                     'user_id'          => $user->id ?? null,
@@ -212,12 +211,12 @@ class ClientCheckoutController extends Controller
                     'status'           => 'pending',
                 ]);
 
+                // Lưu Order Items
                 foreach ($orderItemsData as $itemData) {
                     $itemData['order_id'] = $order->id;
                     OrderItem::create($itemData);
                 }
 
-                // ĐÃ FIX: Cấu trúc History khớp với bảng (new_status, changed_by, changed_by_type)
                 OrderStatusHistory::create([
                     'order_id'        => $order->id,
                     'old_status'      => null,
@@ -333,13 +332,11 @@ class ClientCheckoutController extends Controller
         return redirect($frontendUrl . '/checkout/failed?order=' . $orderCode);
     }
 
-    // ĐÃ FIX LỖI EMAIL TÌM KHÔNG THẤY CUSTOMER EMAIL
     private function sendOrderConfirmationEmail($order)
     {
         try {
             $order->load('items');
 
-            // Vì đã gộp vào shipping_info nên phải lấy email từ đó
             $shippingInfo = is_string($order->shipping_info) ? json_decode($order->shipping_info, true) : $order->shipping_info;
             $customerEmail = $shippingInfo['email'] ?? null;
 

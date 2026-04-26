@@ -54,6 +54,7 @@
             </a>
           </li>
           <li class="nav-item text-nowrap ms-auto">
+            <!-- ĐÃ FIX: Tên tab đổi lại cho chuẩn xác, bỏ chữ Hoàn trả -->
             <a class="nav-link py-2 px-3 d-flex align-items-center custom-tab text-danger" href="#" :class="{ 'active-tab': activeTab === 'cancelled' }" @click.prevent="switchTab('cancelled')">
               <i class="bi bi-x-circle-fill me-2 text-danger"></i> Đã hủy
               <span class="badge ms-2 rounded-pill tab-badge" :class="{'active-badge': activeTab === 'cancelled', 'bg-danger text-white border-danger': activeTab !== 'cancelled'}">{{ counts.cancelled || 0 }}</span>
@@ -135,7 +136,7 @@
                 </tr>
                 <tr v-else v-for="order in orders" :key="order.id" :class="{'bg-light opacity-75 dark:bg-[#121416]': order.deleted_at}">
                   <td class="px-4 py-3 font-monospace fw-bold text-urban">
-                    <router-link :to="{ name: 'admin-orders-edit', params: { id: order.id } }" class="text-decoration-none text-urban hover-text-danger transition-all">
+                    <router-link :to="{ name: 'admin-orders-edit', params: { id: order.id } }" class="text-decoration-none transition-all hover-text-danger" :class="getOrderStatusTextColor(order.status)">
                       #{{ order.order_code }}
                     </router-link>
                     <div class="text-muted small fw-normal mt-1" style="font-size: 0.7rem;">{{ formatDateTime(order.created_at) }}</div>
@@ -153,16 +154,24 @@
                     </div>
                   </td>
                   
+                  <!-- ĐÃ BỔ SUNG GIAO DIỆN TÁCH SẢN PHẨM / COMBO CHO CỘT TỔNG THU Y NHƯ ẢNH -->
                   <td class="px-4 text-end">
                     <div class="fw-bold text-danger fs-6">{{ formatCurrency(order.total_amount) }}</div>
-                    <div class="text-muted small mt-1"><i class="bi bi-bag-check me-1"></i>{{ order.items_count || 0 }} SP</div>
+                    <div class="text-muted mt-1 d-flex justify-content-end flex-wrap gap-1" style="font-size: 0.7rem;">
+                      <span v-if="getComboCount(order.items) > 0" class="badge bg-secondary bg-opacity-10 text-secondary border fw-medium" title="Combo">
+                        <i class="bi bi-magic me-1"></i>{{ getComboCount(order.items) }} Combo
+                      </span>
+                      <span v-if="getRetailCount(order.items) > 0" class="badge bg-light dark:bg-[#2b3035] text-dark dark:text-gray-300 border dark:border-gray-600 fw-medium" title="Sản phẩm lẻ">
+                        <i class="bi bi-box-seam me-1"></i>{{ getRetailCount(order.items) }} SP
+                      </span>
+                    </div>
                   </td>
 
                   <td class="px-4 text-center">
                     <span class="badge border px-3 py-2 shadow-sm w-100" :class="getPaymentStatusClass(order.payment_status)">
                       {{ getPaymentStatusLabel(order.payment_status) }}
                     </span>
-                    <div class="text-muted mt-1 font-monospace" style="font-size: 0.65rem;">VNPAY/COD</div>
+                    <div class="text-muted mt-1 font-monospace" style="font-size: 0.65rem;">{{ order.payment_method ? order.payment_method.toUpperCase() : 'N/A' }}</div>
                   </td>
 
                   <td class="px-4 text-center">
@@ -191,7 +200,8 @@
                 <div class="card-body p-3">
                   <div class="d-flex justify-content-between align-items-center mb-3 border-bottom dark:border-gray-700 pb-2">
                      <div>
-                       <div class="fw-bold font-monospace text-urban">#{{ order.order_code }}</div>
+                       <!-- ĐÃ FIX MÀU MÃ ĐƠN THEO TRẠNG THÁI TRÊN MOBILE -->
+                       <div class="fw-bold font-monospace" :class="getOrderStatusTextColor(order.status)">#{{ order.order_code }}</div>
                        <small class="text-muted">{{ formatDateTime(order.created_at) }}</small>
                      </div>
                      <span class="badge border" :class="getOrderStatusClass(order.status)">{{ getOrderStatusLabel(order.status) }}</span>
@@ -209,8 +219,15 @@
                   
                   <div class="d-flex justify-content-between align-items-end pt-2 border-top dark:border-gray-700 mt-2 mb-3">
                     <div>
-                      <span class="text-muted small d-block mb-1">Tổng cộng ({{ order.items_count }} SP)</span>
-                      <span class="badge border px-2 py-1" :class="getPaymentStatusClass(order.payment_status)">{{ getPaymentStatusLabel(order.payment_status) }}</span>
+                      <div class="d-flex gap-1 mb-1">
+                        <span v-if="getComboCount(order.items) > 0" class="badge bg-secondary bg-opacity-10 text-secondary border fw-medium" style="font-size: 0.65rem;">
+                          <i class="bi bi-magic"></i> {{ getComboCount(order.items) }} Combo
+                        </span>
+                        <span v-if="getRetailCount(order.items) > 0" class="badge bg-light dark:bg-[#2b3035] text-dark dark:text-gray-300 border dark:border-gray-600 fw-medium" style="font-size: 0.65rem;">
+                          <i class="bi bi-box-seam"></i> {{ getRetailCount(order.items) }} SP
+                        </span>
+                      </div>
+                      <span class="badge border px-2 py-1 mt-1" :class="getPaymentStatusClass(order.payment_status)">{{ getPaymentStatusLabel(order.payment_status) }}</span>
                     </div>
                     <div class="text-danger fw-bold fs-5">
                       {{ formatCurrency(order.total_amount) }}
@@ -303,6 +320,20 @@ const getOrderStatusClass = (status) => {
   return map[status] || 'bg-light text-secondary border-secondary';
 };
 
+const getOrderStatusTextColor = (status) => {
+  const map = {
+    'pending': 'text-warning',
+    'confirmed': 'text-info',
+    'processing': 'text-primary',
+    'shipping': 'text-primary',
+    'completed': 'text-success',
+    'cancelled': 'text-danger',
+    'returned': 'text-secondary',
+    'refunded': 'text-dark'
+  };
+  return map[status] || 'text-urban';
+};
+
 const getOrderStatusLabel = (status) => {
   const map = {
     'pending': 'Chờ xác nhận',
@@ -359,6 +390,21 @@ const getCustomerPhone = (order) => {
   } catch(e) { return 'N/A'; }
 };
 
+// HÀM ĐẾM SỐ LƯỢNG SẢN PHẨM LẺ VÀ COMBO
+const getComboCount = (items) => {
+  if (!items || items.length === 0) return 0;
+  const comboIds = new Set();
+  items.forEach(item => {
+      if (item.lookbook_id) comboIds.add(item.lookbook_id);
+  });
+  return comboIds.size;
+};
+
+const getRetailCount = (items) => {
+  if (!items || items.length === 0) return 0;
+  return items.filter(item => !item.lookbook_id).reduce((sum, item) => sum + item.quantity, 0);
+};
+
 // Lọc & Phân trang
 const hasActiveFilters = computed(() => {
   return filters.value.search !== '' || filters.value.payment_status !== '' || filters.value.date_from !== '' || filters.value.date_to !== '';
@@ -380,13 +426,13 @@ const onSearchInput = () => {
   searchTimeout = setTimeout(() => { applyFilters(); }, 500); 
 };
 
+// ĐÃ FIX: Đổi tham số cancelled để chuẩn xác lọc trạng thái đơn hủy chưa thanh toán
 const switchTab = (tab) => {
   activeTab.value = tab;
   if (tab === 'all') {
       filters.value.status = '';
   } else if (tab === 'cancelled') {
-      // Vì hủy và trả gộp chung tab
-      filters.value.status = 'cancelled,returned'; 
+      filters.value.status = 'cancelled'; 
   } else if (tab === 'confirmed') {
       filters.value.status = 'confirmed,processing'; 
   } else {
@@ -417,11 +463,8 @@ const fetchData = async (isSilent = false) => {
     const params = new URLSearchParams();
     params.append('page', pagination.value.current_page);
     
-    // Nếu status bị gộp (VD: cancelled,returned), gọi API custom hoặc tách mảng (Phụ thuộc BE, ở đây BE của ta dùng "=" nên ta sửa lại)
-    // Để giữ nguyên BE ta tạm bỏ logic mảng, lấy tạm cái đầu tiên. Sếp có thể tự nâng cấp BE để nhận IN()
     if(filters.value.status) {
-        const firstStatus = filters.value.status.split(',')[0];
-        params.append('status', firstStatus); 
+        params.append('status', filters.value.status); 
     }
 
     if(filters.value.payment_status) params.append('payment_status', filters.value.payment_status);
@@ -491,4 +534,4 @@ html.dark .active-badge { background-color: rgba(255, 255, 255, 0.1) !important;
 
 .custom-scrollbar-x::-webkit-scrollbar { height: 6px; }
 .custom-scrollbar-x::-webkit-scrollbar-thumb { background: var(--color-c-light, #94B4C1); border-radius: 10px; }
-</style> 
+</style>

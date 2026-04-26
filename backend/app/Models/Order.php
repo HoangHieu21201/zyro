@@ -32,6 +32,7 @@ class Order extends Model
         'tracking_number',
         'shipping_status',
         'status',
+        'return_status', 
         'order_note'
     ];
 

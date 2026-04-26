@@ -8,7 +8,7 @@ use App\Models\OrderStatusHistory;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\ProductVariant;
-use App\Models\Review; // BẮT BUỘC PHẢI THÊM DÒNG NÀY
+use App\Models\Review; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -25,16 +25,26 @@ class ClientOrderController extends Controller
         $dateTo = $request->query('date_to', '');
         $sort = $request->query('sort', 'desc');
 
+        // Tính tổng số đơn và Tổng chi tiêu (Chỉ tính các đơn Giao thành công)
         $stats = [
-            'pending' => Order::where('user_id', $userId)->whereIn('status', ['pending', 'confirmed'])->count(),
-            'shipping' => Order::where('user_id', $userId)->where('status', 'shipping')->count(),
-            'completed' => Order::where('user_id', $userId)->where('status', 'completed')->count(),
+            'total_orders' => Order::where('user_id', $userId)->count(),
+            'total_spent'  => Order::where('user_id', $userId)->where('status', 'completed')->sum('total_amount')
         ];
 
-        $query = Order::where('user_id', $userId)->with(['items.variant']);
+        $query = Order::where('user_id', $userId)->with(['items.variant', 'items.lookbook']);
 
+        // Bộ lọc trạng thái Hủy và Hoàn Trả rành mạch
         if ($status && $status !== 'all') {
-            $query->where('status', $status);
+            if ($status === 'returned') {
+                $query->where(function ($q) {
+                    $q->whereNotNull('return_status')
+                      ->orWhere('status', 'returned');
+                });
+            } elseif ($status === 'cancelled') {
+                $query->where('status', 'cancelled')->whereNull('return_status');
+            } else {
+                $query->where('status', $status);
+            }
         }
 
         if (!empty($search)) {
@@ -61,7 +71,6 @@ class ClientOrderController extends Controller
 
         $orders = $query->paginate(10);
 
-        // ĐÃ THÊM: Quét các đơn hàng xem đã đánh giá chưa
         $orders->getCollection()->transform(function ($order) {
             $order->is_reviewed = Review::where('order_id', $order->id)->exists();
             return $order;
@@ -77,11 +86,10 @@ class ClientOrderController extends Controller
     public function show($id)
     {
         $order = Order::where('user_id', Auth::id())
-            ->with(['items.variant', 'histories'])
+            ->with(['items.variant', 'items.lookbook', 'histories'])
             ->findOrFail($id);
 
         $order->simulated_tracking = $this->simulateTracking($order);
-        // ĐÃ THÊM
         $order->is_reviewed = Review::where('order_id', $order->id)->exists();
 
         return response()->json(['success' => true, 'data' => $order]);
@@ -98,11 +106,15 @@ class ClientOrderController extends Controller
             ], 400);
         }
 
-        $request->validate(['reason' => 'required|string|max:255']);
+        // Kiểm tra an toàn cho Form Checklist
+        $request->validate(['reason' => 'required|string|max:1000']);
 
         DB::transaction(function () use ($order, $request) {
+            $returnStatus = in_array($order->payment_status, ['paid']) ? 'pending' : null;
+
             $order->update([
                 'status' => 'cancelled',
+                'return_status' => $returnStatus,
                 'payment_status' => $order->payment_status === 'unpaid' ? 'failed' : $order->payment_status
             ]);
 
@@ -133,8 +145,16 @@ class ClientOrderController extends Controller
             return response()->json(['success' => false, 'message' => 'Chỉ có thể yêu cầu hoàn trả đối với đơn hàng đã hoàn thành.'], 400);
         }
 
-        $request->validate(['reason' => 'required|string|max:500']);
+        if ($order->return_status !== null) {
+            return response()->json(['success' => false, 'message' => 'Đơn hàng này đã được gửi yêu cầu hoàn trả/hỗ trợ trước đó.'], 400);
+        }
 
+        // Kiểm tra an toàn cho Form Checklist
+        $request->validate(['reason' => 'required|string|max:1000']);
+
+        $order->update(['return_status' => 'pending']);
+
+        // Ghi lại toàn bộ Nhu Cầu + Lý Do + Chi tiết Khách hàng nhập vào Database
         OrderStatusHistory::create([
             'order_id' => $order->id,
             'old_status' => $order->status,
@@ -144,7 +164,7 @@ class ClientOrderController extends Controller
             'changed_by' => Auth::id()
         ]);
 
-        return response()->json(['success' => true, 'message' => 'Yêu cầu của bạn đã được gửi. Bộ phận CSKH sẽ sớm liên hệ lại.']);
+        return response()->json(['success' => true, 'message' => 'Yêu cầu của bạn đã được gửi. Bộ phận CSKH sẽ sớm liên hệ hỗ trợ.']);
     }
 
     public function buyAgain($id)
@@ -173,17 +193,26 @@ class ClientOrderController extends Controller
             }
 
             $addQty = min($item->quantity, $currentStock, 50);
-            $existingCartItem = CartItem::where('cart_id', $cart->id)->where('variant_id', $variant->id)->first();
+            
+            $existingCartItem = CartItem::where('cart_id', $cart->id)
+                                        ->where('variant_id', $variant->id)
+                                        ->where('lookbook_id', $item->lookbook_id)
+                                        ->first();
 
             if ($existingCartItem) {
                 $newQty = min($existingCartItem->quantity + $addQty, $currentStock, 50);
-                $existingCartItem->update(['quantity' => $newQty]);
+                $existingCartItem->update([
+                    'quantity' => $newQty,
+                    'lookbook_selections' => $item->lookbook_selections
+                ]);
             } else {
                 CartItem::create([
                     'cart_id' => $cart->id,
                     'product_id' => $variant->product_id,
                     'variant_id' => $variant->id,
-                    'quantity' => $addQty
+                    'quantity' => $addQty,
+                    'lookbook_id' => $item->lookbook_id,
+                    'lookbook_selections' => $item->lookbook_selections
                 ]);
             }
             $addedCount++;

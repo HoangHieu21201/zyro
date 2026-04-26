@@ -1,12 +1,12 @@
 <template>
   <!-- Padding-top 120px để tránh bị Header Fixed đè lên -->
-  <div class="cart-page-wrapper pb-5 mb-5" style="padding-top: 120px;">
+  <div class="cart-page-wrapper pb-5 mb-5" style="padding-top: 100px;">
     
     <div class="zyro-container">
       
       <!-- BREADCRUMB ĐIỀU HƯỚNG GỌN GÀNG -->
       <nav aria-label="breadcrumb" class="mb-4">
-        <ol class="breadcrumb small fw-semibold text-uppercase" style="letter-spacing: 0.5px;">
+        <ol class="breadcrumb small fw-semibold text-uppercase font-sans-vn" style="letter-spacing: 0.5px;">
           <li class="breadcrumb-item"><router-link to="/" class="text-decoration-none text-muted hover-text-dark">Trang chủ</router-link></li>
           <li class="breadcrumb-item active text-dark dark:text-gray-300" aria-current="page">Giỏ hàng của bạn</li>
         </ol>
@@ -28,9 +28,9 @@
         <div class="bg-light dark:bg-[#1a2533] rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 120px; height: 120px;">
           <i class="bi bi-bag-x text-muted opacity-50" style="font-size: 4rem;"></i>
         </div>
-        <h4 class="fw-bold text-dark dark:text-white mb-3">Giỏ hàng trống</h4>
-        <p class="text-muted mb-4">Bạn chưa chọn sản phẩm nào vào giỏ hàng.</p>
-        <router-link to="/category" class="btn btn-urban text-white px-5 py-3 fw-bold rounded-pill shadow-sm transition-all hover-transform">
+        <h4 class="fw-bold text-dark dark:text-white mb-3 font-sans-vn">Giỏ hàng trống</h4>
+        <p class="text-muted mb-4 font-sans-vn">Bạn chưa chọn sản phẩm nào vào giỏ hàng.</p>
+        <router-link to="/category" class="btn btn-urban text-white px-5 py-3 fw-bold rounded-pill shadow-sm transition-all hover-transform font-sans-vn">
           Tiếp Tục Mua Sắm
         </router-link>
       </div>
@@ -39,14 +39,14 @@
       <div v-else class="row g-4 g-lg-5 animation-fade-in">
         
         <!-- ========================================== -->
-        <!-- CỘT TRÁI: DANH SÁCH SẢN PHẨM               -->
+        <!-- CỘT TRÁI: DANH SÁCH SẢN PHẨM (GOM NHÓM)    -->
         <!-- ========================================== -->
         <div class="col-lg-8">
           
-          <!-- THANH TIẾN TRÌNH FREESHIP NẰM NGAY ĐẦU TIÊN ĐỂ HÚT MẮT -->
+          <!-- THANH TIẾN TRÌNH FREESHIP -->
           <div class="p-3 rounded-4 mb-4 shadow-sm border border-urban border-opacity-25" style="background-color: rgba(84, 119, 146, 0.08);">
              <div v-if="remainingForFreeship > 0">
-               <div class="d-flex justify-content-between small fw-bold mb-2 text-dark dark:text-gray-200">
+               <div class="d-flex justify-content-between small fw-bold mb-2 text-dark dark:text-gray-200 font-sans-vn">
                  <span>Mua thêm <span class="text-urban fs-6">{{ formatCurrency(remainingForFreeship) }}</span> để được</span>
                  <span class="text-urban fw-bolder text-uppercase tracking-widest"><i class="bi bi-truck me-1"></i> FREESHIP</span>
                </div>
@@ -54,86 +54,164 @@
                  <div class="progress-bar bg-urban progress-bar-striped progress-bar-animated" :style="{ width: freeshipProgress + '%' }"></div>
                </div>
              </div>
-             <div v-else class="text-urban fw-bold text-center d-flex align-items-center justify-content-center py-1">
+             <div v-else class="text-urban fw-bold text-center d-flex align-items-center justify-content-center py-1 font-sans-vn">
                <i class="bi bi-check-circle-fill me-2 fs-4"></i> Tuyệt vời! Đơn hàng của bạn đã đủ điều kiện Miễn phí giao hàng.
              </div>
           </div>
 
           <div class="d-flex justify-content-between align-items-end mb-3">
-             <h5 class="fw-bold text-dark dark:text-white m-0">Sản phẩm trong giỏ ({{ cartStore.totalQuantity }})</h5>
+             <h5 class="fw-bold text-dark dark:text-white m-0 font-sans-vn">Sản phẩm trong giỏ ({{ cartStore.totalQuantity }})</h5>
           </div>
 
           <div class="cart-items-list border-top dark:border-gray-700">
-            <!-- TỪNG ITEM SẢN PHẨM -->
-            <div v-for="item in cartStore.items" :key="'cartItem'+item.variant_id" 
-                 class="cart-item position-relative py-4 border-bottom dark:border-gray-700 px-2 transition-all">
-              
-              <!-- SPINNER 3 CHẤM BÁO HIỆU ĐANG CẬP NHẬT SỐ LƯỢNG/XÓA NỔI LÊN TRÊN -->
-              <div v-if="updatingItemId === item.variant_id" class="position-absolute top-50 start-50 translate-middle bouncing-loader" style="z-index: 10;">
-                 <span></span><span></span><span></span>
+            
+            <template v-for="(group, gIdx) in cartGroups" :key="'grp'+gIdx">
+
+              <!-- ===================================== -->
+              <!-- LOẠI 1: GÓI COMBO LOOKBOOK            -->
+              <!-- ===================================== -->
+              <div v-if="group.isLookbook" 
+                   class="cart-item position-relative py-4 border-bottom dark:border-gray-700 px-2 transition-all bg-urban-effect dark:bg-[#1a2533] rounded-4 mb-3 mt-3 shadow-sm border border-secondary border-opacity-25"
+                   :class="{'pe-none opacity-75': updatingItemId === 'combo_' + group.lookbook_id}">
+                  
+                  <!-- NÚT XÓA COMBO -->
+                  <button class="btn-delete-circle d-flex align-items-center justify-content-center transition-all bg-white dark:bg-[#212529]" @click="removeCombo(group)" title="Xóa toàn bộ Combo">
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+
+                  <!-- SPINNER -->
+                  <div v-if="updatingItemId === 'combo_' + group.lookbook_id" class="position-absolute top-50 start-50 translate-middle bouncing-loader" style="z-index: 10;">
+                     <span></span><span></span><span></span>
+                  </div>
+
+                  <div class="row align-items-start position-relative">
+                    <!-- 1. THÔNG TIN COMBO -->
+                    <div class="col-12 col-md-7 mb-3 mb-md-0 pe-md-4">
+                      <div class="d-flex align-items-start gap-3">
+                        <img :src="group.lookbook_image || group.items[0]?.image || '/client_placeholder.png'" 
+                             @error="e => e.target.src='/client_placeholder.png'" 
+                             class="rounded-3 border border-secondary border-opacity-25 dark:border-gray-600 object-fit-cover shadow-sm bg-light flex-shrink-0 cursor-pointer" 
+                             style="width: 100px; height: 130px;"
+                             @click="toggleGroup(group.lookbook_id)">
+                        
+                        <div class="flex-grow-1">
+                          <div class="cursor-pointer" @click="toggleGroup(group.lookbook_id)">
+                             <span class="badge bg-urban text-white rounded-pill px-3 py-1 shadow-sm font-sans-vn d-inline-block mb-2">
+                               <i class="bi bi-magic me-1"></i> {{ group.lookbook_name }}
+                             </span>
+                             <div class="fw-bold text-dark dark:text-gray-200 mb-1 font-sans-vn fs-6">
+                               Combo {{ group.items.length }} món đồ
+                             </div>
+                             <div class="text-muted small d-flex align-items-center gap-1 hover-urban transition-color mt-2 font-sans-vn fw-medium">
+                               <i class="bi" :class="expandedGroups.includes(group.lookbook_id) ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+                               {{ expandedGroups.includes(group.lookbook_id) ? 'Thu gọn chi tiết' : 'Xem chi tiết các món' }}
+                             </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 2. SỐ LƯỢNG & TỔNG TIỀN COMBO -->
+                    <div class="col-12 col-md-5 d-flex justify-content-between justify-content-md-end align-items-center gap-md-4 position-relative mt-2 mt-md-0">
+                      <div class="quantity-box border dark:border-gray-600 rounded-pill d-inline-flex bg-white dark:bg-[#212529] shadow-sm overflow-hidden" style="height: 38px;">
+                        <button class="btn p-0 border-0 text-dark dark:text-gray-300 d-flex align-items-center justify-content-center hover-urban transition-color" style="width: 35px;" @click="decreaseComboQty(group)"><i class="bi bi-dash"></i></button>
+                        <input type="number" class="form-control border-0 text-center fw-bold px-0 h-100 bg-transparent dark:text-white shadow-none no-spinners font-sans-vn" 
+                               style="width: 40px; font-size: 0.95rem;" 
+                               :value="group.comboQuantity" 
+                               @change="onManualComboQtyChange(group, $event.target.value)">
+                        <button class="btn p-0 border-0 text-dark dark:text-gray-300 d-flex align-items-center justify-content-center hover-urban transition-color" style="width: 35px;" @click="increaseComboQty(group)"><i class="bi bi-plus"></i></button>
+                      </div>
+
+                      <div class="fw-bold text-danger fs-4 text-end font-sans-vn" style="min-width: 100px;">
+                         {{ formatCurrency(group.totalPrice) }}
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- DROPDOWN CHI TIẾT CÁC MÓN BÊN TRONG -->
+                  <div v-show="expandedGroups.includes(group.lookbook_id)" class="combo-details mt-4 pt-3 border-top border-secondary border-opacity-25 ps-md-3">
+                     <div class="d-flex flex-column gap-3">
+                        <div v-for="item in group.items" :key="'cb_item_'+item.variant_id" class="d-flex align-items-center gap-3 bg-white dark:bg-[#212529] p-2 rounded-3 border border-light-subtle dark:border-gray-700 shadow-sm">
+                           <img :src="item.image || '/client_placeholder.png'" style="width: 55px; height: 75px;" class="rounded-2 border object-fit-cover">
+                           <div class="flex-grow-1">
+                              <h6 class="fw-semibold text-dark dark:text-gray-200 mb-1 line-clamp-1 font-sans-vn" style="font-size: 0.9rem;">
+                                 {{ item.product_name }}
+                              </h6>
+                              <div class="text-secondary dark:text-gray-400 font-sans-vn" style="font-size: 0.85rem;">
+                                 {{ item.attributes || 'Mặc định' }} <span class="mx-1">|</span> <span class="fw-bold text-dark dark:text-gray-300">{{ formatCurrency(item.current_price) }}</span>
+                              </div>
+                           </div>
+                           <div class="text-muted small fw-bold pe-3">x{{ item.quantity }}</div>
+                        </div>
+                     </div>
+                  </div>
+
               </div>
 
-              <!-- LỚP BỌC NỘI DUNG: Mờ đi và khóa click khi đang cập nhật -->
-              <div class="transition-all w-100" :class="{'pe-none opacity-50': updatingItemId === item.variant_id}">
+              <!-- ===================================== -->
+              <!-- LOẠI 2: SẢN PHẨM LẺ BÌNH THƯỜNG       -->
+              <!-- ===================================== -->
+              <template v-else>
+                <div v-for="item in group.items" :key="'cartItem'+item.variant_id" 
+                     class="cart-item position-relative py-4 border-bottom dark:border-gray-700 px-2 transition-all"
+                     :class="{'pe-none opacity-50': updatingItemId === item.variant_id}">
                   
-                  <!-- NÚT XÓA BỌC VIỀN ĐỎ NẰM GÓC TRÊN BÊN PHẢI -->
+                  <div v-if="updatingItemId === item.variant_id" class="position-absolute top-50 start-50 translate-middle bouncing-loader" style="z-index: 10;">
+                     <span></span><span></span><span></span>
+                  </div>
+
                   <button class="btn-delete-circle d-flex align-items-center justify-content-center transition-all" @click="removeItem(item)" title="Xóa khỏi giỏ">
                     <i class="bi bi-x-lg"></i>
                   </button>
 
                   <div class="row align-items-center position-relative">
-                    
-                    <!-- 1. THÔNG TIN SẢN PHẨM -->
                     <div class="col-12 col-md-7 mb-3 mb-md-0 pe-md-4">
                       <div class="d-flex align-items-start gap-3">
                         <img :src="item.image || '/client_placeholder.png'" @error="e => e.target.src='/client_placeholder.png'" 
                              class="rounded-3 border dark:border-gray-600 object-fit-cover shadow-sm bg-light flex-shrink-0" style="width: 90px; height: 120px;">
                         <div class="flex-grow-1">
-                          <h6 class="fw-bold text-dark dark:text-gray-200 mb-2 line-clamp-2 pe-5">
+                          <h6 class="fw-bold text-dark dark:text-gray-200 mb-2 line-clamp-2 pe-5 font-sans-vn">
                             <router-link :to="`/product/${item.product_slug || item.product_id}`" class="text-decoration-none text-dark dark:text-gray-200 hover-text-urban transition-color">
                                {{ item.product_name }}
                             </router-link>
                           </h6>
                           
-                          <!-- Thuộc tính Màu/Size -->
                           <div class="d-flex flex-wrap gap-2 mt-1 mb-2">
-                            <span class="d-inline-flex align-items-center bg-white dark:bg-[#2b3035] text-dark dark:text-gray-300 border dark:border-gray-600 px-2 py-1 rounded small shadow-sm fw-medium">
+                            <span class="d-inline-flex align-items-center bg-white dark:bg-[#2b3035] text-dark dark:text-gray-300 border dark:border-gray-600 px-2 py-1 rounded small shadow-sm fw-medium font-sans-vn">
                               {{ item.attributes || 'Mặc định' }}
                             </span>
                           </div>
                           
-                          <div class="fw-bold text-muted dark:text-gray-400" style="font-size: 0.95rem;">
+                          <div class="fw-bold text-muted dark:text-gray-400 font-sans-vn" style="font-size: 0.95rem;">
                             {{ formatCurrency(item.current_price) }}
                           </div>
 
-                          <!-- Cảnh báo hết hàng -->
-                          <div v-if="item.stock_warning" class="text-danger small mt-1 fw-medium" style="font-size: 0.75rem;">
+                          <div v-if="item.stock_warning" class="text-danger small mt-1 fw-medium font-sans-vn" style="font-size: 0.75rem;">
                              <i class="bi bi-exclamation-triangle"></i> Số lượng vượt quá tồn kho
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    <!-- 2. SỐ LƯỢNG & 3. THÀNH TIỀN -->
                     <div class="col-12 col-md-5 d-flex justify-content-between justify-content-md-end align-items-center gap-md-4 position-relative">
-                      
-                      <!-- Ô ĐIỀU CHỈNH SỐ LƯỢNG -->
                       <div class="quantity-box border dark:border-gray-600 rounded-pill d-inline-flex bg-light dark:bg-[#212529] shadow-sm overflow-hidden" style="height: 38px;">
                         <button class="btn p-0 border-0 text-dark dark:text-gray-300 d-flex align-items-center justify-content-center hover-urban transition-color" style="width: 35px;" @click="decreaseQty(item)"><i class="bi bi-dash"></i></button>
-                        <input type="text" class="form-control border-0 text-center fw-bold px-0 h-100 bg-transparent dark:text-white shadow-none" style="width: 40px; font-size: 0.9rem;" :value="item.quantity" readonly>
+                        <input type="number" class="form-control border-0 text-center fw-bold px-0 h-100 bg-transparent dark:text-white shadow-none no-spinners font-sans-vn" 
+                               style="width: 40px; font-size: 0.95rem;" 
+                               :value="item.quantity" 
+                               @change="onManualQtyChange(item, $event.target.value)">
                         <button class="btn p-0 border-0 text-dark dark:text-gray-300 d-flex align-items-center justify-content-center hover-urban transition-color" style="width: 35px;" @click="increaseQty(item)"><i class="bi bi-plus"></i></button>
                       </div>
 
-                      <!-- TỔNG TIỀN THEO ITEM -->
-                      <div class="fw-bold text-dark dark:text-white fs-5 text-end" style="min-width: 100px;">
+                      <div class="fw-bold text-dark dark:text-white fs-5 text-end font-sans-vn" style="min-width: 100px;">
                          {{ formatCurrency(item.current_price * item.quantity) }}
                       </div>
-                      
                     </div>
-
                   </div>
-              </div>
-            </div>
+                </div>
+              </template>
+
+            </template>
           </div>
           <!-- Kết thúc danh sách -->
 
@@ -144,29 +222,29 @@
         <!-- ========================================== -->
         <div class="col-lg-4">
           <div class="card border border-light-subtle shadow-sm rounded-4 dark:bg-[#1a2533] p-4 sticky-top bg-light" style="top: 100px;">
-            <h5 class="fw-bold text-dark dark:text-white mb-4 border-bottom dark:border-gray-700 pb-3 text-uppercase tracking-wide">Tổng Kết Đơn Hàng</h5>
+            <h5 class="fw-bold text-dark dark:text-white mb-4 border-bottom dark:border-gray-700 pb-3 text-uppercase tracking-wide font-sans-vn">Tổng Kết Đơn Hàng</h5>
 
             <!-- Chi tiết tính tiền -->
-            <div class="d-flex justify-content-between mb-3 text-dark dark:text-gray-300">
+            <div class="d-flex justify-content-between mb-3 text-dark dark:text-gray-300 font-sans-vn">
               <span>Tạm tính ({{ cartStore.totalQuantity }} SP)</span>
               <span class="fw-semibold">{{ formatCurrency(cartStore.totalPrice) }}</span>
             </div>
             
-            <div class="d-flex justify-content-between mb-4 text-dark dark:text-gray-300">
+            <div class="d-flex justify-content-between mb-4 text-dark dark:text-gray-300 font-sans-vn">
               <span>Phí giao hàng</span>
               <span class="fw-semibold" v-if="remainingForFreeship > 0">Tính ở bước thanh toán</span>
               <span class="fw-bold text-urban" v-else>Miễn phí</span>
             </div>
 
             <!-- Tổng tiền -->
-            <div class="d-flex justify-content-between align-items-center mb-4 pt-3 border-top border-secondary-subtle dark:border-gray-700">
+            <div class="d-flex justify-content-between align-items-center mb-4 pt-3 border-top border-secondary-subtle dark:border-gray-700 font-sans-vn">
               <span class="fw-bold text-uppercase fs-5 text-dark dark:text-white">Tổng Cộng</span>
               <span class="fw-bold text-danger fs-3">{{ formatCurrency(cartStore.totalPrice) }}</span>
             </div>
             
-            <small class="text-muted fst-italic d-block mb-4 text-end">(Đã bao gồm VAT)</small>
+            <small class="text-muted fst-italic d-block mb-4 text-end font-sans-vn">(Đã bao gồm VAT)</small>
 
-            <button class="btn btn-urban btn-lg w-100 rounded-pill fw-bold text-uppercase tracking-widest shadow-lg hover-transform" 
+            <button class="btn btn-urban btn-lg w-100 rounded-pill fw-bold text-uppercase tracking-widest shadow-lg hover-transform font-sans-vn" 
                     :class="{'pe-none opacity-50': updatingItemId !== null || cartStore.isLoading}" 
                     @click="proceedToCheckout">
               Thanh Toán <i class="bi bi-arrow-right ms-2"></i>
@@ -198,10 +276,10 @@ import { ZyroSwal } from '@/components/client/ZyroSwal';
 const router = useRouter();
 const cartStore = useCartStore();
 
-// Track item đang thao tác để hiện spinner cục bộ
+// Track item đang thao tác
 const updatingItemId = ref(null);
+const expandedGroups = ref([]);
 
-// Config Freeship
 const FREESHIP_THRESHOLD = 1000000;
 
 const remainingForFreeship = computed(() => {
@@ -214,12 +292,122 @@ const freeshipProgress = computed(() => {
   return percent > 100 ? 100 : percent;
 });
 
+// THUẬT TOÁN GOM NHÓM ĐÃ ĐƯỢC CHUẨN HÓA
+const cartGroups = computed(() => {
+  const result = [];
+  const normalGroup = { isLookbook: false, items: [] };
+
+  cartStore.items.forEach(item => {
+    if (item.lookbook_id) {
+      let group = result.find(g => g.isLookbook && g.lookbook_id === item.lookbook_id);
+      if (!group) {
+        group = { 
+          isLookbook: true, 
+          lookbook_id: item.lookbook_id, 
+          lookbook_name: item.lookbook_name || 'Combo Phong Cách',
+          lookbook_image: item.lookbook_image,
+          items: [],
+          comboQuantity: item.quantity, 
+          totalPrice: 0 
+        };
+        result.push(group);
+      }
+      group.items.push(item);
+      group.totalPrice += (item.current_price * item.quantity);
+    } else {
+      normalGroup.items.push(item);
+    }
+  });
+
+  if (normalGroup.items.length > 0) {
+    result.push(normalGroup);
+  }
+
+  return result;
+});
+
+const toggleGroup = (id) => {
+  if (expandedGroups.value.includes(id)) {
+    expandedGroups.value = expandedGroups.value.filter(gId => gId !== id);
+  } else {
+    expandedGroups.value.push(id);
+  }
+};
+
 const formatCurrency = (val) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0);
 };
 
 // ========================================================
-// ACTIONS GỌI PINIA STORE
+// ACTIONS COMBO (BULK)
+// ========================================================
+const increaseComboQty = async (group) => {
+  const newQty = group.comboQuantity + 1;
+  if (newQty > 50) return;
+  
+  updatingItemId.value = 'combo_' + group.lookbook_id;
+  try {
+    for (const item of group.items) {
+      await cartStore.updateQuantity(item.item_id, item.variant_id, newQty);
+    }
+  } finally {
+    updatingItemId.value = null;
+  }
+};
+
+const decreaseComboQty = async (group) => {
+  if (group.comboQuantity <= 1) return;
+  const newQty = group.comboQuantity - 1;
+  
+  updatingItemId.value = 'combo_' + group.lookbook_id;
+  try {
+    for (const item of group.items) {
+      await cartStore.updateQuantity(item.item_id, item.variant_id, newQty);
+    }
+  } finally {
+    updatingItemId.value = null;
+  }
+};
+
+const onManualComboQtyChange = async (group, newQty) => {
+  let qty = parseInt(newQty);
+  if (isNaN(qty) || qty < 1) qty = 1;
+  if (qty > 50) qty = 50;
+
+  if (qty === group.comboQuantity) {
+     const input = document.activeElement;
+     if (input && input.tagName === 'INPUT') input.value = qty;
+     return; 
+  }
+
+  updatingItemId.value = 'combo_' + group.lookbook_id;
+  try {
+    for (const item of group.items) {
+      await cartStore.updateQuantity(item.item_id, item.variant_id, qty);
+    }
+  } finally {
+    updatingItemId.value = null;
+  }
+};
+
+const removeCombo = (group) => {
+  ZyroSwal.confirmDelete(group.lookbook_name).then(async (result) => {
+    if (result.isConfirmed) {
+      updatingItemId.value = 'combo_' + group.lookbook_id;
+      try {
+        for (const item of group.items) {
+          await cartStore.removeItem(item.item_id, item.variant_id);
+        }
+        ZyroSwal.toastSuccess('Đã xóa bộ sưu tập khỏi giỏ');
+      } finally {
+        updatingItemId.value = null;
+      }
+    }
+  });
+};
+
+// ========================================================
+// ACTIONS ITEM LẺ
 // ========================================================
 const increaseQty = async (item) => {
   const maxStock = item.current_stock !== undefined ? item.current_stock : 50; 
@@ -244,8 +432,29 @@ const decreaseQty = async (item) => {
   }
 };
 
+const onManualQtyChange = async (item, newQty) => {
+  let qty = parseInt(newQty);
+  if (isNaN(qty) || qty < 1) qty = 1;
+  
+  const maxStock = item.current_stock !== undefined ? item.current_stock : 50;
+  const limit = Math.min(50, maxStock);
+  if (qty > limit) qty = limit;
+
+  if (qty === item.quantity) {
+     const input = document.activeElement;
+     if (input && input.tagName === 'INPUT') input.value = qty;
+     return;
+  }
+
+  updatingItemId.value = item.variant_id;
+  try {
+    await cartStore.updateQuantity(item.item_id, item.variant_id, qty);
+  } finally {
+    updatingItemId.value = null;
+  }
+};
+
 const removeItem = (item) => {
-  // Sử dụng Swal custom của Zyro
   ZyroSwal.confirmDelete(item.product_name).then(async (result) => {
     if (result.isConfirmed) {
       updatingItemId.value = item.variant_id;
@@ -278,7 +487,6 @@ onMounted(() => {
 <style scoped>
 .cart-page-wrapper { width: 100%; }
 
-/* KHUNG CHUẨN ZYRO CONTAINER: 1310px */
 .zyro-container {
   width: 100%;
   max-width: 1310px;
@@ -290,7 +498,9 @@ onMounted(() => {
   .zyro-container { padding-left: 0; padding-right: 0; }
 }
 
-/* TIỆN ÍCH & ANIMATION */
+.font-sans-vn { font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif !important; }
+.font-decor { font-family: 'Times New Roman', Times, serif; font-style: italic; }
+
 .hover-text-dark:hover { color: #000 !important; }
 .tracking-widest { letter-spacing: 2px; }
 .tracking-wide { letter-spacing: 1px; }
@@ -300,21 +510,24 @@ onMounted(() => {
 .border-urban { border-color: var(--color-c-hover, #547792) !important; }
 .btn-urban { background-color: var(--color-c-hover, #547792) !important; color: white; border: none; }
 .btn-urban:hover { background-color: var(--color-c-dark, #213448) !important; color: white; }
+.bg-urban-effect { background-color: var(--color-c-effect, #ebf1f5) !important; }
 
 .hover-urban:hover { color: var(--color-c-hover, #547792) !important; }
 .hover-text-urban:hover { color: var(--color-c-hover, #547792) !important; text-decoration: underline !important; }
 .transition-color { transition: color 0.2s ease; }
+.cursor-pointer { cursor: pointer; }
 
 .hover-transform { transition: transform 0.2s ease, box-shadow 0.2s ease; }
 .hover-transform:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15) !important; }
 
+.line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; }
 .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; }
 .sticky-top { transition: all 0.3s ease; }
 
 .animation-fade-in { animation: fadeIn 0.4s ease-in-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
-/* NÚT XÓA TRÒN VIỀN ĐỎ NẰM GÓC PHẢI */
+/* NÚT XÓA TRÒN VIỀN ĐỎ */
 .btn-delete-circle {
   position: absolute;
   top: 1.5rem; 
@@ -323,7 +536,6 @@ onMounted(() => {
   height: 32px;
   border: 1.5px solid #dc3545;
   color: #dc3545;
-  background: transparent;
   border-radius: 50%;
   padding: 0;
   z-index: 2;
@@ -334,7 +546,17 @@ onMounted(() => {
 html.dark .btn-delete-circle { border-color: #ef4444; color: #ef4444; }
 html.dark .btn-delete-circle:hover { background: #ef4444; color: #fff; }
 
-/* CSS HIỆU ỨNG 3 DẤU CHẤM (BOUNCING DOTS LOADER) NỔI BẬT LÊN TRÊN */
+/* ẨN NÚT MŨI TÊN TRONG Ô INPUT NUMBER */
+.no-spinners::-webkit-outer-spin-button,
+.no-spinners::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.no-spinners {
+  -moz-appearance: textfield;
+}
+
+/* HIỆU ỨNG 3 DẤU CHẤM */
 .bouncing-loader {
   display: flex;
   align-items: center;

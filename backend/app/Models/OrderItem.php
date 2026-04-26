@@ -34,7 +34,7 @@ class OrderItem extends Model
             'order_id'            => 'integer',
             'product_id'          => 'integer',
             'variant_id'          => 'integer',
-            'lookbook_id'         => 'integer', // Đã bổ sung
+            'lookbook_id'         => 'integer', 
             'variant_attributes'  => 'array',
             'lookbook_selections' => 'array',
             'purchased_price'     => 'decimal:2',
@@ -57,5 +57,10 @@ class OrderItem extends Model
     public function variant(): BelongsTo
     {
         return $this->belongsTo(ProductVariant::class)->withTrashed();
+    }
+
+    public function lookbook(): BelongsTo
+    {
+        return $this->belongsTo(Lookbook::class)->withTrashed();
     }
 }

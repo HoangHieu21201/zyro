@@ -25,7 +25,7 @@ const user = [
         component: () => import('../pages/user/Index.vue'),
       },
       {
-        path: '/category/:slug?', 
+        path: '/category/:slug?',
         name: 'client-category',
         component: () => import('@/pages/client/category/Index.vue')
       },
@@ -99,7 +99,7 @@ const user = [
         name: 'client-flash-sale',
         component: () => import('@/pages/client/flash-sale/Index.vue')
       },
-      
+
       // ==========================================
       // NHÓM STATIC PAGES (Thư mục info)
       // Tổ chức theo dạng Table để dễ scale
@@ -133,12 +133,12 @@ const user = [
       {
         path: '/careers',
         name: 'client-info-careers',
-        component: () => import('@/pages/client/info/AboutUs.vue') 
+        component: () => import('@/pages/client/info/AboutUs.vue')
       },
       {
         path: '/social-responsibility',
         name: 'client-info-social',
-        component: () => import('@/pages/client/info/AboutUs.vue') 
+        component: () => import('@/pages/client/info/AboutUs.vue')
       },
       {
         path: '/faq',
@@ -151,6 +151,19 @@ const user = [
         name: 'NotFound',
         component: () => import('@/pages/NotFound.vue')
       },
+
+      {
+        path: '/lookbook',
+        name: 'LookbookIndex',
+        component: () => import('@/pages/client/lookbook/Index.vue'),
+        meta: { title: 'Bộ sưu tập & Combo' }
+      },
+      {
+        path: '/lookbook/:slug',
+        name: 'LookbookDetail',
+        component: () => import('@/pages/client/lookbook/Detail.vue'),
+        meta: { title: 'Chi tiết Bộ sưu tập' }
+      }
     ],
   },
 ]

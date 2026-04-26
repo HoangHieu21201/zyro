@@ -15,7 +15,6 @@ class AddToCartRequest extends FormRequest
     {
         return [
             'variant_id' => 'required|integer|exists:product_variants,id',
-            // Số lượng phải là số nguyên dương, tối thiểu 1, chống spam tối đa 50
             'quantity' => 'required|integer|min:1|max:50',
         ];
     }

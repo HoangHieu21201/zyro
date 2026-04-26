@@ -598,4 +598,84 @@ class HomeController extends Controller
             return response()->json(['success' => false, 'message' => 'Lỗi tải trang Flash Sale: ' . $e->getMessage()], 500);
         }
     }
+
+    // ========================================================
+    // ĐÃ THÊM MỚI: HÀM LẤY DANH SÁCH LOOKBOOK (INDEX PAGE)
+    // ========================================================
+    public function getLookbookPageData(Request $request): JsonResponse
+    {
+        try {
+            // Phân trang mỗi lần tải 8 lookbook
+            $paginator = Lookbook::where('status', 'published')
+                ->with(['items.product.category.parent', 'items.product.brand', 'items.product.variants.attributeValues.attribute'])
+                ->orderBy('id', 'desc')
+                ->paginate(8);
+
+            $lookbooks = collect($paginator->items())->map(function ($lb) {
+                // Tái sử dụng logic formatProduct cho các SP bên trong
+                $lbProducts = $lb->items->map(function ($item) {
+                    if ($item->product && $item->product->status === 'published') {
+                        return $this->formatProduct($item->product);
+                    }
+                    return null;
+                })->filter()->values();
+
+                return [
+                    'id' => $lb->id,
+                    'name' => $lb->name,
+                    'slug' => $lb->slug,
+                    'description' => $lb->description,
+                    'main_image' => $this->getImageUrl($lb->main_image),
+                    'price_estimate' => $lb->total_price_estimate,
+                    'products' => $lbProducts // Trả về SP để frontend có thể preview nhanh nếu muốn
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'lookbooks' => $lookbooks,
+                    'current_page' => $paginator->currentPage(),
+                    'last_page' => $paginator->lastPage(),
+                    'total' => $paginator->total()
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Lỗi tải trang Lookbook: ' . $e->getMessage()], 500);
+        }
+    }
+
+    // ========================================================
+    // ĐÃ THÊM MỚI: HÀM LẤY CHI TIẾT 1 LOOKBOOK (DETAIL PAGE)
+    // ========================================================
+    public function getLookbookDetail($slug): JsonResponse
+    {
+        try {
+            $lb = Lookbook::where('slug', $slug)
+                ->where('status', 'published')
+                ->with(['items.product.category.parent', 'items.product.brand', 'items.product.variants.attributeValues.attribute'])
+                ->firstOrFail();
+
+            $lbProducts = $lb->items->map(function ($item) {
+                if ($item->product && $item->product->status === 'published') {
+                    return $this->formatProduct($item->product);
+                }
+                return null;
+            })->filter()->values();
+
+            $data = [
+                'id' => $lb->id,
+                'name' => $lb->name,
+                'slug' => $lb->slug,
+                'description' => $lb->description,
+                'main_image' => $this->getImageUrl($lb->main_image),
+                'price_estimate' => $lb->total_price_estimate,
+                'products' => $lbProducts
+            ];
+
+            return response()->json(['success' => true, 'data' => $data]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Không tìm thấy Bộ sưu tập này'], 404);
+        }
+    }
 }

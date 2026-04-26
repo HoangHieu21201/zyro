@@ -24,20 +24,20 @@
             </a>
           </li>
           <li class="nav-item text-nowrap">
-            <a class="nav-link py-2 px-3 d-flex align-items-center custom-tab text-warning" href="#" :class="{ 'active-tab text-warning border-warning': activeTab === 'pending' }" @click.prevent="switchTab('pending')">
-              <i class="bi bi-exclamation-circle-fill me-2"></i> Chờ Kế toán xử lý
+            <a class="nav-link py-2 px-3 d-flex align-items-center custom-tab" href="#" :class="{ 'active-tab': activeTab === 'pending' }" @click.prevent="switchTab('pending')">
+              <i class="bi bi-exclamation-circle-fill me-2 text-warning"></i> Chờ xử lý
               <span class="badge ms-2 rounded-pill tab-badge" :class="{'active-badge': activeTab === 'pending'}">{{ counts.pending || 0 }}</span>
             </a>
           </li>
           <li class="nav-item text-nowrap">
-            <a class="nav-link py-2 px-3 d-flex align-items-center custom-tab text-info" href="#" :class="{ 'active-tab text-info border-info': activeTab === 'proposing' }" @click.prevent="switchTab('proposing')">
-              <i class="bi bi-chat-dots-fill me-2"></i> Đang thỏa thuận
+            <a class="nav-link py-2 px-3 d-flex align-items-center custom-tab" href="#" :class="{ 'active-tab': activeTab === 'proposing' }" @click.prevent="switchTab('proposing')">
+              <i class="bi bi-chat-dots-fill me-2 text-info"></i> Đang thỏa thuận
               <span class="badge ms-2 rounded-pill tab-badge" :class="{'active-badge': activeTab === 'proposing'}">{{ counts.proposing || 0 }}</span>
             </a>
           </li>
           <li class="nav-item text-nowrap">
-            <a class="nav-link py-2 px-3 d-flex align-items-center custom-tab text-success" href="#" :class="{ 'active-tab text-success border-success': activeTab === 'refunded' }" @click.prevent="switchTab('refunded')">
-              <i class="bi bi-check-circle-fill me-2"></i> Đã hoàn tất
+            <a class="nav-link py-2 px-3 d-flex align-items-center custom-tab" href="#" :class="{ 'active-tab': activeTab === 'refunded' }" @click.prevent="switchTab('refunded')">
+              <i class="bi bi-check-circle-fill me-2 text-success"></i> Đã hoàn tất
               <span class="badge ms-2 rounded-pill tab-badge" :class="{'active-badge': activeTab === 'refunded'}">{{ counts.refunded || 0 }}</span>
             </a>
           </li>
@@ -92,8 +92,10 @@
                   </td>
                 </tr>
                 <tr v-else v-for="order in orders" :key="order.id">
-                  <td class="px-4 py-3 font-monospace fw-bold text-urban">
-                    <router-link :to="{ name: 'admin-returns-edit', params: { id: order.id } }" class="text-decoration-none text-urban hover-text-danger transition-all">
+                  
+                  <!-- ĐÃ FIX: CHỈNH MÀU MÃ ĐƠN KHỚP VỚI TRẠNG THÁI -->
+                  <td class="px-4 py-3 font-monospace fw-bold">
+                    <router-link :to="{ name: 'admin-returns-edit', params: { id: order.id } }" class="text-decoration-none transition-all hover-text-danger" :class="getReturnStatusTextColor(order.return_status)">
                       #{{ order.order_code }}
                     </router-link>
                     <div class="text-muted small fw-normal mt-1" style="font-size: 0.7rem;">{{ formatDateTime(order.created_at) }}</div>
@@ -111,16 +113,26 @@
                     </div>
                   </td>
                   
+                  <!-- CỘT TỔNG THU ĐỒNG BỘ VỚI TRANG ĐƠN HÀNG -->
                   <td class="px-4 text-end">
                     <div class="fw-bold text-danger fs-6">{{ formatCurrency(order.total_amount) }}</div>
+                    <div class="text-muted mt-1 d-flex justify-content-end flex-wrap gap-1" style="font-size: 0.7rem;">
+                      <span v-if="getComboCount(order.items) > 0" class="badge bg-secondary bg-opacity-10 text-secondary border fw-medium" title="Combo">
+                        <i class="bi bi-magic me-1"></i>{{ getComboCount(order.items) }} Combo
+                      </span>
+                      <span v-if="getRetailCount(order.items) > 0" class="badge bg-light dark:bg-[#2b3035] text-dark dark:text-gray-300 border dark:border-gray-600 fw-medium" title="Sản phẩm lẻ">
+                        <i class="bi bi-box-seam me-1"></i>{{ getRetailCount(order.items) }} SP
+                      </span>
+                    </div>
                     <div class="text-muted small mt-1 font-monospace">Qua: {{ (order.payment_method || 'N/A').toUpperCase() }}</div>
                   </td>
 
                   <td class="px-4 text-center">
-                    <span class="badge border px-3 py-2 shadow-sm w-100" :class="getReturnStatusClass(order)">
-                      {{ getReturnStatusLabel(order) }}
+                    <!-- SỬ DỤNG return_status CHUẨN XÁC TỪ DATABASE -->
+                    <span class="badge border px-3 py-2 shadow-sm w-100" :class="getReturnStatusClass(order.return_status)">
+                      {{ getReturnStatusLabel(order.return_status) }}
                     </span>
-                    <div v-if="order.refunded_amount > 0 && order.payment_status !== 'refunded'" class="text-urban fw-bold mt-1 font-monospace" style="font-size: 0.75rem;">
+                    <div v-if="order.refunded_amount > 0 && order.return_status === 'proposing'" class="text-urban fw-bold mt-1 font-monospace" style="font-size: 0.75rem;">
                        Đề xuất: {{ formatCurrency(order.refunded_amount) }}
                     </div>
                   </td>
@@ -143,10 +155,11 @@
                 <div class="card-body p-3">
                   <div class="d-flex justify-content-between align-items-center mb-3 border-bottom dark:border-gray-700 pb-2">
                      <div>
-                       <div class="fw-bold font-monospace text-urban">#{{ order.order_code }}</div>
+                       <!-- MÀU TRẠNG THÁI TRÊN MOBILE -->
+                       <div class="fw-bold font-monospace" :class="getReturnStatusTextColor(order.return_status)">#{{ order.order_code }}</div>
                        <small class="text-muted">{{ formatDateTime(order.created_at) }}</small>
                      </div>
-                     <span class="badge border" :class="getReturnStatusClass(order)">{{ getReturnStatusLabel(order) }}</span>
+                     <span class="badge border" :class="getReturnStatusClass(order.return_status)">{{ getReturnStatusLabel(order.return_status) }}</span>
                   </div>
 
                   <div class="d-flex align-items-center mb-3">
@@ -160,8 +173,16 @@
                   </div>
                   
                   <div class="d-flex justify-content-between align-items-end pt-2 border-top dark:border-gray-700 mt-2 mb-3">
-                    <div class="text-muted small">
-                      Tổng thu:
+                    <div>
+                      <div class="d-flex gap-1 mb-1">
+                        <span v-if="getComboCount(order.items) > 0" class="badge bg-secondary bg-opacity-10 text-secondary border fw-medium" style="font-size: 0.65rem;">
+                          <i class="bi bi-magic"></i> {{ getComboCount(order.items) }} Combo
+                        </span>
+                        <span v-if="getRetailCount(order.items) > 0" class="badge bg-light dark:bg-[#2b3035] text-dark dark:text-gray-300 border dark:border-gray-600 fw-medium" style="font-size: 0.65rem;">
+                          <i class="bi bi-box-seam"></i> {{ getRetailCount(order.items) }} SP
+                        </span>
+                      </div>
+                      <div class="text-muted small mt-1">Tổng thu:</div>
                     </div>
                     <div class="text-danger fw-bold fs-5">
                       {{ formatCurrency(order.total_amount) }}
@@ -215,20 +236,42 @@ const formatDateTime = (dateString) => {
   return `${d.toLocaleDateString('vi-VN')} ${d.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}`;
 };
 
-// UI Helpers Dành riêng cho RMA (Hoàn trả)
-const getReturnStatusClass = (order) => {
-    if (order.payment_status === 'refunded') return 'bg-success bg-opacity-10 text-success border-success';
-    if (order.refunded_amount === null) return 'bg-warning bg-opacity-10 text-warning border-warning';
-    if (order.refunded_amount > 0) return 'bg-info bg-opacity-10 text-info border-info';
-    if (order.refunded_amount == 0) return 'bg-danger bg-opacity-10 text-danger border-danger';
-    return 'bg-light text-secondary border-secondary';
+const getComboCount = (items) => {
+  if (!items || items.length === 0) return 0;
+  const comboIds = new Set();
+  items.forEach(item => {
+      if (item.lookbook_id) comboIds.add(item.lookbook_id);
+  });
+  return comboIds.size;
 };
 
-const getReturnStatusLabel = (order) => {
-    if (order.payment_status === 'refunded') return 'Đã hoàn tiền';
-    if (order.refunded_amount === null) return 'Chờ Kế toán xử lý';
-    if (order.refunded_amount > 0) return 'Đang thỏa thuận';
-    if (order.refunded_amount == 0) return 'Đã từ chối hoàn';
+const getRetailCount = (items) => {
+  if (!items || items.length === 0) return 0;
+  return items.filter(item => !item.lookbook_id).reduce((sum, item) => sum + item.quantity, 0);
+};
+
+// ĐÃ SỬA CÁCH HIỂN THỊ DỰA TRÊN return_status TỪ DATABASE
+const getReturnStatusClass = (status) => {
+    if (status === 'approved') return 'bg-success bg-opacity-10 text-success border-success';
+    if (status === 'pending') return 'bg-warning bg-opacity-10 text-warning border-warning';
+    if (status === 'proposing') return 'bg-info bg-opacity-10 text-info border-info';
+    if (status === 'rejected') return 'bg-danger bg-opacity-10 text-danger border-danger';
+    return 'bg-secondary bg-opacity-10 text-secondary border-secondary';
+};
+
+const getReturnStatusTextColor = (status) => {
+    if (status === 'approved') return 'text-success';
+    if (status === 'pending') return 'text-warning';
+    if (status === 'proposing') return 'text-info';
+    if (status === 'rejected') return 'text-danger';
+    return 'text-secondary';
+};
+
+const getReturnStatusLabel = (status) => {
+    if (status === 'approved') return 'Đã hoàn tiền';
+    if (status === 'pending') return 'Chờ Kế toán xử lý';
+    if (status === 'proposing') return 'Đang thỏa thuận';
+    if (status === 'rejected') return 'Đã từ chối hoàn';
     return 'Đang xử lý';
 };
 

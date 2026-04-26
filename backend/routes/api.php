@@ -217,6 +217,9 @@ Route::prefix('v1/client')->group(function () {
 
     Route::get('/flash-sale-page', [HomeController::class, 'getFlashSalePageData']);
 
+    Route::get('lookbook-page', [HomeController::class, 'getLookbookPageData']);
+    Route::get('lookbook-detail/{slug}', [HomeController::class, 'getLookbookDetail']);
+
     // CÁC ROUTE GIỎ HÀNG (CẦN LOGIN)
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('cart', [CartController::class, 'index']);
@@ -225,6 +228,7 @@ Route::prefix('v1/client')->group(function () {
         Route::delete('cart/clear', [CartController::class, 'clear']);
         Route::delete('cart/{itemId}', [CartController::class, 'remove']);
         Route::post('cart/merge', [CartController::class, 'merge']);
+        Route::post('cart/add-lookbook', [CartController::class, 'addLookbook']);
     });
 
 

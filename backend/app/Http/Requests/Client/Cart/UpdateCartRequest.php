@@ -14,8 +14,17 @@ class UpdateCartRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // Lúc update số lượng thì variant_id không bắt buộc, chỉ check quantity
             'quantity' => 'required|integer|min:1|max:50',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'quantity.required' => 'Vui lòng cung cấp số lượng cập nhật.',
+            'quantity.integer' => 'Số lượng cập nhật phải là số nguyên.',
+            'quantity.min' => 'Số lượng ít nhất phải là 1.',
+            'quantity.max' => 'Số lượng không được vượt quá 50 sản phẩm.',
         ];
     }
 }

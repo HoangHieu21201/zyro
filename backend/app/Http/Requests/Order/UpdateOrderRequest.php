@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Order;
 
 use Illuminate\Foundation\Http\FormRequest;
+use App\Models\Order;
 
 class UpdateOrderRequest extends FormRequest
 {
@@ -46,5 +47,31 @@ class UpdateOrderRequest extends FormRequest
             
             'order_note.max'            => 'Ghi chú đơn hàng không được vượt quá 1000 ký tự.',
         ];
+    }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $orderId = $this->route('id') ?? $this->route('order');
+            $order = Order::find($orderId);
+
+            if (!$order) return;
+
+            // BẢO MẬT HÀNG HÓA: Các trạng thái đã "Rời kho" hoặc "Đóng" không được phép đổi thông tin vận chuyển
+            $lockedStatuses = ['shipping', 'completed', 'returned', 'cancelled'];
+
+            if (in_array($order->status, $lockedStatuses)) {
+                
+                // Cố tình đẩy lên mã tracking mới khác với database
+                if ($this->has('tracking_number') && $this->input('tracking_number') !== $order->tracking_number) {
+                    $validator->errors()->add('tracking_number', 'Cảnh báo Pháp lý: Đơn hàng đã xuất kho, hệ thống khóa thay đổi Mã vận đơn.');
+                }
+                
+                // Cố tình đổi hãng giao hàng
+                if ($this->has('shipping_provider') && $this->input('shipping_provider') !== $order->shipping_provider) {
+                    $validator->errors()->add('shipping_provider', 'Cảnh báo Pháp lý: Đơn hàng đã xuất kho, hệ thống khóa thay đổi Đơn vị vận chuyển.');
+                }
+            }
+        });
     }
 }
