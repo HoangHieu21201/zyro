@@ -1,11 +1,14 @@
 <template>
-  <div class="info-navigation" style="margin-top: 40px;">
+  <div class="info-navigation">
     <div class="d-none d-lg-block">
       <div class="sticky-top" style="top: 160px; z-index: 10;">
         <h6 class="fw-bold mb-4 text-uppercase tracking-widest" style="color: var(--color-c-dark);">Dịch vụ Khách hàng</h6>
         <ul class="nav flex-column zyro-sidebar-nav gap-2">
           <li class="nav-item">
             <router-link to="/about-us" class="nav-link rounded-3 px-3 py-2" :class="{ 'router-link-active': currentRoute === '/about-us' }">Về ZYRO</router-link>
+          </li>
+          <li class="nav-item">
+            <router-link to="/contact" class="nav-link rounded-3 px-3 py-2" :class="{ 'router-link-active': currentRoute === '/contact' }">Liên hệ</router-link>
           </li>
           <li class="nav-item">
             <router-link to="/shipping-policy" class="nav-link rounded-3 px-3 py-2" :class="{ 'router-link-active': currentRoute === '/shipping-policy' }">Chính sách vận chuyển</router-link>
@@ -22,6 +25,10 @@
           <li class="nav-item">
             <router-link to="/faq" class="nav-link rounded-3 px-3 py-2" :class="{ 'router-link-active': currentRoute === '/faq' }">Câu hỏi thường gặp (FAQ)</router-link>
           </li>
+          <!-- <li class="nav-item">
+            <router-link to="/stores" class="nav-link rounded-3 px-3 py-2" :class="{ 'router-link-active': currentRoute === '/stores' }">Hệ thống cửa hàng</router-link>
+          </li> -->
+          
         </ul>
       </div>
     </div>
@@ -34,6 +41,8 @@
         <option value="/privacy-policy">Chính sách bảo mật</option>
         <option value="/terms-of-service">Điều khoản dịch vụ</option>
         <option value="/faq">Câu hỏi thường gặp (FAQ)</option>
+        <option value="/stores">Hệ thống cửa hàng</option>
+        <option value="/contact">Liên hệ</option>
       </select>
     </div>
   </div>

@@ -1,110 +1,116 @@
-<!-- frontend/src/pages/client/info/ReturnPolicy.vue -->
 <template>
-  <div class="info-page-wrapper pt-4 pb-5">
-    <div class="zyro-container">
-      
-      <nav aria-label="breadcrumb" class="mb-4">
-        <ol class="breadcrumb mb-0 small text-uppercase tracking-wider fw-semibold">
-          <li class="breadcrumb-item"><router-link to="/" class="text-decoration-none zyro-link-hover">Trang chủ</router-link></li>
-          <li class="breadcrumb-item active opacity-50" aria-current="page">Đổi trả</li>
-        </ol>
-      </nav>
-
-      <div class="row g-4 g-lg-5">
+  <div class="policy-page-wrapper pb-5 mb-5 bg-white dark:bg-[#121416] transition-all">
+    
+    <div class="pt-5 mt-4">
+      <div class="zyro-container pt-3">
         
-        <div class="col-lg-3">
-          <InfoNavigation currentRoute="/return-policy" />
-        </div>
+        <!-- BREADCRUMB -->
+        <nav aria-label="breadcrumb" class="mb-4 mt-2">
+          <ol class="breadcrumb small fw-semibold text-uppercase font-sans-vn" style="letter-spacing: 0.5px;">
+            <li class="breadcrumb-item"><router-link to="/" class="text-decoration-none text-muted hover-urban">Trang chủ</router-link></li>
+            <li class="breadcrumb-item active text-urban-dark dark:text-gray-300" aria-current="page">Chính sách Đổi trả & Hoàn tiền</li>
+          </ol>
+        </nav>
 
-        <div class="col-lg-9">
-          
-          <div v-if="isLoading" class="bg-white rounded-4 border border-light-subtle p-4 p-md-5 shadow-sm w-100" style="min-height: 800px;">
-            <div class="skeleton-line mb-4" style="width: 350px; height: 40px;"></div>
-            <div class="skeleton-line mb-4" style="width: 100%; height: 100px; border-radius: 12px;"></div>
-            <div class="skeleton-line mb-3" style="width: 100%; height: 20px;"></div>
-            <div class="skeleton-line mb-3" style="width: 90%; height: 20px;"></div>
-            <div class="row g-4 mt-2">
-               <div class="col-4"><div class="skeleton-line h-100" style="min-height: 150px; border-radius: 12px;"></div></div>
-               <div class="col-4"><div class="skeleton-line h-100" style="min-height: 150px; border-radius: 12px;"></div></div>
-               <div class="col-4"><div class="skeleton-line h-100" style="min-height: 150px; border-radius: 12px;"></div></div>
-            </div>
+        <div class="row g-4 g-lg-5">
+          <!-- SIDEBAR: ĐIỀU HƯỚNG THÔNG TIN -->
+          <div class="col-lg-3 d-none d-lg-block">
+            <InfoNavigation currentRoute="/shipping-policy" />
           </div>
 
-          <transition name="fade" mode="out-in">
-            <div v-show="!isLoading" class="bg-white rounded-4 border border-light-subtle p-4 p-md-5 shadow-sm info-content-card w-100">
-              <h1 class="display-6 fw-black text-uppercase tracking-tight mb-4" style="color: var(--color-c-dark);">Đổi Trả Dễ Dàng</h1>
-              
-              <div class="alert bg-transparent border-0 rounded-4 mb-5 p-4 d-flex align-items-center gap-3" style="background-color: var(--color-c-effect) !important;">
-                <i class="bi bi-arrow-repeat fs-1" style="color: var(--color-c-hover);"></i>
-                <div>
-                  <h6 class="fw-bold mb-1" style="color: var(--color-c-dark);">Hỗ trợ 07 Ngày</h6>
-                  <p class="mb-0 text-muted small">Kể từ thời điểm quý khách nhận hàng thành công từ đơn vị vận chuyển.</p>
-                </div>
-              </div>
+          <!-- MAIN CONTENT -->
+          <div class="col-lg-9">
+            
+            <div class="mb-4 pb-2 border-bottom dark:border-gray-700">
+              <h2 class="fw-bold text-urban-dark dark:text-white m-0 text-uppercase tracking-widest font-sans-vn">CHÍNH SÁCH ĐỔI TRẢ (RMA)</h2>
+              <p class="text-muted mt-2 font-sans-vn">Cam kết mang lại sự an tâm tuyệt đối khi mua sắm tại ZYRO.</p>
+            </div>
 
-              <section class="mb-5">
-                <h4 class="fw-bold mb-4 d-flex align-items-center gap-2 section-title" style="color: var(--color-c-dark);">
-                  <span class="font-serif italic fs-2 opacity-50" style="color: var(--color-c-hover);">01.</span> Điều Kiện Áp Dụng
-                </h4>
-                <div class="row g-3">
-                  <div class="col-md-6">
-                    <div class="p-3 border border-light-subtle rounded-3 bg-transparent h-100">
-                      <i class="bi bi-check-circle text-success mb-2 fs-5"></i>
-                      <p class="text-muted small mb-0 lh-lg">Sản phẩm nguyên tem, nguyên mác, chưa qua sử dụng, chưa giặt ủi và không bám mùi lạ.</p>
-                    </div>
-                  </div>
-                  <div class="col-md-6">
-                    <div class="p-3 border border-light-subtle rounded-3 bg-transparent h-100">
-                      <i class="bi bi-x-circle text-danger mb-2 fs-5"></i>
-                      <p class="text-muted small mb-0 lh-lg">Không áp dụng cho hàng phụ kiện (tất, đồ lót) hoặc hàng giảm giá đặc biệt Flash Sale > 50%.</p>
-                    </div>
-                  </div>
-                </div>
-              </section>
+            <!-- SKELETON LOADER -->
+            <div v-if="isLoading" class="pe-none">
+               <div v-for="i in 4" :key="i" class="shimmer rounded-3 w-100 mb-4" style="height: 150px;"></div>
+            </div>
 
-              <section class="mb-5 pb-3">
-                <h4 class="fw-bold mb-4 d-flex align-items-center gap-2 section-title" style="color: var(--color-c-dark);">
-                  <span class="font-serif italic fs-2 opacity-50" style="color: var(--color-c-hover);">02.</span> Quy trình đổi hàng
-                </h4>
-                
-                <div class="row g-4">
-                  <div class="col-md-4">
-                    <div class="policy-card p-4 rounded-4 h-100 border border-light-subtle transition-all text-center bg-transparent">
-                      <div class="display-3 font-serif italic opacity-25 mb-3" style="color: var(--color-c-hover);">1</div>
-                      <h6 class="fw-bold mb-3">Tạo yêu cầu</h6>
-                      <p class="text-muted small lh-base">Tạo yêu cầu trả hàng trong mục "Lịch sử đơn hàng" hoặc gọi Hotline 1900 9999 để được hỗ trợ.</p>
-                    </div>
-                  </div>
-                  <div class="col-md-4">
-                    <div class="policy-card p-4 rounded-4 h-100 border border-light-subtle transition-all text-center bg-transparent">
-                      <div class="display-3 font-serif italic opacity-25 mb-3" style="color: var(--color-c-hover);">2</div>
-                      <h6 class="fw-bold mb-3">Đóng gói gửi về</h6>
-                      <p class="text-muted small lh-base">Đóng gói cẩn thận. Ghi rõ mã đơn hàng và SĐT bên ngoài gói hàng gửi về kho ZYRO.</p>
-                    </div>
-                  </div>
-                  <div class="col-md-4">
-                    <div class="policy-card p-4 rounded-4 h-100 border border-light-subtle transition-all text-center bg-transparent">
-                      <div class="display-3 font-serif italic opacity-25 mb-3" style="color: var(--color-c-hover);">3</div>
-                      <h6 class="fw-bold mb-3">Chờ xác nhận</h6>
-                      <p class="text-muted small lh-base">Sau 2-3 ngày xử lý kiểm định, kho sẽ gửi sản phẩm mới (hoặc hoàn tiền) lại cho bạn.</p>
-                    </div>
-                  </div>
-                </div>
-              </section>
+            <!-- NỘI DUNG CHÍNH -->
+            <div v-else class="policy-content font-sans-vn animation-fade-in text-dark dark:text-gray-300">
+               
+               <p class="lh-lg mb-4">Với mong muốn khách hàng có được trải nghiệm hài lòng nhất, ZYRO hỗ trợ khách hàng đổi trả sản phẩm hoặc hoàn tiền theo các điều kiện và quy định dưới đây.</p>
 
-              <section>
-                <h4 class="fw-bold mb-4 d-flex align-items-center gap-2 section-title" style="color: var(--color-c-dark);">
-                  <span class="font-serif italic fs-2 opacity-50" style="color: var(--color-c-hover);">03.</span> Chi Phí
-                </h4>
-                <ul class="text-muted lh-lg mb-0 ps-3">
-                  <li class="mb-2"><strong>Lỗi do ZYRO:</strong> Chúng tôi sẽ điều phối shipper lấy hàng tại nhà và chịu 100% cước phí đổi/trả.</li>
-                  <li class="mb-2"><strong>Khách đổi ý (Size/Mẫu):</strong> Quý khách thanh toán phí gửi hàng về kho. ZYRO miễn phí gửi sản phẩm mới đi.</li>
-                </ul>
-              </section>
+               <div class="policy-section mb-4">
+                 <h4 class="fw-bold text-urban-dark dark:text-white mb-3 tracking-wide">1. Điều kiện áp dụng đổi trả</h4>
+                 <p class="lh-lg">Khách hàng được hỗ trợ đổi size, đổi mẫu hoặc trả hàng hoàn tiền nếu thỏa mãn TẤT CẢ các điều kiện sau:</p>
+                 <ul class="list-unstyled lh-lg mt-3 bg-urban-effect dark:bg-[#1a2533] p-4 rounded-4">
+                    <li class="mb-2 d-flex align-items-start">
+                       <i class="bi bi-asterisk text-urban mt-1 me-3"></i>
+                       <div>Thời gian: Trong vòng <strong>07 ngày</strong> kể từ ngày hệ thống cập nhật giao hàng thành công.</div>
+                    </li>
+                    <li class="mb-2 d-flex align-items-start">
+                       <i class="bi bi-asterisk text-urban mt-1 me-3"></i>
+                       <div>Tình trạng sản phẩm: Sản phẩm phải còn <strong>nguyên tem mác, nguyên tag, chưa qua sử dụng, chưa giặt ủi</strong> và không bị dính bẩn hay hư hỏng do tác động từ phía khách hàng.</div>
+                    </li>
+                    <li class="d-flex align-items-start">
+                       <i class="bi bi-asterisk text-urban mt-1 me-3"></i>
+                       <div>Giấy tờ: Yêu cầu cung cấp hóa đơn mua hàng (hoặc thông tin số điện thoại đặt hàng) và video quay rõ cảnh khui kiện hàng.</div>
+                    </li>
+                 </ul>
+                 <div class="alert border border-danger border-opacity-25 bg-white dark:bg-[#212529] mt-3 small">
+                    <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i> <strong>Lưu ý:</strong> Các sản phẩm thuộc danh mục: Đồ lót, Phụ kiện (tất, mũ, vòng cổ), Sản phẩm xả kho (Flash Sale > 50%) sẽ KHÔNG được áp dụng chính sách đổi trả, trừ trường hợp lỗi do nhà sản xuất.
+                 </div>
+               </div>
+
+               <div class="policy-section mb-4">
+                 <h4 class="fw-bold text-urban-dark dark:text-white mb-3 tracking-wide">2. Chi phí đổi trả</h4>
+                 <ul class="list-unstyled lh-lg">
+                    <li class="mb-3 d-flex align-items-start">
+                       <i class="bi bi-dot text-muted fs-3 lh-1 me-1"></i>
+                       <div><strong>Lỗi từ phía ZYRO:</strong> (Giao sai mẫu, sai màu, sai size, hàng bị lỗi/rách). ZYRO sẽ chịu 100% chi phí vận chuyển 2 chiều để đổi sản phẩm mới hoặc hoàn tiền cho bạn.</div>
+                    </li>
+                    <li class="d-flex align-items-start">
+                       <i class="bi bi-dot text-muted fs-3 lh-1 me-1"></i>
+                       <div><strong>Lý do từ phía khách hàng:</strong> (Không vừa size, đổi ý muốn sang mẫu khác). Khách hàng sẽ thanh toán chi phí vận chuyển để gửi hàng về kho ZYRO và phí vận chuyển đơn hàng mới (nếu có).</div>
+                    </li>
+                 </ul>
+               </div>
+
+               <div class="policy-section mb-4">
+                 <h4 class="fw-bold text-urban-dark dark:text-white mb-3 tracking-wide">3. Quy trình thực hiện Đổi/Trả</h4>
+                 <div class="row g-4 mt-2">
+                    <div class="col-md-4">
+                       <div class="p-3 border dark:border-gray-700 rounded-4 text-center h-100 shadow-sm bg-white dark:bg-[#1a2533]">
+                          <div class="bg-urban text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3 fs-5 fw-bold" style="width: 40px; height: 40px;">1</div>
+                          <h6 class="fw-bold text-urban-dark dark:text-white">Gửi Yêu Cầu</h6>
+                          <p class="small text-muted mb-0">Truy cập "Đơn mua hàng" -> Chọn "Hoàn trả/Đổi hàng" và ghi rõ lý do.</p>
+                       </div>
+                    </div>
+                    <div class="col-md-4">
+                       <div class="p-3 border dark:border-gray-700 rounded-4 text-center h-100 shadow-sm bg-white dark:bg-[#1a2533]">
+                          <div class="bg-urban text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3 fs-5 fw-bold" style="width: 40px; height: 40px;">2</div>
+                          <h6 class="fw-bold text-urban-dark dark:text-white">Kiểm Duyệt</h6>
+                          <p class="small text-muted mb-0">Bộ phận CSKH sẽ liên hệ xác nhận và hướng dẫn bạn đóng gói gửi hàng về kho.</p>
+                       </div>
+                    </div>
+                    <div class="col-md-4">
+                       <div class="p-3 border dark:border-gray-700 rounded-4 text-center h-100 shadow-sm bg-white dark:bg-[#1a2533]">
+                          <div class="bg-urban text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3 fs-5 fw-bold" style="width: 40px; height: 40px;">3</div>
+                          <h6 class="fw-bold text-urban-dark dark:text-white">Xử lý RMA</h6>
+                          <p class="small text-muted mb-0">Sau khi nhận và kiểm tra hàng, ZYRO sẽ tiến hành chuyển khoản hoàn tiền hoặc gửi SP mới.</p>
+                       </div>
+                    </div>
+                 </div>
+               </div>
+
+               <div class="policy-section mb-4">
+                 <h4 class="fw-bold text-urban-dark dark:text-white mb-3 tracking-wide">4. Chính sách hoàn tiền (Refund)</h4>
+                 <p class="lh-lg">Nếu quý khách yêu cầu trả hàng và hoàn tiền, thời gian xử lý sẽ phụ thuộc vào phương thức quý khách đã thanh toán:</p>
+                 <ul class="lh-lg">
+                    <li><strong>Thanh toán COD (Tiền mặt):</strong> Hoàn tiền qua Chuyển khoản Ngân hàng nội địa trong vòng <strong>24h - 48h</strong> làm việc sau khi kho xác nhận nhận lại hàng.</li>
+                    <li><strong>Thanh toán qua MoMo:</strong> Hoàn tiền trực tiếp vào tài khoản MoMo của quý khách trong vòng <strong>1 - 3 ngày</strong> làm việc.</li>
+                 </ul>
+                 <p class="lh-lg fst-italic text-muted">Số tiền hoàn lại sẽ trừ đi phí vận chuyển ban đầu (nếu đơn hàng bị lỗi không xuất phát từ phía ZYRO).</p>
+               </div>
 
             </div>
-          </transition>
-
+          </div>
         </div>
       </div>
     </div>
@@ -117,34 +123,50 @@ import InfoNavigation from '@/components/client/info/InfoNavigation.vue';
 
 const isLoading = ref(true);
 
-onMounted(() => { 
-  window.scrollTo({ top: 0, behavior: 'smooth' }); 
-  setTimeout(() => { isLoading.value = false; }, 300); 
+const simulateLoading = () => {
+  setTimeout(() => {
+    isLoading.value = false;
+  }, 400);
+};
+
+onMounted(() => {
+  window.scrollTo(0, 0);
+  simulateLoading();
 });
 </script>
 
 <style scoped>
-.info-page-wrapper { min-height: calc(100vh - 200px); }
-.tracking-wider { letter-spacing: 0.05em; }
-.tracking-tight { letter-spacing: -0.02em; }
-.fw-black { font-weight: 900; }
-.font-serif { font-family: 'Georgia', serif; }
-.italic { font-style: italic; }
-.zyro-link-hover { color: var(--color-c-dark); transition: color 0.3s ease; }
-.zyro-link-hover:hover { color: var(--color-c-hover); }
+.policy-page-wrapper { width: 100%; }
 
-.policy-card:hover {
-  border-color: var(--color-c-hover) !important;
-  box-shadow: 0 10px 25px rgba(33, 52, 72, 0.05); transform: translateY(-5px);
+.zyro-container { width: 100%; max-width: 1310px; margin: 0 auto; padding-left: 20px; padding-right: 20px; }
+@media (min-width: 1400px) { .zyro-container { padding-left: 0; padding-right: 0; } }
+
+.font-sans-vn { font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif !important; }
+
+.text-urban-dark { color: var(--color-c-dark, #213448) !important; }
+.text-urban { color: var(--color-c-hover, #547792) !important; }
+.bg-urban { background-color: var(--color-c-hover, #547792) !important; }
+.bg-urban-effect { background-color: rgba(84, 119, 146, 0.05) !important; }
+
+.hover-urban:hover { color: var(--color-c-hover, #547792) !important; }
+.tracking-widest { letter-spacing: 2px; }
+.tracking-wide { letter-spacing: 1px; }
+
+/* SKELETON CSS */
+.shimmer {
+  background: #f6f7f8;
+  background-image: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
+  background-repeat: no-repeat;
+  background-size: 800px 100%;
+  animation: placeholderShimmer 1.5s infinite linear;
 }
+html.dark .shimmer {
+  background: #2b3035;
+  background-image: linear-gradient(to right, #2b3035 0%, #343a40 20%, #2b3035 40%, #2b3035 100%);
+}
+@keyframes placeholderShimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
 
-.fade-enter-active, .fade-leave-active { transition: opacity 0.4s ease, transform 0.4s ease; }
-.fade-enter-from, .fade-leave-to { opacity: 0; transform: translateY(10px); }
-.skeleton-line { background: linear-gradient(90deg, #e2e5e7 25%, #f0f2f3 50%, #e2e5e7 75%); background-size: 200% 100%; animation: skeletonShimmer 1.5s infinite; border-radius: 4px; }
-@keyframes skeletonShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-
-[data-bs-theme="dark"] .zyro-link-hover { color: #adb5bd; }
-[data-bs-theme="dark"] .bg-white, [data-bs-theme="dark"] .info-content-card { background-color: #1e2125 !important; border-color: #2b3035 !important; }
-[data-bs-theme="dark"] .skeleton-line { background: linear-gradient(90deg, #2b3035 25%, #373b3e 50%, #2b3035 75%); background-size: 200% 100%; }
-[data-bs-theme="dark"] .alert { background-color: #2b3035 !important; }
+.animation-fade-in { animation: fadeIn 0.4s ease-in-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+.transition-all { transition: all 0.3s ease; }
 </style>

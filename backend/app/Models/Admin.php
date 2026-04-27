@@ -1,15 +1,15 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Laravel\Sanctum\HasApiTokens; 
+use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Notifications\Notifiable; 
 
-class Admin extends Authenticatable 
+class Admin extends Authenticatable
 {
-    use HasApiTokens, HasFactory, SoftDeletes; 
+    use HasApiTokens, HasFactory, SoftDeletes, Notifiable; 
 
     protected $table = 'admins';
 

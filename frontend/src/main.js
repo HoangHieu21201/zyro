@@ -1,5 +1,3 @@
-// File: frontend/src/main.js
-
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 
@@ -22,19 +20,23 @@ window.Pusher = Pusher;
 // ==========================================
 const reverbKey = import.meta.env.VITE_REVERB_APP_KEY;
 
+// Lấy URL base từ env, bỏ đi phần '/api/v1' để lấy chính xác domain của Backend
+const backendHost = import.meta.env.VITE_API_BASE_URL 
+    ? import.meta.env.VITE_API_BASE_URL.replace('/api/v1', '') 
+    : 'http://127.0.0.1:8000';
+
 if (reverbKey) {
     try {
         window.Echo = new Echo({
             broadcaster: 'reverb',
             key: import.meta.env.VITE_REVERB_APP_KEY,
-            wsHost: import.meta.env.VITE_REVERB_HOST,
+            wsHost: import.meta.env.VITE_REVERB_HOST || '127.0.0.1',
             wsPort: import.meta.env.VITE_REVERB_PORT ?? 8080,
             wssPort: import.meta.env.VITE_REVERB_PORT ?? 8080,
-            forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
+            forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'http') === 'https',
             enabledTransports: ['ws', 'wss'],
-
-            authEndpoint: 'http://127.0.0.1:8000/api/broadcasting/auth',
-
+            // ĐÃ FIX: Dùng URL động lấy từ ENV để tránh lỗi CORS giữa các Port
+            authEndpoint: `${backendHost}/api/broadcasting/auth`, 
             auth: {
                 headers: {
                     Authorization: 'Bearer ' + localStorage.getItem('admin_token'),

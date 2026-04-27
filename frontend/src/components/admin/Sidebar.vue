@@ -176,9 +176,11 @@ const menuItems = ref([
     children: [
       { name: 'Voucher', path: '/admin/vouchers', moduleCode: 'admin_vouchers' },
       { name: 'Banner', path: '/admin/banners', moduleCode: 'admin_banners' },
-      { name: 'Lượt thích', path: '/admin/wishlists', moduleCode: 'admin_wishlists' }
+      { name: 'Lượt thích', path: '/admin/wishlists', moduleCode: 'admin_wishlists' },
+      { name: 'Liên hệ (contact)', path: '/admin/contacts', moduleCode: 'admin_contacts' }
     ]
   },
+  
 ]);
 
 const menuState = reactive({

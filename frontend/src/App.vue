@@ -35,13 +35,10 @@ onMounted(() => {
   });
 });
 
-// ========================================================
 // GLOBAL AUTO SCROLL TO TOP
 // Lắng nghe mọi sự thay đổi của đường dẫn để cuộn lên đầu trang
-// ========================================================
 watch(() => route.path, () => {
   nextTick(() => {
-    // Đợi 100ms để DOM của component mới kịp render và có chiều cao thực tế
     setTimeout(() => {
       window.scrollTo({
         top: 0,
@@ -56,7 +53,6 @@ watch(() => route.path, () => {
 <style>
 @import "tailwindcss";
 
-/* Định nghĩa bộ màu Xanh Urban bằng cú pháp v4 */
 @theme {
   --color-c-light: rgb(148, 180, 193);
   --color-c-hover: rgb(84, 119, 146);
@@ -95,10 +91,9 @@ html.dark .global-splash {
   font-style: italic;
   font-weight: 900;
   font-size: 6rem;
-  fill: transparent !important; /* Tuyệt đối không đổ màu đặc */
-  stroke-width: 2.5px; /* Làm nét dày thêm một chút để nhìn rõ ràng, sắc nét hơn */
+  fill: transparent !important;
+  stroke-width: 2.5px;
   
-  /* ĐÃ SỬA: Kéo dài dải băng (dash) từ 60 lên 120, và rút ngắn khoảng cách (gap) để các sóng gối đầu lên nhau lấp đầy khoảng trống */
   stroke-dasharray: 120 120; 
   animation: liquidWave 3s infinite linear;
 }
@@ -127,22 +122,18 @@ html.dark .wave-3 { stroke: rgba(255, 255, 255, 1); }
 
 /* Chuyển động chạy liên tục vô tận */
 @keyframes liquidWave {
-  100% { stroke-dashoffset: -240; } /* 120 + 120 = 240 */
+  100% { stroke-dashoffset: -240; } 
 }
 
-/* Hiệu ứng Fade-out mượt mà, phóng to nhẹ để mở không gian */
 .splash-fade-leave-active {
   transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1), transform 1s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .splash-fade-leave-to {
   opacity: 0;
-  transform: scale(1.15); /* Phóng to nhẹ khi mờ đi tạo cảm giác "mở không gian" */
+  transform: scale(1.15); 
   pointer-events: none;
 }
 
-/* =======================================================
-   ZYRO GLOBAL CONTAINER (TỶ LỆ VÀNG 1310px)
-======================================================== */
 .zyro-container {
   width: 100%;
   max-width: 1310px;
@@ -157,10 +148,6 @@ html.dark .wave-3 { stroke: rgba(255, 255, 255, 1); }
     padding-right: 0;
   }
 }
-
-/* =======================================================
-   TÙY CHỈNH THANH CUỘN (SCROLLBAR) TOÀN HỆ THỐNG
-======================================================== */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -175,9 +162,6 @@ html.dark .wave-3 { stroke: rgba(255, 255, 255, 1); }
   @apply bg-c-hover;
 }
 
-/* =======================================================
-   GLOBAL CSS: CHUẨN HÓA GIAO DIỆN DARK MODE CHO BOOTSTRAP
-======================================================== */
 [data-bs-theme="dark"] body {
     background-color: #121416 !important;
     color: #e0e0e0 !important;
@@ -260,7 +244,6 @@ html.dark .wave-3 { stroke: rgba(255, 255, 255, 1); }
     border-color: #373b3e !important;
 }
 
-/* BỘ MÀU SHIMMER CHUẨN ZYRO */
 .logo-shimmer { 
   font-weight: 900; 
   background: linear-gradient(120deg, var(--color-c-dark) 30%, var(--color-c-light) 50%, var(--color-c-dark) 70%); 

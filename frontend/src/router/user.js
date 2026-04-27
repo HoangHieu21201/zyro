@@ -84,9 +84,10 @@ const user = [
         name: 'client-track-order',
         component: () => import('@/pages/client/TrackOrder.vue')
       },
+       // Đã map với "Cửa hàng hệ thống" trong Footer
       {
         path: '/stores',
-        name: 'client-stores', // Đã map với "Cửa hàng hệ thống" trong Footer
+        name: 'client-stores',
         component: () => import('@/pages/client/StoreLocator.vue')
       },
       {
@@ -100,10 +101,6 @@ const user = [
         component: () => import('@/pages/client/flash-sale/Index.vue')
       },
 
-      // ==========================================
-      // NHÓM STATIC PAGES (Thư mục info)
-      // Tổ chức theo dạng Table để dễ scale
-      // ==========================================
       {
         path: '/about-us',
         name: 'client-info-about',
@@ -147,12 +144,6 @@ const user = [
       },
 
       {
-        path: '/:pathMatch(.*)*',
-        name: 'NotFound',
-        component: () => import('@/pages/NotFound.vue')
-      },
-
-      {
         path: '/lookbook',
         name: 'LookbookIndex',
         component: () => import('@/pages/client/lookbook/Index.vue'),
@@ -163,7 +154,19 @@ const user = [
         name: 'LookbookDetail',
         component: () => import('@/pages/client/lookbook/Detail.vue'),
         meta: { title: 'Chi tiết Bộ sưu tập' }
-      }
+      },
+      {
+        path: '/contact',
+        name: 'client-contact',
+        component: () => import('@/pages/client/info/Contact.vue'),
+        meta: { title: 'Liên hệ' }
+      },
+
+      {
+        path: '/:pathMatch(.*)*',
+        name: 'NotFound',
+        component: () => import('@/pages/NotFound.vue')
+      },
     ],
   },
 ]

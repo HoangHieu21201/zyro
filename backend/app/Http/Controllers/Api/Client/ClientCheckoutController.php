@@ -20,6 +20,9 @@ use App\Mail\AdminNewOrderMail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 
+// ĐÃ THÊM: Import Notification Class
+use App\Notifications\AdminAlertNotification;
+
 class ClientCheckoutController extends Controller
 {
     // ========================================================
@@ -140,7 +143,6 @@ class ClientCheckoutController extends Controller
                             $attrs = $variant->attributeValues->pluck('value')->toArray();
                         }
 
-                        // ĐÃ FIX: CHÈN THÊM DỮ LIỆU LOOKBOOK TỪ CART SANG ORDER
                         $orderItemsData[] = [
                             'product_id'         => $item->product_id,
                             'variant_id'         => $variant->id, 
@@ -152,7 +154,6 @@ class ClientCheckoutController extends Controller
                             'cost_price'         => $costPrice, 
                             'quantity'           => $item->quantity,
                             'total_price'        => $itemTotal,
-                            // LUÂN CHUYỂN THÔNG TIN COMBO Ở ĐÂY!!!
                             'lookbook_id'        => $item->lookbook_id,
                             'lookbook_selections'=> $item->lookbook_selections
                         ];
@@ -211,7 +212,6 @@ class ClientCheckoutController extends Controller
                     'status'           => 'pending',
                 ]);
 
-                // Lưu Order Items
                 foreach ($orderItemsData as $itemData) {
                     $itemData['order_id'] = $order->id;
                     OrderItem::create($itemData);
@@ -230,6 +230,7 @@ class ClientCheckoutController extends Controller
                     $cart->items()->delete();
                     $cart->delete();
 
+                    // Gọi hàm gửi email + Bắn Real-time
                     $this->sendOrderConfirmationEmail($order);
 
                     return response()->json([
@@ -322,6 +323,7 @@ class ClientCheckoutController extends Controller
                     }
                 }
 
+                // Gọi hàm gửi email + Bắn Real-time
                 $this->sendOrderConfirmationEmail($order);
             }
 
@@ -332,6 +334,9 @@ class ClientCheckoutController extends Controller
         return redirect($frontendUrl . '/checkout/failed?order=' . $orderCode);
     }
 
+    /**
+     * HÀM GỬI EMAIL VÀ BẮN REAL-TIME NOTIFICATION CHO ADMIN
+     */
     private function sendOrderConfirmationEmail($order)
     {
         try {
@@ -344,13 +349,24 @@ class ClientCheckoutController extends Controller
                 Mail::to($customerEmail)->send(new OrderPlacedMail($order));
             }
 
-            $adminEmailsToNotify = Admin::where('role_id', 1)
+            // SỬA: Lấy Collection Admin thay vì chỉ lấy mảng email
+            $adminsToNotify = Admin::where('role_id', 1)
                 ->where('status', 'active')
-                ->pluck('email')
-                ->toArray();
+                ->get();
 
-            if (!empty($adminEmailsToNotify)) {
-                Mail::to($adminEmailsToNotify)->send(new AdminNewOrderMail($order));
+            if ($adminsToNotify->isNotEmpty()) {
+                // Lấy danh sách email để gửi mail
+                Mail::to($adminsToNotify->pluck('email')->toArray())->send(new AdminNewOrderMail($order));
+                
+                // ĐÃ THÊM: Bắn Real-time Notification
+                foreach ($adminsToNotify as $admin) {
+                    $admin->notify(new AdminAlertNotification([
+                        'type'    => 'success',
+                        'title'   => 'Đơn hàng mới: #' . $order->order_code,
+                        'message' => 'Khách hàng vừa đặt đơn hàng mới trị giá ' . number_format($order->total_amount, 0, ',', '.') . 'đ.',
+                        'url'     => '/admin/orders/' . $order->id,
+                    ]));
+                }
             }
         } catch (\Exception $e) {
             Log::error('Lỗi gửi mail đơn hàng ' . $order->order_code . ': ' . $e->getMessage());

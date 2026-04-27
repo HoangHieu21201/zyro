@@ -9,10 +9,14 @@ use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\ProductVariant;
 use App\Models\Review; 
+use App\Models\Admin; // Thêm Model Admin
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+
+// ĐÃ THÊM: Import Notification Class
+use App\Notifications\AdminAlertNotification;
 
 class ClientOrderController extends Controller
 {
@@ -25,7 +29,6 @@ class ClientOrderController extends Controller
         $dateTo = $request->query('date_to', '');
         $sort = $request->query('sort', 'desc');
 
-        // Tính tổng số đơn và Tổng chi tiêu (Chỉ tính các đơn Giao thành công)
         $stats = [
             'total_orders' => Order::where('user_id', $userId)->count(),
             'total_spent'  => Order::where('user_id', $userId)->where('status', 'completed')->sum('total_amount')
@@ -33,7 +36,6 @@ class ClientOrderController extends Controller
 
         $query = Order::where('user_id', $userId)->with(['items.variant', 'items.lookbook']);
 
-        // Bộ lọc trạng thái Hủy và Hoàn Trả rành mạch
         if ($status && $status !== 'all') {
             if ($status === 'returned') {
                 $query->where(function ($q) {
@@ -106,7 +108,6 @@ class ClientOrderController extends Controller
             ], 400);
         }
 
-        // Kiểm tra an toàn cho Form Checklist
         $request->validate(['reason' => 'required|string|max:1000']);
 
         DB::transaction(function () use ($order, $request) {
@@ -149,12 +150,10 @@ class ClientOrderController extends Controller
             return response()->json(['success' => false, 'message' => 'Đơn hàng này đã được gửi yêu cầu hoàn trả/hỗ trợ trước đó.'], 400);
         }
 
-        // Kiểm tra an toàn cho Form Checklist
         $request->validate(['reason' => 'required|string|max:1000']);
 
         $order->update(['return_status' => 'pending']);
 
-        // Ghi lại toàn bộ Nhu Cầu + Lý Do + Chi tiết Khách hàng nhập vào Database
         OrderStatusHistory::create([
             'order_id' => $order->id,
             'old_status' => $order->status,
@@ -163,6 +162,24 @@ class ClientOrderController extends Controller
             'changed_by_type' => get_class(Auth::user()),
             'changed_by' => Auth::id()
         ]);
+
+        // =========================================================
+        // ĐÃ THÊM: BẮN REAL-TIME NOTIFICATION CHO ADMIN QUA REVERB
+        // =========================================================
+        try {
+            $adminsToNotify = Admin::where('role_id', 1)->where('status', 'active')->get();
+            foreach ($adminsToNotify as $admin) {
+                $admin->notify(new AdminAlertNotification([
+                    'type'    => 'warning',
+                    'title'   => 'Yêu cầu hoàn trả: #' . $order->order_code,
+                    'message' => 'Khách hàng vừa yêu cầu hoàn trả/đổi hàng. Vui lòng kiểm tra.',
+                    'url'     => '/admin/returns/' . $order->id,
+                ]));
+            }
+        } catch (\Exception $e) {
+            // Log lỗi nếu notification thất bại nhưng không ảnh hưởng UX người dùng
+            \Illuminate\Support\Facades\Log::error('Lỗi bắn thông báo Return: ' . $e->getMessage());
+        }
 
         return response()->json(['success' => true, 'message' => 'Yêu cầu của bạn đã được gửi. Bộ phận CSKH sẽ sớm liên hệ hỗ trợ.']);
     }

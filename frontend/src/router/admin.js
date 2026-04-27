@@ -271,7 +271,6 @@ const admin = [
         component: () => import('../pages/admin/flash_sales/Edit.vue'),
         meta: { moduleCode: 'admin_flash_sales' },
       },
-      // inventory
       {
         path: 'inventory',
         name: 'admin-inventory',
@@ -279,6 +278,12 @@ const admin = [
         meta: { moduleCode: 'admin_inventory' },
       },
 
+       {
+        path: 'contacts',
+        name: 'admin-contacts',
+        component: () => import('../pages/admin/contact/Index.vue'),
+        meta: { title: 'Hộp thư khách hàng' }
+      },
     ],
   },
 ]

@@ -22,10 +22,11 @@
             <i class="bi fs-2 transition-all" :class="isMegaMenuOpen ? 'bi-x-lg' : 'bi-list'"></i>
           </button>
 
-          <router-link to="/stores" class="btn btn-link p-0 border-0 hover-opacity transition-color d-none d-sm-block" 
+          <!-- ĐÃ ĐỔI: Chuyển sang trang Về ZYRO với icon Stars nổi bật và sang trọng -->
+          <router-link to="/about-us" class="btn btn-link p-0 border-0 hover-opacity transition-color d-none d-sm-block" 
                   :class="(isScrolled || !isHomePage || isMegaMenuOpen || isSearchOpen || isMiniCartOpen) ? 'text-dark' : 'text-white'"
-                  title="Hệ thống cửa hàng">
-            <i class="bi bi-shop fs-4"></i>
+                  title="Về ZYRO & Câu chuyện thương hiệu">
+            <i class="bi bi-stars fs-4"></i>
           </router-link>
         </div>
 

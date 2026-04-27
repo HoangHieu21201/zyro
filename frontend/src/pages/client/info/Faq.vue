@@ -1,125 +1,110 @@
 <template>
-  <div class="info-page-wrapper pt-4 pb-5">
-    <div class="zyro-container">
-      
-      <nav aria-label="breadcrumb" class="mb-4">
-        <ol class="breadcrumb mb-0 small text-uppercase tracking-wider fw-semibold">
-          <li class="breadcrumb-item"><router-link to="/" class="text-decoration-none zyro-link-hover">Trang chủ</router-link></li>
-          <li class="breadcrumb-item active opacity-50" aria-current="page">FAQ</li>
-        </ol>
-      </nav>
-
-      <div class="row g-4 g-lg-5">
+  <div class="policy-page-wrapper pb-5 mb-5 bg-white dark:bg-[#121416] transition-all">
+    
+    <div class="pt-5 mt-4">
+      <div class="zyro-container pt-3">
         
-        <div class="col-lg-3">
-          <InfoNavigation currentRoute="/faq" />
-        </div>
+        <!-- BREADCRUMB -->
+        <nav aria-label="breadcrumb" class="mb-4 mt-2">
+          <ol class="breadcrumb small fw-semibold text-uppercase font-sans-vn" style="letter-spacing: 0.5px;">
+            <li class="breadcrumb-item"><router-link to="/" class="text-decoration-none text-muted hover-urban">Trang chủ</router-link></li>
+            <li class="breadcrumb-item active text-urban-dark dark:text-gray-300" aria-current="page">Câu hỏi thường gặp</li>
+          </ol>
+        </nav>
 
-        <div class="col-lg-9">
-          
-          <transition name="fade" mode="out-in">
+        <div class="row g-4 g-lg-5">
+          <!-- SIDEBAR: ĐIỀU HƯỚNG THÔNG TIN -->
+          <div class="col-lg-3 d-none d-lg-block">
+            <InfoNavigation currentRoute="/shipping-policy" />
+          </div>
+
+          <!-- MAIN CONTENT -->
+          <div class="col-lg-9">
             
-            <div v-if="isLoading" class="bg-white rounded-4 border border-light-subtle p-4 p-md-5 shadow-sm w-100" style="min-height: 800px;">
-              <div class="skeleton-line mb-4" style="width: 250px; height: 35px;"></div>
-              <div class="skeleton-line mb-4" style="width: 100%; height: 250px; border-radius: 12px;"></div>
-              <div class="skeleton-line mb-3" style="width: 100%; height: 60px;"></div>
-              <div class="skeleton-line mb-3" style="width: 100%; height: 60px;"></div>
-              <div class="skeleton-line mb-3" style="width: 100%; height: 60px;"></div>
-              <div class="skeleton-line mb-3" style="width: 100%; height: 60px;"></div>
+            <div class="mb-4 pb-2 border-bottom dark:border-gray-700">
+              <h2 class="fw-bold text-urban-dark dark:text-white m-0 text-uppercase tracking-widest font-sans-vn">TRUNG TÂM TRỢ GIÚP (FAQ)</h2>
+              <p class="text-muted mt-2 font-sans-vn">Tổng hợp các câu hỏi phổ biến nhất của khách hàng ZYRO.</p>
             </div>
 
-            <div v-else class="bg-white rounded-4 border border-light-subtle p-4 p-md-5 shadow-sm info-content-card w-100">
-              <h1 class="display-6 fw-black text-uppercase tracking-tight mb-4" style="color: var(--color-c-dark);">Câu hỏi thường gặp</h1>
-              
-              <div class="rounded-4 overflow-hidden mb-5 position-relative shadow-sm zyro-banner-container" style="background-color: var(--color-c-effect); height: 250px;">
-                  <img v-if="bannerUrl" :src="bannerUrl" alt="FAQ ZYRO" class="w-100 h-100 object-fit-cover transition-all hover-scale" />
-                  <div v-else class="w-100 h-100 d-flex align-items-center justify-content-center">
-                     <i class="bi bi-question-circle text-muted opacity-25" style="font-size: 5rem;"></i>
-                  </div>
-              </div>
-
-              <div class="accordion zyro-accordion">
-                
-                <!-- FAQ Item 1 -->
-                <div class="accordion-item border-0 mb-3 bg-transparent rounded-4 overflow-hidden">
-                  <h2 class="accordion-header">
-                    <button class="accordion-button fw-bold px-4 py-3 shadow-none" 
-                            :class="{ collapsed: activeTab !== 1 }" 
-                            @click="toggleTab(1)" 
-                            type="button">
-                      1. Thời gian giao hàng mất bao lâu?
-                    </button>
-                  </h2>
-                  <div class="zyro-faq-wrapper" :class="{ 'is-open': activeTab === 1 }">
-                    <div class="zyro-faq-inner">
-                      <div class="accordion-body px-4 pt-0 pb-4 text-muted lh-lg">
-                        Tùy thuộc vào khu vực của bạn, thời gian giao hàng tiêu chuẩn dao động từ 1-5 ngày làm việc. Nếu bạn ở nội thành Hà Nội hoặc TP.HCM, ZYRO có cung cấp dịch vụ giao hỏa tốc trong vòng 2-4 tiếng.
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- FAQ Item 2 -->
-                <div class="accordion-item border-0 mb-3 bg-transparent rounded-4 overflow-hidden">
-                  <h2 class="accordion-header">
-                    <button class="accordion-button fw-bold px-4 py-3 shadow-none" 
-                            :class="{ collapsed: activeTab !== 2 }" 
-                            @click="toggleTab(2)" 
-                            type="button">
-                      2. Tôi có thể kiểm tra hàng trước khi thanh toán không?
-                    </button>
-                  </h2>
-                  <div class="zyro-faq-wrapper" :class="{ 'is-open': activeTab === 2 }">
-                    <div class="zyro-faq-inner">
-                      <div class="accordion-body px-4 pt-0 pb-4 text-muted lh-lg">
-                        Hoàn toàn có thể. ZYRO áp dụng chính sách "Đồng kiểm" - quý khách được quyền mở gói hàng kiểm tra ngoại quan (màu sắc, số lượng, mẫu mã) cùng shipper trước khi thanh toán. Tuy nhiên, quý khách vui lòng không mặc thử sản phẩm.
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- FAQ Item 3 -->
-                <div class="accordion-item border-0 mb-3 bg-transparent rounded-4 overflow-hidden">
-                  <h2 class="accordion-header">
-                    <button class="accordion-button fw-bold px-4 py-3 shadow-none" 
-                            :class="{ collapsed: activeTab !== 3 }" 
-                            @click="toggleTab(3)" 
-                            type="button">
-                      3. Làm thế nào để đổi size nếu không vừa?
-                    </button>
-                  </h2>
-                  <div class="zyro-faq-wrapper" :class="{ 'is-open': activeTab === 3 }">
-                    <div class="zyro-faq-inner">
-                      <div class="accordion-body px-4 pt-0 pb-4 text-muted lh-lg">
-                        Bạn có thể yêu cầu đổi size trong vòng 07 ngày kể từ khi nhận hàng. Hãy truy cập mục "Lịch sử đơn hàng" trong tài khoản của bạn để gửi yêu cầu, hoặc liên hệ Hotline 1900 9999. Khách hàng vui lòng chịu phí ship gửi hàng về kho ZYRO, chúng tôi sẽ miễn phí ship gửi lại.
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- FAQ Item 4 -->
-                <div class="accordion-item border-0 mb-3 bg-transparent rounded-4 overflow-hidden">
-                  <h2 class="accordion-header">
-                    <button class="accordion-button fw-bold px-4 py-3 shadow-none" 
-                            :class="{ collapsed: activeTab !== 4 }" 
-                            @click="toggleTab(4)" 
-                            type="button">
-                      4. Mua hàng lỗi thì phải làm sao?
-                    </button>
-                  </h2>
-                  <div class="zyro-faq-wrapper" :class="{ 'is-open': activeTab === 4 }">
-                    <div class="zyro-faq-inner">
-                      <div class="accordion-body px-4 pt-0 pb-4 text-muted lh-lg">
-                        Trong trường hợp hy hữu nhận phải hàng lỗi từ nhà sản xuất, ZYRO thành thật xin lỗi bạn. Chúng tôi sẽ chịu 100% chi phí vận chuyển 2 chiều để đổi trả sản phẩm mới cho bạn trong thời gian sớm nhất.
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
+            <!-- SKELETON LOADER -->
+            <div v-if="isLoading" class="pe-none">
+               <div v-for="i in 5" :key="i" class="shimmer rounded-3 w-100 mb-3" style="height: 70px;"></div>
             </div>
-          </transition>
 
+            <!-- NỘI DUNG CHÍNH (ACCORDION FAQ) -->
+            <div v-else class="policy-content font-sans-vn animation-fade-in text-dark dark:text-gray-300">
+               
+               <div class="accordion custom-accordion" id="accordionFaq">
+                  
+                  <!-- Câu 1 -->
+                  <div class="accordion-item bg-transparent border-0 mb-3 rounded-4 shadow-sm overflow-hidden bg-white dark:bg-[#1a2533] border dark:border-gray-700">
+                    <h2 class="accordion-header" id="headingOne">
+                      <button class="accordion-button bg-transparent fw-bold text-dark dark:text-white shadow-none px-4 py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                        1. Tôi có thể hủy đơn hàng sau khi đã đặt không?
+                      </button>
+                    </h2>
+                    <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionFaq">
+                      <div class="accordion-body text-muted dark:text-gray-400 px-4 pb-4 pt-1 lh-lg">
+                        Được. Bạn có thể tự thao tác hủy đơn hàng trên website trong mục <strong>Đơn mua hàng</strong> MIỄN LÀ đơn hàng đó đang ở trạng thái <strong>Chờ xác nhận</strong>. Nếu đơn hàng đã chuyển sang Đang giao, vui lòng liên hệ CSKH để được hỗ trợ từ chối nhận hàng.
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Câu 2 -->
+                  <div class="accordion-item bg-transparent border-0 mb-3 rounded-4 shadow-sm overflow-hidden bg-white dark:bg-[#1a2533] border dark:border-gray-700">
+                    <h2 class="accordion-header" id="headingTwo">
+                      <button class="accordion-button collapsed bg-transparent fw-bold text-dark dark:text-white shadow-none px-4 py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                        2. Làm sao để biết Size nào vừa với tôi?
+                      </button>
+                    </h2>
+                    <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionFaq">
+                      <div class="accordion-body text-muted dark:text-gray-400 px-4 pb-4 pt-1 lh-lg">
+                        Bên trong mỗi trang chi tiết sản phẩm, ZYRO đều cung cấp <strong>Bảng Quy đổi Kích Cỡ (Size Guide)</strong> chi tiết theo chiều cao và cân nặng. Bạn cũng có thể nhắn tin trực tiếp cho ZYRO để được nhân viên tư vấn size chuẩn xác nhất.
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Câu 3 -->
+                  <div class="accordion-item bg-transparent border-0 mb-3 rounded-4 shadow-sm overflow-hidden bg-white dark:bg-[#1a2533] border dark:border-gray-700">
+                    <h2 class="accordion-header" id="headingThree">
+                      <button class="accordion-button collapsed bg-transparent fw-bold text-dark dark:text-white shadow-none px-4 py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                        3. Thời gian hoàn tiền là bao lâu nếu tôi trả hàng?
+                      </button>
+                    </h2>
+                    <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionFaq">
+                      <div class="accordion-body text-muted dark:text-gray-400 px-4 pb-4 pt-1 lh-lg">
+                        Ngay sau khi kho ZYRO nhận lại sản phẩm hoàn và kiểm tra hợp lệ, kế toán sẽ thực hiện lệnh hoàn tiền (Refund). Thời gian tiền về tài khoản ngân hàng thường từ <strong>24h - 48h làm việc</strong>. Đối với ví MoMo, thời gian xử lý từ <strong>1 - 3 ngày</strong>.
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Câu 4 -->
+                  <div class="accordion-item bg-transparent border-0 mb-3 rounded-4 shadow-sm overflow-hidden bg-white dark:bg-[#1a2533] border dark:border-gray-700">
+                    <h2 class="accordion-header" id="headingFour">
+                      <button class="accordion-button collapsed bg-transparent fw-bold text-dark dark:text-white shadow-none px-4 py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                        4. Tôi có được kiểm tra hàng trước khi nhận không?
+                      </button>
+                    </h2>
+                    <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#accordionFaq">
+                      <div class="accordion-body text-muted dark:text-gray-400 px-4 pb-4 pt-1 lh-lg">
+                        <strong>CÓ.</strong> Nhằm đảm bảo quyền lợi, ZYRO cho phép bạn mở bưu phẩm để đồng kiểm (kiểm tra ngoại quan, màu sắc, số lượng) trước khi thanh toán cho Shipper. <i>Lưu ý: Không hỗ trợ mặc thử hoặc làm rách tem mác.</i>
+                      </div>
+                    </div>
+                  </div>
+
+               </div>
+
+               <div class="mt-5 p-4 bg-urban-effect border border-urban border-opacity-25 rounded-4 text-center dark:bg-[#1a2533]">
+                  <i class="bi bi-chat-heart text-urban fs-1 mb-3 d-block"></i>
+                  <h6 class="fw-bold text-urban-dark dark:text-white mb-2">Bạn không tìm thấy câu trả lời?</h6>
+                  <p class="text-muted small mb-4">Đội ngũ ZYRO luôn sẵn sàng hỗ trợ mọi thắc mắc của bạn.</p>
+                  <router-link to="/contact" class="btn btn-urban rounded-pill px-4 fw-bold shadow-sm transition-all hover-transform">
+                     Gửi Lời Nhắn Cho ZYRO
+                  </router-link>
+               </div>
+
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -128,97 +113,68 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import axios from '@/utils/axios';
 import InfoNavigation from '@/components/client/info/InfoNavigation.vue';
 
 const isLoading = ref(true);
-const bannerUrl = ref('');
 
-const activeTab = ref(1);
-
-const toggleTab = (tabIndex) => {
-  activeTab.value = activeTab.value === tabIndex ? null : tabIndex;
-};
-
-const fetchBannerFromHome = async () => {
-  try {
-    const res = await axios.get('/client/home');
-    if (res.data && res.data.success) {
-      const homeData = res.data.data;
-      if (homeData.hero_banners && homeData.hero_banners.length > 0) {
-        bannerUrl.value = homeData.hero_banners[homeData.hero_banners.length - 1].image_desktop;
-      }
-    }
-  } catch (error) {
-    console.error("Lỗi khi tải banner cho trang FAQ:", error);
-  } finally {
-    setTimeout(() => { isLoading.value = false; }, 300);
-  }
+const simulateLoading = () => {
+  setTimeout(() => {
+    isLoading.value = false;
+  }, 400);
 };
 
 onMounted(() => {
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-  fetchBannerFromHome();
+  window.scrollTo(0, 0);
+  simulateLoading();
 });
 </script>
 
 <style scoped>
-.info-page-wrapper { min-height: calc(100vh - 200px); }
-.tracking-wider { letter-spacing: 0.05em; }
-.tracking-tight { letter-spacing: -0.02em; }
-.fw-black { font-weight: 900; }
+.policy-page-wrapper { width: 100%; }
 
-.zyro-link-hover { color: var(--color-c-dark); transition: color 0.3s ease; }
-.zyro-link-hover:hover { color: var(--color-c-hover); }
+.zyro-container { width: 100%; max-width: 1310px; margin: 0 auto; padding-left: 20px; padding-right: 20px; }
+@media (min-width: 1400px) { .zyro-container { padding-left: 0; padding-right: 0; } }
 
-.hover-scale { transition: transform 0.8s ease; }
-.zyro-banner-container:hover .hover-scale { transform: scale(1.05); }
+.font-sans-vn { font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif !important; }
 
-.zyro-faq-wrapper {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 0.35s ease-in-out;
-}
-.zyro-faq-wrapper.is-open {
-  grid-template-rows: 1fr;
-}
-.zyro-faq-inner {
-  overflow: hidden;
-}
+.text-urban-dark { color: var(--color-c-dark, #213448) !important; }
+.text-urban { color: var(--color-c-hover, #547792) !important; }
+.bg-urban-effect { background-color: rgba(84, 119, 146, 0.05) !important; }
+.btn-urban { background-color: var(--color-c-dark, #213448); color: white; border: none; transition: 0.2s ease; }
+.btn-urban:hover { background-color: var(--color-c-hover, #547792); color: white; }
 
-.zyro-accordion .accordion-item {
-  border: 1px solid rgba(148, 180, 193, 0.3) !important;
-  transition: all 0.3s ease;
+.hover-urban:hover { color: var(--color-c-hover, #547792) !important; }
+.tracking-widest { letter-spacing: 2px; }
+.tracking-wide { letter-spacing: 1px; }
+
+.hover-transform { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.hover-transform:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important; }
+
+/* TÙY CHỈNH ACCORDION */
+.custom-accordion .accordion-button:not(.collapsed) {
+   background-color: transparent !important;
+   color: var(--color-c-hover, #547792) !important;
+   box-shadow: none;
 }
-.zyro-accordion .accordion-item:hover {
-  border-color: var(--color-c-hover) !important;
-}
-.zyro-accordion .accordion-button {
-  background-color: transparent !important;
-  color: var(--color-c-dark);
-  font-size: 1.05rem;
-}
-.zyro-accordion .accordion-button:focus {
-  border-color: transparent;
-  box-shadow: none;
-}
-.zyro-accordion .accordion-button:not(.collapsed) {
-  color: var(--color-c-hover);
-  background-color: var(--color-c-effect) !important;
+.custom-accordion .accordion-button::after {
+   transition: transform 0.3s ease;
 }
 
-.fade-enter-active, .fade-leave-active { transition: opacity 0.4s ease, transform 0.4s ease; }
-.fade-enter-from, .fade-leave-to { opacity: 0; transform: translateY(10px); }
-.skeleton-line {
-  background: linear-gradient(90deg, #e2e5e7 25%, #f0f2f3 50%, #e2e5e7 75%);
-  background-size: 200% 100%; animation: skeletonShimmer 1.5s infinite; border-radius: 4px;
+/* SKELETON CSS */
+.shimmer {
+  background: #f6f7f8;
+  background-image: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
+  background-repeat: no-repeat;
+  background-size: 800px 100%;
+  animation: placeholderShimmer 1.5s infinite linear;
 }
-@keyframes skeletonShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+html.dark .shimmer {
+  background: #2b3035;
+  background-image: linear-gradient(to right, #2b3035 0%, #343a40 20%, #2b3035 40%, #2b3035 100%);
+}
+@keyframes placeholderShimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
 
-[data-bs-theme="dark"] .zyro-link-hover { color: #adb5bd; }
-[data-bs-theme="dark"] .bg-white, [data-bs-theme="dark"] .info-content-card { background-color: #1e2125 !important; border-color: #2b3035 !important; }
-[data-bs-theme="dark"] .skeleton-line { background: linear-gradient(90deg, #2b3035 25%, #373b3e 50%, #2b3035 75%); background-size: 200% 100%; }
-[data-bs-theme="dark"] .accordion-item { border-color: #373b3e !important; }
-[data-bs-theme="dark"] .accordion-button { color: #f8f9fa; }
-[data-bs-theme="dark"] .accordion-button:not(.collapsed) { background-color: #2b3035 !important; color: #fff; }
+.animation-fade-in { animation: fadeIn 0.4s ease-in-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+.transition-all { transition: all 0.3s ease; }
 </style>

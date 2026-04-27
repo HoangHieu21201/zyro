@@ -4,49 +4,93 @@ if (!document.getElementById('zyro-swal-global-styles')) {
   const style = document.createElement('style');
   style.id = 'zyro-swal-global-styles';
   style.innerHTML = `
-    .swal2-container.swal2-top-end {
-      top: 100px !important; 
+    .swal2-container.swal2-bottom-end {
+      bottom: 20px !important; 
       right: 20px !important;
       z-index: 100000 !important;
       pointer-events: none;
     }
-    .swal2-container.swal2-top-end .swal2-popup { pointer-events: auto; }
+    .swal2-container.swal2-bottom-end .swal2-popup { pointer-events: auto; }
     
-    .swal2-timer-progress-bar { 
-      background-color: var(--color-c-hover, #547792) !important;
-      height: 3px !important;
-      opacity: 0.8 !important;
-    }
-    html.dark .swal2-timer-progress-bar {
+    /* GLOBAL SAFETY NET CHO TOAST MẶC ĐỊNH */
+    .swal2-popup.swal2-toast {
       background-color: #ffffff !important;
-    }
-
-    .zyro-custom-toast {
-      padding: 0.6rem 1.2rem !important;
+      padding: 12px 18px !important;
       border: none !important;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.08) !important;
-      animation: fadeInRightToast 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-      overflow: hidden !important; 
+      border-radius: 10px !important;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0,0,0,0.05) !important;
+      width: auto !important;
+    }
+    html.dark .swal2-popup.swal2-toast {
+      background-color: #1a2533 !important;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
     }
     
-    @keyframes fadeInRightToast {
-      from { opacity: 0; transform: translateX(50px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
+    .swal2-toast .swal2-title { font-family: 'Segoe UI', Roboto, Arial, sans-serif !important; font-size: 0.95rem !important; font-weight: 600 !important; color: var(--color-c-hover, #547792) !important; margin: 0 0 4px 0 !important; text-align: left !important; }
+    html.dark .swal2-toast .swal2-title { color: var(--color-c-light, #94b4c1) !important; }
     
+    .swal2-toast .swal2-html-container { font-family: 'Segoe UI', Roboto, Arial, sans-serif !important; font-size: 0.85rem !important; color: #6c757d !important; margin: 0 !important; text-align: left !important; }
+    html.dark .swal2-toast .swal2-html-container { color: #adb5bd !important; }
+
+    .swal2-toast.swal2-icon-error .swal2-title { color: #dc3545 !important; }
+    html.dark .swal2-toast.swal2-icon-error .swal2-title { color: #ef4444 !important; }
+
+    /* ZYRO CUSTOM TOAST */
+    .zyro-custom-toast { background-color: #ffffff !important; padding: 12px 18px !important; border: none !important; border-radius: 10px !important; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0,0,0,0.05) !important; width: auto !important; max-width: 400px !important; opacity: 1 !important; animation: fadeInRightToast 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    html.dark .zyro-custom-toast { background-color: #1a2533 !important; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important; }
+    .zyro-toast-html-wrap { margin: 0 !important; padding: 0 !important; overflow: visible !important; }
+    .zyro-toast-container { display: flex !important; align-items: center !important; gap: 12px !important; text-align: left !important; }
+
+    .zyro-toast-icon { width: 28px !important; height: 28px !important; border-radius: 50% !important; display: flex !important; align-items: center !important; justify-content: center !important; flex-shrink: 0 !important; font-size: 1rem !important; color: #ffffff !important; }
+    .toast-success-mode .zyro-toast-icon { background-color: var(--color-c-hover, #547792) !important; } 
+    .toast-error-mode .zyro-toast-icon { background-color: #dc3545 !important; }
+
+    .zyro-toast-msg { font-family: 'Segoe UI', Roboto, Arial, sans-serif !important; font-size: 0.95rem !important; font-weight: 600 !important; line-height: 1.4 !important; word-break: break-word !important; margin: 0 !important; }
+    .toast-success-mode .zyro-toast-msg { color: var(--color-c-hover, #547792) !important; }
+    html.dark .toast-success-mode .zyro-toast-msg { color: var(--color-c-light, #94b4c1) !important; }
+    .toast-error-mode .zyro-toast-msg { color: #dc3545 !important; }
+    html.dark .toast-error-mode .zyro-toast-msg { color: #ef4444 !important; }
+
+    .swal2-timer-progress-bar { height: 3px !important; opacity: 1 !important; }
+    .toast-success-mode .swal2-timer-progress-bar { background-color: var(--color-c-hover, #547792) !important; }
+    .toast-error-mode .swal2-timer-progress-bar { background-color: #dc3545 !important; }
+    @keyframes fadeInRightToast { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
+
     .swal-font-script { font-family: inherit; font-style: normal; }
 
-    /* CSS cho hộp thoại Hủy đơn hàng (Shopee Style) */
+    /* CSS Hủy đơn hàng */
     .custom-cancel-radio-box { transition: all 0.2s ease; }
     .custom-cancel-radio-box:hover { border-color: var(--color-c-hover, #547792) !important; }
-    .swal-custom-radio-input:checked {
-       background-color: var(--color-c-hover, #547792) !important;
-       border-color: var(--color-c-hover, #547792) !important;
+    .swal-custom-radio-input:checked { background-color: var(--color-c-hover, #547792) !important; border-color: var(--color-c-hover, #547792) !important; }
+    .swal-custom-textarea:focus { border-color: var(--color-c-hover, #547792) !important; box-shadow: 0 0 0 3px rgba(84, 119, 146, 0.2) !important; outline: none; }
+
+    /* ==========================================
+       HIỆU ỨNG LOADING MỚI (BOUNCING DOTS) CHO SWEETALERT
+    ========================================== */
+    .zyro-swal-bouncing-dots {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 24px;
+      height: 48px;
     }
-    .swal-custom-textarea:focus {
-       border-color: var(--color-c-hover, #547792) !important;
-       box-shadow: 0 0 0 3px rgba(84, 119, 146, 0.2) !important;
-       outline: none;
+    .zyro-swal-dot {
+      width: 12px;
+      height: 12px;
+      background-color: var(--color-c-hover, #547792);
+      border-radius: 50%;
+      animation: zyroSwalBounce 1.4s infinite ease-in-out both;
+    }
+    html.dark .zyro-swal-dot {
+      background-color: var(--color-c-light, #94b4c1);
+    }
+    .zyro-swal-dot:nth-child(1) { animation-delay: -0.32s; }
+    .zyro-swal-dot:nth-child(2) { animation-delay: -0.16s; }
+
+    @keyframes zyroSwalBounce {
+      0%, 80%, 100% { transform: scale(0); opacity: 0.4; }
+      40% { transform: scale(1); opacity: 1; }
     }
   `;
   document.head.appendChild(style);
@@ -104,9 +148,6 @@ export const ZyroSwal = {
     });
   },
 
-  // ========================================================
-  // HÀM MỚI: HỘP THOẠI HỦY ĐƠN HÀNG (SHOPEE STYLE)
-  // ========================================================
   confirmCancelOrder() {
     return Swal.fire({
       html: `
@@ -119,22 +160,18 @@ export const ZyroSwal = {
               <input class="form-check-input mt-0 me-3 swal-custom-radio-input" type="radio" name="cancelReason" value="Muốn thay đổi địa chỉ nhận hàng" checked style="cursor: pointer;">
               <span class="fw-medium text-dark dark:text-gray-200" style="font-size: 0.95rem;">Muốn thay đổi địa chỉ nhận hàng</span>
             </label>
-            
             <label class="form-check custom-cancel-radio-box p-3 border dark:border-gray-600 rounded-3 cursor-pointer d-flex align-items-center mb-0">
               <input class="form-check-input mt-0 me-3 swal-custom-radio-input" type="radio" name="cancelReason" value="Muốn đổi sản phẩm/phân loại khác" style="cursor: pointer;">
               <span class="fw-medium text-dark dark:text-gray-200" style="font-size: 0.95rem;">Muốn đổi sản phẩm/phân loại khác</span>
             </label>
-            
             <label class="form-check custom-cancel-radio-box p-3 border dark:border-gray-600 rounded-3 cursor-pointer d-flex align-items-center mb-0">
               <input class="form-check-input mt-0 me-3 swal-custom-radio-input" type="radio" name="cancelReason" value="Tìm thấy nơi khác giá rẻ hơn" style="cursor: pointer;">
               <span class="fw-medium text-dark dark:text-gray-200" style="font-size: 0.95rem;">Tìm thấy nơi khác giá rẻ hơn</span>
             </label>
-            
             <label class="form-check custom-cancel-radio-box p-3 border dark:border-gray-600 rounded-3 cursor-pointer d-flex align-items-center mb-0">
               <input class="form-check-input mt-0 me-3 swal-custom-radio-input" type="radio" name="cancelReason" value="Đổi ý không muốn mua nữa" style="cursor: pointer;">
               <span class="fw-medium text-dark dark:text-gray-200" style="font-size: 0.95rem;">Đổi ý không muốn mua nữa</span>
             </label>
-            
             <label class="form-check custom-cancel-radio-box p-3 border dark:border-gray-600 rounded-3 cursor-pointer d-flex align-items-center mb-0">
               <input class="form-check-input mt-0 me-3 swal-custom-radio-input" type="radio" name="cancelReason" value="Khác" style="cursor: pointer;">
               <span class="fw-medium text-dark dark:text-gray-200" style="font-size: 0.95rem;">Lý do khác...</span>
@@ -164,16 +201,11 @@ export const ZyroSwal = {
         };
         
         updateBoxes();
-
         radios.forEach(radio => {
           radio.addEventListener('change', (e) => {
             updateBoxes();
-            if (e.target.value === 'Khác') {
-              customInput.classList.remove('d-none');
-              customInput.focus();
-            } else {
-              customInput.classList.add('d-none');
-            }
+            if (e.target.value === 'Khác') { customInput.classList.remove('d-none'); customInput.focus(); } 
+            else { customInput.classList.add('d-none'); }
           });
         });
       },
@@ -192,10 +224,7 @@ export const ZyroSwal = {
         const selectedOption = document.querySelector('input[name="cancelReason"]:checked').value;
         if (selectedOption === 'Khác') {
           const customReason = document.getElementById('customCancelReason').value.trim();
-          if (!customReason) {
-            Swal.showValidationMessage('Vui lòng nhập rõ lý do hủy của bạn!');
-            return false;
-          }
+          if (!customReason) { Swal.showValidationMessage('Vui lòng nhập rõ lý do hủy của bạn!'); return false; }
           return customReason;
         }
         return selectedOption;
@@ -206,21 +235,22 @@ export const ZyroSwal = {
   toastSuccess(message) {
     return Swal.fire({
       toast: true,
-      position: 'top-end',
+      position: 'bottom-end',
       timerProgressBar: true,
       html: `
-        <div class="d-flex align-items-center gap-3">
-          <div class="bg-dark rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 24px; height: 24px;">
-            <i class="bi bi-check2 text-white" style="font-size: 1rem;"></i>
+        <div class="zyro-toast-container">
+          <div class="zyro-toast-icon shadow-sm">
+            <i class="bi bi-check-lg"></i>
           </div>
-          <span class="fw-semibold text-dark dark:text-white tracking-wide" style="font-size: 0.9rem; white-space: nowrap;">${message}</span>
+          <div class="zyro-toast-msg">${message}</div>
         </div>
       `,
       showConfirmButton: false,
-      timer: 2500,
+      timer: 3000,
       background: 'transparent',
       customClass: {
-        popup: 'zyro-custom-toast rounded-pill shadow-lg border border-light-subtle px-3 py-2 bg-white dark:bg-[#212529]',
+        popup: 'zyro-custom-toast toast-success-mode',
+        htmlContainer: 'zyro-toast-html-wrap'
       }
     });
   },
@@ -228,21 +258,22 @@ export const ZyroSwal = {
   toastError(message) {
     return Swal.fire({
       toast: true,
-      position: 'top-end',
+      position: 'bottom-end',
       timerProgressBar: true,
       html: `
-        <div class="d-flex align-items-center gap-3">
-          <div class="bg-danger rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 24px; height: 24px;">
-            <i class="bi bi-x-lg text-white" style="font-size: 0.9rem;"></i>
+        <div class="zyro-toast-container">
+          <div class="zyro-toast-icon shadow-sm">
+            <i class="bi bi-x-lg"></i>
           </div>
-          <span class="fw-semibold text-dark dark:text-white tracking-wide" style="font-size: 0.9rem; white-space: nowrap;">${message}</span>
+          <div class="zyro-toast-msg">${message}</div>
         </div>
       `,
       showConfirmButton: false,
-      timer: 3000,
+      timer: 4000,
       background: 'transparent',
       customClass: {
-        popup: 'zyro-custom-toast rounded-pill shadow-lg border border-light-subtle px-3 py-2 bg-white dark:bg-[#212529]',
+        popup: 'zyro-custom-toast toast-error-mode',
+        htmlContainer: 'zyro-toast-html-wrap'
       }
     });
   },
@@ -251,7 +282,11 @@ export const ZyroSwal = {
     return Swal.fire({
       html: `
         <div class="d-flex flex-column align-items-center py-4">
-          <div class="spinner-border text-urban mb-4" style="width: 3rem; height: 3rem;" role="status"></div>
+          <div class="zyro-swal-bouncing-dots">
+            <div class="zyro-swal-dot"></div>
+            <div class="zyro-swal-dot"></div>
+            <div class="zyro-swal-dot"></div>
+          </div>
           <h5 class="fw-bold text-dark dark:text-white swal-font-script tracking-widest text-uppercase">${title}</h5>
           <span class="text-muted small">Vui lòng đợi trong giây lát...</span>
         </div>

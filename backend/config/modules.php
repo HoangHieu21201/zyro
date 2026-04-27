@@ -86,4 +86,9 @@ return [
         'module_code' => 'admin_inventory',
         'default_level' => 4
     ],
+    [
+        'module_name' => 'Quản lý Hộp thư khách hàng',
+        'module_code' => 'admin_contacts',
+        'default_level' => 2
+    ],
 ];
