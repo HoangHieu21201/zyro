@@ -65,9 +65,27 @@ class CartController extends Controller
             ];
         });
 
+        // ========================================================
+        // ĐÃ FIX: TÍNH TOÁN SỐ LƯỢNG GIỎ HÀNG CHUẨN XÁC (COMBO TÍNH LÀ 1)
+        // ========================================================
+        $cartCount = 0;
+        $comboTracker = [];
+
+        foreach ($formattedItems as $item) {
+            if (!empty($item['lookbook_id'])) {
+                if (!in_array($item['lookbook_id'], $comboTracker)) {
+                    $comboTracker[] = $item['lookbook_id'];
+                    $cartCount++;
+                }
+            } else {
+                $cartCount++;
+            }
+        }
+
         return response()->json([
             'success' => true, 
-            'data' => $formattedItems
+            'data' => $formattedItems,
+            'cart_count' => $cartCount // Đã trả về Backend số đếm chuẩn
         ]);
     }
 
@@ -186,7 +204,7 @@ class CartController extends Controller
 
         DB::beginTransaction();
         try {
-            $addedCount = 0; // ĐÃ THÊM: Biến đếm số lượng sp được thêm thực sự
+            $addedCount = 0;
 
             foreach ($selections as $item) {
                 $variantId = $item['variant_id'];
@@ -201,7 +219,6 @@ class CartController extends Controller
 
                 $currentStock = $variant->stock_quantity - ($variant->reserved_stock ?? 0);
 
-                // ĐÃ FIX: Chỉ dùng unique (cart_id + variant_id) để tránh lỗi SQL Constraint
                 $existingItem = CartItem::where('cart_id', $cart->id)
                                         ->where('variant_id', $variantId)
                                         ->first();
@@ -215,9 +232,8 @@ class CartController extends Controller
 
                 if ($existingItem) {
                     $existingItem->quantity = $totalRequested;
-                    $existingItem->lookbook_id = $lookbookId; // Cập nhật lookbook ID vào item cũ
+                    $existingItem->lookbook_id = $lookbookId;
                     
-                    // Cập nhật mảng attributes (nếu có)
                     $existingSelections = is_array($existingItem->lookbook_selections) ? $existingItem->lookbook_selections : [];
                     $existingItem->lookbook_selections = array_merge($existingSelections, ['attributes' => $attributes]);
                     
@@ -236,7 +252,6 @@ class CartController extends Controller
                 }
             }
 
-            // ĐÃ THÊM: Nếu không có sản phẩm nào được thêm (Do hết hàng), báo lỗi rõ ràng!
             if ($addedCount === 0) {
                 DB::rollBack();
                 return response()->json(['success' => false, 'message' => 'Tất cả sản phẩm bạn chọn đều đã hết hàng hoặc không khả dụng.'], 400);
@@ -314,7 +329,6 @@ class CartController extends Controller
     {
         if (!$path) return null;
         if (str_starts_with($path, 'http')) return $path;
-        // ĐÃ FIX: Sử dụng hàm asset() để tự động nhận dạng domain chuẩn khi deploy
         return asset('storage/' . ltrim($path, '/'));
     }
 }

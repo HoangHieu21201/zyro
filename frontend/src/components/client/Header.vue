@@ -59,8 +59,10 @@
             
             <button class="btn btn-link p-0 border-0 hover-opacity transition-color" 
                     @click="isUserMenuOpen = !isUserMenuOpen"
-                    :class="(isScrolled || !isHomePage || isMegaMenuOpen || isSearchOpen || isMiniCartOpen) ? 'text-dark' : 'text-white'" title="Tài khoản của tôi">
-              <i class="bi bi-person-check fs-5"></i>
+                    :class="!tierColor ? ((isScrolled || !isHomePage || isMegaMenuOpen || isSearchOpen || isMiniCartOpen) ? 'text-dark' : 'text-white') : ''"
+                    :style="tierColor ? { color: tierColor + ' !important' } : {}"
+                    title="Tài khoản của tôi">
+              <i class="bi bi-person-check fs-5" :style="tierColor ? { filter: `drop-shadow(0 0 6px ${tierColor}80)` } : {}"></i>
             </button>
 
             <transition name="fade-slide-up">
@@ -91,10 +93,12 @@
                   :class="(isScrolled || !isHomePage || isMegaMenuOpen || isSearchOpen || isMiniCartOpen) ? 'text-dark' : 'text-white'" 
                   title="Giỏ hàng" @click="toggleMiniCart">
             <i class="bi fs-5 transition-all" :class="isMiniCartOpen ? 'bi-x-lg' : 'bi-bag'"></i>
+            
+            <!-- ĐÃ FIX: GỌI BIẾN uniqueCartItemsCount TỪ COMPUTED THAY VÌ ITEMS.LENGTH -->
             <span v-show="!isMiniCartOpen" class="position-absolute top-0 start-100 translate-middle badge rounded-pill font-monospace transition-color shadow-sm"
                   :class="(isScrolled || !isHomePage || isMegaMenuOpen || isSearchOpen || isMiniCartOpen) ? 'bg-dark text-white' : 'bg-white text-dark'"
                   style="font-size: 0.6rem; padding: 0.25em 0.45em;">
-              {{ cartStore.items.length }}
+              {{ uniqueCartItemsCount }}
             </span>
           </button>
         </div>
@@ -156,10 +160,32 @@ const headerHeight = computed(() => isScrolled.value ? 60 : 90);
 const megaMenuOffset = computed(() => headerHeight.value);
 
 // ========================================================
+// ĐÃ FIX: TÍNH TOÁN SỐ LƯỢNG GIỎ HÀNG CHUẨN XÁC THEO LOGIC MỚI
+// ========================================================
+const uniqueCartItemsCount = computed(() => {
+  let count = 0;
+  const comboIds = new Set();
+  
+  cartStore.items.forEach(item => {
+    if (item.lookbook_id) {
+      if (!comboIds.has(item.lookbook_id)) {
+        comboIds.add(item.lookbook_id);
+        count++; // Tính nguyên 1 Combo là 1 sản phẩm
+      }
+    } else {
+      count++; // Sản phẩm lẻ tính 1
+    }
+  });
+  
+  return count;
+});
+
+// ========================================================
 // STATE & LOGIC AUTH (ĐĂNG NHẬP / ĐĂNG XUẤT / MENU USER)
 // ========================================================
 const isLoggedIn = ref(false);
 const userName = ref('');
+const tierColor = ref('');
 let userMenuTimeout = null;
 
 const openUserMenu = () => {
@@ -173,7 +199,21 @@ const closeUserMenu = () => {
   }, 200); 
 };
 
-const checkAuthStatus = () => {
+// Map màu cho Tên Hạng Thành Viên nếu người dùng Refresh Page
+const getTierColorFromName = (name) => {
+  if (!name) return '';
+  const lName = name.toLowerCase();
+  if (lName.includes('khởi đầu')) return ''; // Giữ màu mặc định theo Header
+  if (lName.includes('fan cứng') || lName.includes('bronze')) return '#3b82f6';
+  if (lName.includes('bạc') || lName.includes('silver')) return '#94a3b8';
+  if (lName.includes('vàng') || lName.includes('gold')) return '#eab308';
+  if (lName.includes('kim cương') || lName.includes('diamond')) return '#06b6d4';
+  if (lName.includes('bạch kim') || lName.includes('platinum')) return '#8b5cf6';
+  if (lName.includes('vip')) return '#f43f5e';
+  return '';
+};
+
+const checkAuthStatus = (e) => {
   const token = localStorage.getItem('access_token');
   const userStr = localStorage.getItem('user_info');
   
@@ -182,14 +222,26 @@ const checkAuthStatus = () => {
     try {
       const userObj = JSON.parse(userStr);
       userName.value = userObj.full_name || userObj.fullName || userObj.name || 'Khách hàng';
-      wishlistStore.fetchWishlist(); // ĐÃ THÊM: Tự động kéo danh sách yêu thích
-    } catch (e) {
+
+      // Xử lý Lấy Màu Của Hạng Thành Viên
+      if (e && e.type === 'user-profile-updated' && e.detail && e.detail.tierColor) {
+         tierColor.value = e.detail.tierColor;
+         if (e.detail.tierName && e.detail.tierName.toLowerCase().includes('khởi đầu')) {
+             tierColor.value = ''; // Chặn không tô màu nếu là cấp Khởi Đầu
+         }
+      } else {
+         tierColor.value = getTierColorFromName(userObj.tier_name);
+      }
+
+      wishlistStore.fetchWishlist(); 
+    } catch (err) {
       console.error('Lỗi parse thông tin user');
     }
   } else {
     isLoggedIn.value = false;
     userName.value = '';
-    wishlistStore.items = []; // ĐÃ THÊM: Xóa danh sách nếu chưa đăng nhập
+    tierColor.value = '';
+    wishlistStore.items = []; 
   }
 };
 
@@ -204,7 +256,6 @@ const handleLogout = () => {
       try {
         const token = localStorage.getItem('access_token');
         if (token) {
-          // Bắn API logout lên server để hủy token
           await axios.post(`${import.meta.env.VITE_API_BASE_URL}/client/logout`, {}, {
             headers: { Authorization: `Bearer ${token}` }
           });
@@ -212,12 +263,12 @@ const handleLogout = () => {
       } catch (error) {
         console.error('Lỗi API logout', error);
       } finally {
-        // Luôn dọn dẹp localStorage dù API có lỗi hay không
         localStorage.removeItem('access_token');
         localStorage.removeItem('user_info');
         
         isLoggedIn.value = false;
         userName.value = '';
+        tierColor.value = '';
         isUserMenuOpen.value = false;
 
         ZyroSwal.toastSuccess('Đăng xuất thành công!');
@@ -302,12 +353,14 @@ const handleScroll = () => {
 
 onMounted(() => { 
   checkAuthStatus(); 
+  window.addEventListener('user-profile-updated', checkAuthStatus);
   window.addEventListener('scroll', handleScroll); 
   fetchHeaderData();
   cartStore.initCart(); 
 });
 
 onUnmounted(() => { 
+  window.removeEventListener('user-profile-updated', checkAuthStatus);
   window.removeEventListener('scroll', handleScroll); 
 });
 </script>

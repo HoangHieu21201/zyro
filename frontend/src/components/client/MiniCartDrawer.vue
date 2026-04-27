@@ -11,7 +11,8 @@
         <div class="p-3 border-bottom dark:border-gray-700 d-flex justify-content-between align-items-center bg-light dark:bg-[#212529]">
           <h5 class="fw-bold m-0 text-dark dark:text-white d-flex align-items-center text-uppercase tracking-wide font-sans-vn">
             <i class="bi bi-bag-check-fill text-dark me-2"></i> Giỏ hàng 
-            <span class="badge bg-dark ms-2 rounded-pill" style="font-size: 0.75rem;">{{ cartStore.totalQuantity }}</span>
+            <!-- ĐÃ FIX: Đồng bộ hiển thị số đếm giỏ hàng thông minh -->
+            <span class="badge bg-dark ms-2 rounded-pill" style="font-size: 0.75rem;">{{ uniqueCartItemsCount }}</span>
           </h5>
           <button class="btn-close dark:filter-invert" @click="$emit('close')"></button>
         </div>
@@ -117,7 +118,7 @@
                     </div>
                   </div>
 
-                  <!-- Dropdown Các món bên trong Combo (Read-only) ĐÃ BỎ VIỀN XANH -->
+                  <!-- Dropdown Các món bên trong Combo (Read-only) -->
                   <div v-show="expandedGroups.includes(group.lookbook_id)" class="combo-items-dropdown mt-3 pt-3 border-top border-secondary border-opacity-25">
                     <div class="d-flex flex-column gap-3">
                       <div v-for="item in group.items" :key="'lbItem'+item.variant_id" class="d-flex gap-3 align-items-center">
@@ -130,7 +131,6 @@
                            </h6>
                            <div class="d-flex justify-content-between align-items-center">
                              <span class="text-secondary dark:text-gray-400 font-sans-vn" style="font-size: 0.75rem;">
-                               <!-- ĐÃ CẬP NHẬT: Định dạng MÀU/SIZE | GIÁ TIỀN -->
                                {{ item.attributes || 'Mặc định' }} <span class="mx-1">|</span> <span class="fw-bold text-dark dark:text-gray-300">{{ formatCurrency(item.current_price) }}</span>
                              </span>
                              <span class="text-muted fw-semibold" style="font-size: 0.75rem;">x{{ item.quantity }}</span>
@@ -257,6 +257,27 @@ const remainingForFreeship = computed(() => {
 const freeshipProgress = computed(() => {
   const percent = (cartStore.totalPrice / FREESHIP_THRESHOLD) * 100;
   return percent > 100 ? 100 : percent;
+});
+
+// ========================================================
+// ĐÃ FIX: TÍNH SỐ LƯỢNG GIỎ HÀNG CHUẨN XÁC THEO NHÓM COMBO VÀ SP LẺ
+// ========================================================
+const uniqueCartItemsCount = computed(() => {
+  let count = 0;
+  const comboIds = new Set();
+  
+  cartStore.items.forEach(item => {
+    if (item.lookbook_id) {
+      if (!comboIds.has(item.lookbook_id)) {
+        comboIds.add(item.lookbook_id);
+        count++; // Tính nguyên 1 Combo là 1 sản phẩm
+      }
+    } else {
+      count++; // Sản phẩm lẻ tính 1
+    }
+  });
+  
+  return count;
 });
 
 // THUẬT TOÁN GOM NHÓM ĐÃ NÂNG CẤP LẤY ẢNH & TÊN TỪ API

@@ -1,7 +1,5 @@
 <?php
 
-// File: backend/app/Http/Requests/Tier/UpdateMembershipTierRequest.php
-
 namespace App\Http\Requests\Tier;
 
 use Illuminate\Foundation\Http\FormRequest;
@@ -19,8 +17,7 @@ class UpdateMembershipTierRequest extends FormRequest
         $tierId = $this->route('tier');
 
         return [
-            // ĐÃ THÊM min:3
-            'name'                 => ['required', 'string', 'min:3', 'max:100', Rule::unique('membership_tiers', 'name')->ignore($tierId)->whereNull('deleted_at')],
+            'name'                 => ['required', 'string', 'min:3', 'max:100', Rule::unique('membership_tiers', 'name')->ignore($tierId)],
             'min_spent'            => ['required', 'numeric', 'min:0', 'max:9999999999'],
             'min_orders'           => ['required', 'integer', 'min:0', 'max:999999'],
             'discount_percent'     => ['required', 'numeric', 'min:0', 'max:100'],
