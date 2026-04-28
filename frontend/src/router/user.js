@@ -84,7 +84,6 @@ const user = [
         name: 'client-track-order',
         component: () => import('@/pages/client/TrackOrder.vue')
       },
-       // Đã map với "Cửa hàng hệ thống" trong Footer
       {
         path: '/stores',
         name: 'client-stores',

@@ -63,7 +63,7 @@
              <h5 class="fw-bold text-dark dark:text-white m-0 font-sans-vn">Sản phẩm trong giỏ ({{ cartStore.totalQuantity }})</h5>
           </div>
 
-          <div class="cart-items-list border-top dark:border-gray-700">
+          <div class="cart-items-list border-top dark:border-gray-700 pt-2">
             
             <template v-for="(group, gIdx) in cartGroups" :key="'grp'+gIdx">
 
@@ -71,11 +71,11 @@
               <!-- LOẠI 1: GÓI COMBO LOOKBOOK            -->
               <!-- ===================================== -->
               <div v-if="group.isLookbook" 
-                   class="cart-item position-relative py-4 border-bottom dark:border-gray-700 px-2 transition-all bg-urban-effect dark:bg-[#1a2533] rounded-4 mb-3 mt-3 shadow-sm border border-secondary border-opacity-25"
+                   class="cart-item position-relative p-3 p-md-4 transition-all bg-urban-effect dark:bg-[#1a2533] rounded-4 mb-4 mt-2 shadow-sm border border-secondary border-opacity-25"
                    :class="{'pe-none opacity-75': updatingItemId === 'combo_' + group.lookbook_id}">
                   
-                  <!-- NÚT XÓA COMBO -->
-                  <button class="btn-delete-circle d-flex align-items-center justify-content-center transition-all bg-white dark:bg-[#212529]" @click="removeCombo(group)" title="Xóa toàn bộ Combo">
+                  <!-- ĐÃ FIX: NÚT XÓA COMBO CHUẨN XÁC, CHỐNG MÙ MÀU HOVER -->
+                  <button class="btn-delete-circle transition-all shadow-sm" @click="removeCombo(group)" title="Xóa toàn bộ Combo">
                     <i class="bi bi-x-lg"></i>
                   </button>
 
@@ -86,7 +86,7 @@
 
                   <div class="row align-items-start position-relative">
                     <!-- 1. THÔNG TIN COMBO -->
-                    <div class="col-12 col-md-7 mb-3 mb-md-0 pe-md-4">
+                    <div class="col-12 col-md-7 mb-3 mb-md-0 pe-md-5">
                       <div class="d-flex align-items-start gap-3">
                         <img :src="group.lookbook_image || group.items[0]?.image || '/client_placeholder.png'" 
                              @error="e => e.target.src='/client_placeholder.png'" 
@@ -94,7 +94,7 @@
                              style="width: 100px; height: 130px;"
                              @click="toggleGroup(group.lookbook_id)">
                         
-                        <div class="flex-grow-1">
+                        <div class="flex-grow-1 pt-1">
                           <div class="cursor-pointer" @click="toggleGroup(group.lookbook_id)">
                              <span class="badge bg-urban text-white rounded-pill px-3 py-1 shadow-sm font-sans-vn d-inline-block mb-2">
                                <i class="bi bi-magic me-1"></i> {{ group.lookbook_name }}
@@ -112,7 +112,7 @@
                     </div>
 
                     <!-- 2. SỐ LƯỢNG & TỔNG TIỀN COMBO -->
-                    <div class="col-12 col-md-5 d-flex justify-content-between justify-content-md-end align-items-center gap-md-4 position-relative mt-2 mt-md-0">
+                    <div class="col-12 col-md-5 d-flex justify-content-between justify-content-md-end align-items-center gap-md-4 position-relative mt-2 mt-md-0 pt-md-4">
                       <div class="quantity-box border dark:border-gray-600 rounded-pill d-inline-flex bg-white dark:bg-[#212529] shadow-sm overflow-hidden" style="height: 38px;">
                         <button class="btn p-0 border-0 text-dark dark:text-gray-300 d-flex align-items-center justify-content-center hover-urban transition-color" style="width: 35px;" @click="decreaseComboQty(group)"><i class="bi bi-dash"></i></button>
                         <input type="number" class="form-control border-0 text-center fw-bold px-0 h-100 bg-transparent dark:text-white shadow-none no-spinners font-sans-vn" 
@@ -132,7 +132,7 @@
                   <div v-show="expandedGroups.includes(group.lookbook_id)" class="combo-details mt-4 pt-3 border-top border-secondary border-opacity-25 ps-md-3">
                      <div class="d-flex flex-column gap-3">
                         <div v-for="item in group.items" :key="'cb_item_'+item.variant_id" class="d-flex align-items-center gap-3 bg-white dark:bg-[#212529] p-2 rounded-3 border border-light-subtle dark:border-gray-700 shadow-sm">
-                           <img :src="item.image || '/client_placeholder.png'" style="width: 55px; height: 75px;" class="rounded-2 border object-fit-cover">
+                           <img :src="item.image || '/client_placeholder.png'" style="width: 55px; height: 75px;" class="rounded-2 border object-fit-cover shadow-sm bg-white">
                            <div class="flex-grow-1">
                               <h6 class="fw-semibold text-dark dark:text-gray-200 mb-1 line-clamp-1 font-sans-vn" style="font-size: 0.9rem;">
                                  {{ item.product_name }}
@@ -152,25 +152,27 @@
               <!-- LOẠI 2: SẢN PHẨM LẺ BÌNH THƯỜNG       -->
               <!-- ===================================== -->
               <template v-else>
+                <!-- ĐÃ FIX: Đưa px-3 p-md-4 vào để khung bao trọn, Xóa margin lộn xộn -->
                 <div v-for="item in group.items" :key="'cartItem'+item.variant_id" 
-                     class="cart-item position-relative py-4 border-bottom dark:border-gray-700 px-2 transition-all"
+                     class="cart-item position-relative p-3 p-md-4 border-bottom dark:border-gray-700 transition-all"
                      :class="{'pe-none opacity-50': updatingItemId === item.variant_id}">
                   
                   <div v-if="updatingItemId === item.variant_id" class="position-absolute top-50 start-50 translate-middle bouncing-loader" style="z-index: 10;">
                      <span></span><span></span><span></span>
                   </div>
 
-                  <button class="btn-delete-circle d-flex align-items-center justify-content-center transition-all" @click="removeItem(item)" title="Xóa khỏi giỏ">
+                  <!-- ĐÃ FIX: NÚT XÓA SP LẺ CHUẨN XÁC, CHỐNG MÙ MÀU HOVER -->
+                  <button class="btn-delete-circle transition-all shadow-sm" @click="removeItem(item)" title="Xóa khỏi giỏ">
                     <i class="bi bi-x-lg"></i>
                   </button>
 
                   <div class="row align-items-center position-relative">
-                    <div class="col-12 col-md-7 mb-3 mb-md-0 pe-md-4">
+                    <div class="col-12 col-md-7 mb-3 mb-md-0 pe-md-5">
                       <div class="d-flex align-items-start gap-3">
                         <img :src="item.image || '/client_placeholder.png'" @error="e => e.target.src='/client_placeholder.png'" 
                              class="rounded-3 border dark:border-gray-600 object-fit-cover shadow-sm bg-light flex-shrink-0" style="width: 90px; height: 120px;">
-                        <div class="flex-grow-1">
-                          <h6 class="fw-bold text-dark dark:text-gray-200 mb-2 line-clamp-2 pe-5 font-sans-vn">
+                        <div class="flex-grow-1 pt-1">
+                          <h6 class="fw-bold text-dark dark:text-gray-200 mb-2 line-clamp-2 pe-3 font-sans-vn">
                             <router-link :to="`/product/${item.product_slug || item.product_id}`" class="text-decoration-none text-dark dark:text-gray-200 hover-text-urban transition-color">
                                {{ item.product_name }}
                             </router-link>
@@ -186,7 +188,7 @@
                             {{ formatCurrency(item.current_price) }}
                           </div>
 
-                          <div v-if="item.stock_warning" class="text-danger small mt-1 fw-medium font-sans-vn" style="font-size: 0.75rem;">
+                          <div v-if="item.stock_warning" class="text-danger small mt-2 fw-medium font-sans-vn" style="font-size: 0.75rem;">
                              <i class="bi bi-exclamation-triangle"></i> Số lượng vượt quá tồn kho
                           </div>
                         </div>
@@ -527,24 +529,42 @@ onMounted(() => {
 .animation-fade-in { animation: fadeIn 0.4s ease-in-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
-/* NÚT XÓA TRÒN VIỀN ĐỎ */
+/* =====================================
+   ĐÃ FIX: NÚT XÓA (X) LUÔN NẰM CHUẨN GÓC PHẢI
+====================================== */
 .btn-delete-circle {
   position: absolute;
-  top: 1.5rem; 
-  right: 0.5rem;
+  top: 16px; 
+  right: 16px;
   width: 32px;
   height: 32px;
+  background-color: #ffffff;
   border: 1.5px solid #dc3545;
   color: #dc3545;
   border-radius: 50%;
   padding: 0;
-  z-index: 2;
+  z-index: 5;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.btn-delete-circle i { font-size: 0.85rem; font-weight: bold; }
-.btn-delete-circle:hover { background: #dc3545; color: #fff; transform: scale(1.1); box-shadow: 0 4px 8px rgba(220, 53, 69, 0.2); }
-html.dark .btn-delete-circle { border-color: #ef4444; color: #ef4444; }
-html.dark .btn-delete-circle:hover { background: #ef4444; color: #fff; }
+.btn-delete-circle i { font-size: 0.85rem; font-weight: bold; pointer-events: none; }
+.btn-delete-circle:hover { 
+  background-color: #dc3545 !important; 
+  color: #ffffff !important; 
+  transform: scale(1.1); 
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.2); 
+}
+html.dark .btn-delete-circle { 
+  background-color: #212529; 
+  border-color: #ef4444; 
+  color: #ef4444; 
+}
+html.dark .btn-delete-circle:hover { 
+  background-color: #ef4444 !important; 
+  color: #ffffff !important; 
+}
 
 /* ẨN NÚT MŨI TÊN TRONG Ô INPUT NUMBER */
 .no-spinners::-webkit-outer-spin-button,

@@ -34,12 +34,13 @@
         <div class="card-body p-0">
           <!-- GIAO DIỆN PC -->
           <div class="table-responsive d-none d-lg-block">
-            <table class="table table-hover align-middle mb-0" style="table-layout: fixed; width: 100%; min-width: 900px;">
+            <!-- ĐÃ FIX: Tăng min-width và chia lại phần trăm các cột để chống lẹm -->
+            <table class="table table-hover align-middle mb-0" style="table-layout: fixed; width: 100%; min-width: 1000px;">
               <thead class="bg-light dark:bg-[#212529]">
                 <tr>
-                  <th class="py-3 px-4 text-secondary dark:text-gray-400 border-0" style="width: 25%;">Huy hiệu & Hạng</th>
-                  <th class="py-3 px-4 text-secondary dark:text-gray-400 border-0" style="width: 30%;">Điều kiện đạt hạng</th>
-                  <th class="py-3 px-4 text-secondary dark:text-gray-400 border-0" style="width: 20%;">Đặc quyền</th>
+                  <th class="py-3 px-4 text-secondary dark:text-gray-400 border-0" style="width: 23%;">Huy hiệu & Hạng</th>
+                  <th class="py-3 px-4 text-secondary dark:text-gray-400 border-0" style="width: 27%;">Điều kiện đạt hạng</th>
+                  <th class="py-3 px-4 text-secondary dark:text-gray-400 border-0" style="width: 25%;">Đặc quyền</th>
                   <th class="py-3 px-4 text-secondary dark:text-gray-400 border-0 text-center" style="width: 10%;">Số khách</th>
                   <th class="py-3 px-4 text-secondary dark:text-gray-400 text-center border-0" style="width: 15%;">Thao tác</th>
                 </tr>
@@ -53,7 +54,7 @@
                 <tr v-else v-for="tier in tiers" :key="tier.id">
                   <td class="px-4 py-3">
                     <div class="d-flex align-items-center">
-                      <div class="bg-light dark:bg-[#212529] rounded-circle p-2 me-3 border shadow-sm dark:border-gray-600 d-flex align-items-center justify-content-center" style="width: 55px; height: 55px;">
+                      <div class="bg-light dark:bg-[#212529] rounded-circle p-2 me-3 border shadow-sm dark:border-gray-600 d-flex align-items-center justify-content-center flex-shrink-0" style="width: 55px; height: 55px;">
                          <img v-if="tier.icon" :src="getImageUrl(tier.icon)" @error="handleImageError" class="object-fit-contain" style="width: 35px; height: 35px;">
                          <i v-else class="bi bi-gem text-warning fs-3"></i>
                       </div>
@@ -66,13 +67,15 @@
                     <div><i class="bi bi-bag-check text-urban me-2"></i>Số đơn hoàn tất: <strong class="text-dark dark:text-white">{{ tier.min_orders }} đơn</strong></div>
                   </td>
                   
+                  <!-- ĐÃ CẬP NHẬT: Cho phép xuống dòng (text-wrap) để giải phóng diện tích ngang -->
                   <td class="px-4">
-                     <span class="badge bg-success bg-opacity-10 text-success border border-success mb-1 w-100 text-start">
-                        <i class="bi bi-percent me-1"></i> Giảm {{ tier.discount_percent }}% / Đơn
-                     </span>
-                     <span class="badge bg-info bg-opacity-10 text-info border border-info w-100 text-start">
+                     <div class="badge bg-success bg-opacity-10 text-success border border-success mb-2 w-100 text-start text-wrap lh-base py-2">
+                        <div style="font-size: 0.8rem;"><i class="bi bi-percent me-1"></i> Giảm {{ tier.discount_percent }}% / Đơn</div>
+                        <div v-if="tier.max_discount_amount > 0" class="fst-italic fw-normal mt-1 opacity-75" style="font-size: 0.75rem;">(Tối đa: {{ formatCurrency(tier.max_discount_amount) }})</div>
+                     </div>
+                     <div class="badge bg-info bg-opacity-10 text-info border border-info w-100 text-start text-wrap lh-base py-2" style="font-size: 0.8rem;">
                         <i class="bi bi-gift me-1"></i> {{ tier.yearly_service_quota }} Dịch vụ / Năm
-                     </span>
+                     </div>
                   </td>
 
                   <td class="px-4 text-center fw-bold text-dark dark:text-white fs-5">
@@ -120,9 +123,13 @@
                       <span>Số đơn hoàn tất:</span>
                       <strong class="text-dark dark:text-white">{{ tier.min_orders }} đơn</strong>
                     </div>
+                    
                     <div class="d-flex justify-content-between mb-1">
                       <span>Giảm giá hóa đơn:</span>
-                      <strong class="text-success">{{ tier.discount_percent }}%</strong>
+                      <div class="text-end">
+                        <strong class="text-success">Giảm {{ tier.discount_percent }}%</strong>
+                        <div v-if="tier.max_discount_amount > 0" class="text-muted" style="font-size: 0.7rem;">(Tối đa: {{ formatCurrency(tier.max_discount_amount) }})</div>
+                      </div>
                     </div>
                     <div class="d-flex justify-content-between mb-1">
                       <span>Lượt dịch vụ miễn phí:</span>

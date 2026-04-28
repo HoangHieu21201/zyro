@@ -92,18 +92,39 @@
                         {{ getPaymentStatusLabel(selectedOrder.payment_status) }}
                       </span>
                     </div>
+                    
+                    <!-- ĐÃ CẬP NHẬT: LẤY TRỰC TIẾP TỪ CỘT DATABASE MỚI CỦA BẠN -->
                     <div class="d-flex justify-content-between mb-2 small text-muted dark:text-gray-400 mt-4">
-                      <span>Tạm tính:</span>
-                      <span class="fw-bold text-dark dark:text-gray-200">{{ formatCurrency(Number(selectedOrder.total_amount) - Number(selectedOrder.shipping_fee || 0) + Number(selectedOrder.discount_amount || 0)) }}</span>
+                      <span>Tạm tính ({{ selectedOrder.items?.length || 0 }} SP):</span>
+                      <span class="fw-bold text-dark dark:text-gray-200">{{ formatCurrency(selectedOrder.sub_total || (Number(selectedOrder.total_amount) - Number(selectedOrder.shipping_fee || 0) + Number(selectedOrder.discount_amount || 0))) }}</span>
                     </div>
+
+                    <div v-if="selectedOrder.flash_sale_discount > 0" class="d-flex justify-content-between mb-2 small text-success">
+                      <span>Trợ giá Flash Sale:</span>
+                      <span class="fw-bold">- {{ formatCurrency(selectedOrder.flash_sale_discount) }}</span>
+                    </div>
+                    
+                    <div v-if="selectedOrder.tier_discount > 0" class="d-flex justify-content-between mb-2 small text-success">
+                      <span>Ưu đãi Hạng (<span class="fw-bold">{{ selectedOrder.discount_details?.tier_name || 'Thành viên' }}</span>):</span>
+                      <span class="fw-bold">- {{ formatCurrency(selectedOrder.tier_discount) }}</span>
+                    </div>
+
+                    <div v-if="selectedOrder.voucher_discount > 0" class="d-flex justify-content-between mb-2 small text-success">
+                      <span>Giảm giá (Voucher):</span>
+                      <span class="fw-bold">- {{ formatCurrency(selectedOrder.voucher_discount) }}</span>
+                    </div>
+
+                    <!-- FALLBACK: Dự phòng cho các đơn hàng cũ gộp chung discount_amount -->
+                    <div v-if="selectedOrder.discount_amount > 0 && !selectedOrder.tier_discount && !selectedOrder.voucher_discount" class="d-flex justify-content-between mb-2 small text-success">
+                      <span>Tổng Khuyến mãi:</span>
+                      <span class="fw-bold">- {{ formatCurrency(selectedOrder.discount_amount) }}</span>
+                    </div>
+
                     <div class="d-flex justify-content-between mb-2 small text-muted dark:text-gray-400">
                       <span>Phí vận chuyển:</span>
                       <span class="fw-bold text-dark dark:text-gray-200">{{ formatCurrency(selectedOrder.shipping_fee || 0) }}</span>
                     </div>
-                    <div v-if="selectedOrder.discount_amount > 0" class="d-flex justify-content-between mb-2 small text-success">
-                      <span>Giảm giá/Voucher:</span>
-                      <span class="fw-bold">- {{ formatCurrency(selectedOrder.discount_amount) }}</span>
-                    </div>
+                    
                     <hr class="dark:border-gray-600 my-2">
                     <div class="d-flex justify-content-between align-items-center mt-2">
                       <span class="fw-bold text-dark dark:text-white text-uppercase">Tổng thanh toán:</span>
@@ -263,8 +284,6 @@ import api from '@/utils/axios';
 import Swal from 'sweetalert2';
 import { ZyroSwal } from '@/components/client/ZyroSwal';
 import { useCartStore } from '@/stores/cartStore';
-
-// ĐÃ IMPORT: Component TrackingMap dùng chung cho cả Hệ thống
 import TrackingMap from '@/components/shared/TrackingMap.vue';
 
 const emit = defineEmits(['refresh']);
@@ -309,6 +328,14 @@ const openModal = async (id) => {
        selectedOrder.value = res.data.data;
        if (typeof selectedOrder.value.shipping_info === 'string') {
           selectedOrder.value.shipping_info = JSON.parse(selectedOrder.value.shipping_info);
+       }
+       // Parse Json discount_details
+       if (typeof selectedOrder.value.discount_details === 'string') {
+          try {
+             selectedOrder.value.discount_details = JSON.parse(selectedOrder.value.discount_details);
+          } catch(e) {
+             selectedOrder.value.discount_details = {};
+          }
        }
        if (stepLevel.value >= 3) {
           prepareMapData();

@@ -19,6 +19,7 @@ class StoreMembershipTierRequest extends FormRequest
             'min_spent'            => ['required', 'numeric', 'min:0', 'max:9999999999'],
             'min_orders'           => ['required', 'integer', 'min:0', 'max:999999'],
             'discount_percent'     => ['required', 'numeric', 'min:0', 'max:100'],
+            'max_discount_amount'  => ['nullable', 'numeric', 'min:0', 'max:9999999999'], 
             'yearly_service_quota' => ['required', 'integer', 'min:0', 'max:999999'],
             'icon'                 => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp,svg', 'max:5120'],
         ];
@@ -33,6 +34,8 @@ class StoreMembershipTierRequest extends FormRequest
             'min_spent.min'             => 'Chi tiêu tối thiểu không được là số âm.',
             'min_spent.max'             => 'Chi tiêu tối thiểu vượt quá giới hạn hệ thống.',
             'discount_percent.max'      => 'Phần trăm giảm giá tối đa là 100%.',
+            'max_discount_amount.min'   => 'Giới hạn giảm tối đa không được là số âm.',
+            'max_discount_amount.max'   => 'Giới hạn giảm tối đa vượt mức cho phép.',
             'icon.image'                => 'Icon phải là định dạng hình ảnh hợp lệ.',
         ];
     }

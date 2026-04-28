@@ -1,20 +1,25 @@
 <template>
   <div class="user-sidebar-container">
     
-    <!-- DESKTOP -->
     <div class="d-none d-lg-block sticky-top" style="top: 130px;">
       <div class="d-flex align-items-center mb-4 pb-4 border-bottom dark:border-gray-700">
-        <!-- AVATAR GLOW THEO MÀU HẠNG -->
-        <div class="position-relative flex-shrink-0 avatar-wrapper" :class="{'vip-glow': isTopTier}" :style="{'--tier-color': tierColor}">
+        
+        <div class="position-relative flex-shrink-0 avatar-wrapper" 
+             :class="{'vip-glow': isTopTier}" 
+             :style="{'--tier-color': tierColor, width: '65px', height: '65px'}">
+             
+          <div v-if="isTopTier" class="crown-icon">
+             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><path d="M235.25,83.56a16,16,0,0,0-18.77-5.18L174,94.24l-38.16-57.26a16,16,0,0,0-26.6,0L71.1,94.24,28.51,78.38a16,16,0,0,0-18.77,5.18,16.21,16.21,0,0,0-2.48,19.06L38,168.39A24,24,0,0,0,59.3,184H185.69a24,24,0,0,0,21.32-15.61l30.72-65.77A16.21,16.21,0,0,0,235.25,83.56Z"></path></svg>
+          </div>
+
           <img :src="userAvatar" @error="handleAvatarError" 
-               class="rounded-circle object-fit-cover border border-3 bg-light dark:bg-gray-800" 
+               class="rounded-circle object-fit-cover border border-3 bg-transparent" 
                :style="{ borderColor: tierColor + ' !important' }"
-               style="width: 65px; height: 65px; position: relative; z-index: 2;">
+               style="width: 100%; height: 100%; position: relative; z-index: 2;">
         </div>
 
         <div class="overflow-hidden ms-3">
           <h6 class="fw-bold text-dark dark:text-white mb-1 text-truncate">{{ userName }}</h6>
-          <!-- BADGE HẠNG TỰ ĐỘNG THEO MÀU -->
           <span class="badge fw-bold shadow-sm d-inline-flex align-items-center tracking-wide px-2 py-1" 
                 :style="{ backgroundColor: tierColor, color: getContrastYIQ(tierColor) }" style="font-size: 0.7rem;">
             <i class="bi bi-stars me-1" style="font-size: 0.7rem;"></i> {{ tierName }}
@@ -41,15 +46,23 @@
       </ul>
     </div>
 
-    <!-- MOBILE -->
     <div class="d-lg-none">
       <div class="mobile-menu-trigger bg-white dark:bg-[#1a2533] shadow-sm border rounded-4 p-3 mb-4 d-flex align-items-center justify-content-between cursor-pointer" 
            @click="isMobileMenuOpen = true">
         <div class="d-flex align-items-center overflow-hidden">
-          <div class="position-relative me-3 flex-shrink-0 avatar-wrapper" :class="{'vip-glow': isTopTier}" :style="{'--tier-color': tierColor}">
-             <img :src="userAvatar" @error="handleAvatarError" class="rounded-circle border border-2 object-fit-cover" 
-                  :style="{ borderColor: tierColor + ' !important' }" style="width: 45px; height: 45px;">
+          
+          <div class="position-relative me-3 flex-shrink-0 avatar-wrapper" 
+               :class="{'vip-glow': isTopTier}" 
+               :style="{'--tier-color': tierColor, width: '45px', height: '45px'}">
+               
+             <div v-if="isTopTier" class="crown-icon crown-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><path d="M235.25,83.56a16,16,0,0,0-18.77-5.18L174,94.24l-38.16-57.26a16,16,0,0,0-26.6,0L71.1,94.24,28.51,78.38a16,16,0,0,0-18.77,5.18,16.21,16.21,0,0,0-2.48,19.06L38,168.39A24,24,0,0,0,59.3,184H185.69a24,24,0,0,0,21.32-15.61l30.72-65.77A16.21,16.21,0,0,0,235.25,83.56Z"></path></svg>
+             </div>
+
+             <img :src="userAvatar" @error="handleAvatarError" class="rounded-circle border border-2 object-fit-cover bg-transparent" 
+                  :style="{ borderColor: tierColor + ' !important' }" style="width: 100%; height: 100%; position: relative; z-index: 2;">
           </div>
+
           <div class="overflow-hidden">
             <div class="small text-muted mb-0">Tài khoản</div>
             <div class="fw-bold text-dark dark:text-white text-truncate">{{ userName }}</div>
@@ -68,10 +81,18 @@
             <div class="text-center position-relative mb-4 pt-4">
               <button class="btn-close-custom position-absolute top-0 end-0" @click="isMobileMenuOpen = false"><i class="bi bi-x-lg fs-5"></i></button>
               
-              <div class="d-inline-block position-relative mb-3 avatar-wrapper" :class="{'vip-glow': isTopTier}" :style="{'--tier-color': tierColor}">
-                <img :src="userAvatar" @error="handleAvatarError" class="rounded-circle shadow-sm border border-4 object-fit-cover" 
-                     :style="{ borderColor: tierColor + ' !important' }" style="width: 90px; height: 90px; position: relative; z-index: 2;">
+              <div class="d-inline-block position-relative mb-3 avatar-wrapper" 
+                   :class="{'vip-glow': isTopTier}" 
+                   :style="{'--tier-color': tierColor, width: '90px', height: '90px'}">
+
+                <div v-if="isTopTier" class="crown-icon crown-lg">
+                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><path d="M235.25,83.56a16,16,0,0,0-18.77-5.18L174,94.24l-38.16-57.26a16,16,0,0,0-26.6,0L71.1,94.24,28.51,78.38a16,16,0,0,0-18.77,5.18,16.21,16.21,0,0,0-2.48,19.06L38,168.39A24,24,0,0,0,59.3,184H185.69a24,24,0,0,0,21.32-15.61l30.72-65.77A16.21,16.21,0,0,0,235.25,83.56Z"></path></svg>
+                </div>
+
+                <img :src="userAvatar" @error="handleAvatarError" class="rounded-circle shadow-sm border border-4 object-fit-cover bg-transparent" 
+                     :style="{ borderColor: tierColor + ' !important' }" style="width: 100%; height: 100%; position: relative; z-index: 2;">
               </div>
+
               <h5 class="fw-bold text-dark dark:text-white mb-1 text-truncate px-3">{{ userName }}</h5>
               <span class="badge px-3 py-1 rounded-pill small fw-bold tracking-wide shadow-sm" :style="{ backgroundColor: tierColor, color: getContrastYIQ(tierColor) }">
                 <i class="bi bi-stars"></i> {{ tierName }}
@@ -102,7 +123,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ZyroSwal } from '@/components/client/ZyroSwal';
 import api from '@/utils/axios';
@@ -112,7 +133,7 @@ const router = useRouter();
 
 const userName = ref('Khách hàng');
 const userAvatar = ref('');
-const tierName = ref('Thành viên Mới');
+const tierName = ref('Member');
 const tierColor = ref('#6c757d');
 const isTopTier = ref(false);
 const isMobileMenuOpen = ref(false);
@@ -134,15 +155,41 @@ const getImageUrl = (path) => {
 
 const handleAvatarError = (e) => { e.target.src = defaultAvatarUrl; };
 
-// Tính toán màu text (trắng/đen) dựa trên độ sáng của màu nền
 const getContrastYIQ = (hexcolor) => {
   if (!hexcolor) return '#ffffff';
   hexcolor = hexcolor.replace("#", "");
+  if (hexcolor.length === 3) hexcolor = hexcolor.split('').map(c => c + c).join('');
   const r = parseInt(hexcolor.substr(0,2),16);
   const g = parseInt(hexcolor.substr(2,2),16);
   const b = parseInt(hexcolor.substr(4,2),16);
   const yiq = ((r*299)+(g*587)+(b*114))/1000;
   return (yiq >= 128) ? '#111111' : '#ffffff';
+};
+
+// =====================================
+// ĐÃ ĐỒNG BỘ: BẢNG MÀU VÀ THUẬT TOÁN HSL NHƯ PROFILE
+// =====================================
+const getTierColorFromName = (name) => {
+  if (!name) return '#9ca3af'; 
+  const lName = name.toLowerCase();
+  
+  if (lName.includes('khởi đầu') || lName.includes('member')) return '#9ca3af'; 
+  if (lName.includes('fan cứng') || lName.includes('bronze')) return '#3b82f6'; 
+  if (lName.includes('đồng')) return '#f59e0b';
+  // Đã đồng bộ màu Bạc
+  if (lName.includes('bạc') || lName.includes('silver')) return '#00d2ff'; 
+  if (lName.includes('vàng') || lName.includes('gold')) return '#ffc107'; 
+  if (lName.includes('bạch kim') || lName.includes('platinum')) return '#d946ef'; 
+  if (lName.includes('kim cương') || lName.includes('diamond')) return '#8b5cf6'; 
+  if (lName.includes('vip') || lName.includes('master')) return '#f43f5e'; 
+
+  // Thuật toán màu ngẫu nhiên cho hạng mới (Saturation 90%, Lightness 55%)
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const h = Math.abs(hash) % 360;
+  return `hsl(${h}, 90%, 55%)`;
 };
 
 const loadUserData = (e) => {
@@ -153,18 +200,23 @@ const loadUserData = (e) => {
       userName.value = user.full_name || user.fullName || user.name;
       userAvatar.value = getImageUrl(user.avatar_url); 
       
-      // Ưu tiên lấy dữ liệu trực tiếp từ Event (Profile gửi qua)
+      // Nếu sự kiện (Event) được bắn ra từ trang Profile thì bắt lấy
       if (e && e.detail && e.detail.tierName) {
          tierName.value = e.detail.tierName;
          tierColor.value = e.detail.tierColor;
-         isTopTier.value = e.detail.isTopTier;
       } else {
-         tierName.value = user.tier_name || 'Thành viên mới';
-         // Nếu không có event, dùng màu mặc định chờ Profile emit sang
-         tierColor.value = '#adb5bd'; 
+         // Nếu không có event (F5 hoặc vào tab khác), móc từ localStorage và chạy thuật toán map màu
+         tierName.value = user.tier_name || 'Member';
+         tierColor.value = getTierColorFromName(tierName.value); 
       }
+      
+      // Vương miện chỉ hiện cho những người thoát cấp Mặc Định
+      isTopTier.value = !tierName.value.toLowerCase().includes('mới') && 
+                        !tierName.value.toLowerCase().includes('khởi đầu') && 
+                        !tierName.value.toLowerCase().includes('member');
+                        
     } catch (err) {
-      console.error("Lỗi đọc dữ liệu user", err);
+      console.error(err);
     }
   }
 };
@@ -212,19 +264,54 @@ html.dark .user-sidebar-container .hover-nav:hover { background-color: rgba(255,
 .active-nav { background-color: var(--color-c-effect, #EBF1F5); color: var(--color-c-hover, #547792) !important; border-left: 4px solid var(--color-c-hover, #547792) !important; font-weight: 700; }
 html.dark .active-nav { background-color: rgba(255,255,255,0.05); color: #fff !important; border-left-color: #fff !important; }
 
-/* HIỆU ỨNG GLOW CHO AVATAR */
+/* ====================================================
+   HIỆU ỨNG GLOW CHO AVATAR
+==================================================== */
 .avatar-wrapper { position: relative; border-radius: 50%; display: inline-flex; }
 .avatar-wrapper img { box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+
 .vip-glow::before {
   content: ''; position: absolute; top: -3px; left: -3px; right: -3px; bottom: -3px;
-  border-radius: 50%; z-index: 1;
+  border-radius: 50%; z-index: 0;
   background: var(--tier-color);
   filter: blur(8px);
   animation: pulse-glow 2s infinite alternate;
 }
+
 @keyframes pulse-glow {
   0% { opacity: 0.6; filter: blur(5px); transform: scale(0.98); }
   100% { opacity: 1; filter: blur(12px); transform: scale(1.05); }
+}
+
+/* ====================================================
+   HIỆU ỨNG CROWN ĐỘI NGHIÊNG NHẤP NHÁY
+==================================================== */
+.crown-icon {
+  position: absolute;
+  top: -12px;
+  right: -6px;
+  z-index: 10;
+  animation: floatCrown 1.5s infinite alternate ease-in-out;
+}
+.crown-icon svg { width: 26px; height: 26px; fill: #ffc107; }
+
+/* Mobile trigger */
+.crown-sm { top: -8px; right: -5px; }
+.crown-sm svg { width: 20px; height: 20px; }
+
+/* Mobile Panel lớn */
+.crown-lg { top: -14px; right: -8px; }
+.crown-lg svg { width: 34px; height: 34px; }
+
+@keyframes floatCrown {
+  0% { 
+    transform: translateY(0) rotate(25deg); 
+    filter: drop-shadow(0 2px 4px rgba(255, 193, 7, 0.4)) brightness(1); 
+  }
+  100% { 
+    transform: translateY(-4px) rotate(15deg); 
+    filter: drop-shadow(0 0 12px rgba(255, 193, 7, 0.9)) brightness(1.3); 
+  }
 }
 
 .mobile-menu-trigger { border: 1px solid #eee !important; }

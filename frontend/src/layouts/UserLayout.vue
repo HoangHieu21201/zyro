@@ -7,12 +7,13 @@
     </main>
 
     <Footer />
-
+    <FloatingWidgets />
   </div>
 </template>
 
 <script setup>
 import Header from '../components/client/Header.vue';
 import Footer from '../components/client/Footer.vue';
+import FloatingWidgets from '../pages/FloatingWidgets.vue';
 import router from '@/router';
 </script>

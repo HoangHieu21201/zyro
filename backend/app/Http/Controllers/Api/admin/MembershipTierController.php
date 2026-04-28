@@ -33,7 +33,6 @@ class MembershipTierController extends Controller
         }
     }
 
-    // ĐÃ BỔ SUNG: Hàm show() để trả về chi tiết 1 hạng thành viên cho trang Edit.vue
     public function show($id): JsonResponse
     {
         try {
@@ -49,6 +48,12 @@ class MembershipTierController extends Controller
         try {
             $data = $request->validated();
 
+            // ĐÃ BỔ SUNG: Vệ sinh dữ liệu cho trường Giới hạn giảm giá (Tránh lỗi từ FormData của Vue)
+            // Nếu để trống hoặc nhập 0 -> Đưa về null (Không giới hạn)
+            if (empty($data['max_discount_amount']) || $data['max_discount_amount'] <= 0) {
+                $data['max_discount_amount'] = null;
+            }
+
             if ($request->hasFile('icon')) {
                 $data['icon'] = $request->file('icon')->store('tiers', 'public');
             }
@@ -57,7 +62,6 @@ class MembershipTierController extends Controller
 
             $this->clearCache();
             
-            // ĐÃ BỌC LẠI BẰNG TRY CATCH: Tránh lỗi 500 nếu máy chủ Reverb đang tắt
             try {
                 broadcast(new MembershipTierEvent('created', $tier))->toOthers();
             } catch (\Exception $e) {
@@ -78,6 +82,11 @@ class MembershipTierController extends Controller
             $tier = MembershipTier::findOrFail($id);
             $data = $request->validated();
 
+            // ĐÃ BỔ SUNG: Vệ sinh dữ liệu cho trường Giới hạn giảm giá
+            if (empty($data['max_discount_amount']) || $data['max_discount_amount'] <= 0) {
+                $data['max_discount_amount'] = null;
+            }
+
             if ($request->hasFile('icon')) {
                 if ($tier->icon) Storage::disk('public')->delete($tier->icon);
                 $data['icon'] = $request->file('icon')->store('tiers', 'public');
@@ -90,7 +99,6 @@ class MembershipTierController extends Controller
 
             $this->clearCache();
             
-            // ĐÃ BỌC LẠI BẰNG TRY CATCH: Tránh lỗi 500 nếu máy chủ Reverb đang tắt
             try {
                 broadcast(new MembershipTierEvent('updated', $tier))->toOthers();
             } catch (\Exception $e) {

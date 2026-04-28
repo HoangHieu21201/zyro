@@ -176,153 +176,10 @@
       </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- MODAL TÙY CHỈNH COMBO CHUYÊN SÂU -->
-    <!-- Đảm bảo người dùng chọn đúng và đủ biến thể trước khi thêm -->
-    <!-- ========================================== -->
-    <div v-if="isComboModalOpen && lookbook" class="modal-backdrop fade show" style="background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 1050;"></div>
-    <div v-if="lookbook" class="modal fade" :class="{ 'show d-block': isComboModalOpen }" tabindex="-1" role="dialog" aria-modal="true" style="z-index: 1060;">
-      <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
-         <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden bg-white dark:bg-[#1a2533]">
-            
-            <!-- HEADER MODAL -->
-            <div class="modal-header border-bottom border-light-subtle dark:border-gray-700 bg-urban-effect dark:bg-[#121416] py-3 px-4 position-relative">
-               <div>
-                 <h5 class="modal-title fw-bold text-urban-dark dark:text-white text-uppercase tracking-wide font-sans-vn m-0">Tùy Chỉnh Biến Thể Combo</h5>
-                 <span class="small text-muted font-sans-vn">Bộ sưu tập: <strong class="text-dark dark:text-white">{{ lookbook.name }}</strong></span>
-               </div>
-               <button type="button" class="btn-close dark:filter-invert" @click="closeComboModal" aria-label="Close"></button>
-            </div>
-            
-            <div class="modal-body p-0">
-               <div class="row g-0 h-100">
-                  <!-- LEFT: DANH SÁCH SẢN PHẨM CẦN CHỌN BIẾN THỂ -->
-                  <div class="col-lg-8 p-4 border-end border-light-subtle dark:border-gray-700 overflow-auto custom-scrollbar" style="max-height: 65vh;">
-                     
-                     <div v-for="item in comboSelections" :key="item.product.id" class="combo-item-row d-flex gap-4 mb-4 pb-4 border-bottom border-light-subtle dark:border-gray-700 last-no-border position-relative">
-                        
-                        <!-- Trạng thái hoàn thành góc phải -->
-                        <div class="position-absolute top-0 end-0">
-                          <i v-if="item.selectedSize?.variant_id" class="bi bi-check-circle-fill text-success fs-5" title="Đã chọn đủ thông tin"></i>
-                          <i v-else class="bi bi-exclamation-circle-fill text-warning fs-5" title="Cần chọn Size/Màu"></i>
-                        </div>
-
-                        <!-- Ảnh nhảy theo biến thể màu -->
-                        <div class="combo-item-img flex-shrink-0 rounded-3 overflow-hidden border border-light-subtle dark:border-gray-600 bg-urban-effect" style="width: 120px; height: 160px;">
-                           <img :src="item.selectedColor?.image || item.product.image || '/client_placeholder.png'" class="w-100 h-100 object-fit-cover">
-                        </div>
-                        
-                        <!-- Block chọn thuộc tính -->
-                        <div class="combo-item-info flex-grow-1 pe-4">
-                           <h6 class="fw-bold text-urban-dark dark:text-white font-sans-vn mb-1">{{ item.product.name }}</h6>
-                           <div class="text-danger fw-bold mb-3 font-sans-vn">{{ formatCurrency(item.product.price) }}</div>
-                           
-                           <!-- Chọn Màu Sắc -->
-                           <div class="mb-3" v-if="item.product.colors && item.product.colors.length > 0 && item.product.colors[0].name !== 'Mặc định'">
-                              <span class="d-block small fw-semibold text-muted mb-2 font-sans-vn">Màu sắc: <span class="text-urban-dark dark:text-gray-300 fw-bold">{{ item.selectedColor?.name }}</span></span>
-                              <div class="d-flex flex-wrap gap-2">
-                                 <div v-for="color in item.product.colors" :key="color.name" 
-                                      class="combo-swatch rounded-circle shadow-sm transition-all"
-                                      :class="{ 'active border-urban': item.selectedColor?.name === color.name, 'out-of-stock': color.out_of_stock }"
-                                      :style="{ backgroundColor: color.hex }"
-                                      @click="!color.out_of_stock ? selectColorForCombo(item.product.id, color) : null"
-                                      :title="color.name + (color.out_of_stock ? ' (Hết hàng)' : '')">
-                                 </div>
-                              </div>
-                           </div>
-
-                           <!-- Chọn Kích Cỡ -->
-                           <div v-if="item.selectedColor?.sizes && item.selectedColor.sizes.length > 0">
-                              <span class="d-block small fw-semibold text-muted mb-2 font-sans-vn">Kích cỡ: <span v-if="!item.selectedSize" class="text-danger fst-italic fw-normal">(Vui lòng chọn)</span></span>
-                              <div class="d-flex flex-wrap gap-2">
-                                 <button v-for="size in item.selectedColor.sizes" :key="size.name"
-                                         class="btn btn-sm combo-size-btn border font-sans-vn transition-all fw-semibold"
-                                         :class="{ 'btn-urban shadow-sm': item.selectedSize?.name === size.name, 'btn-light bg-white dark:bg-transparent dark:text-gray-300 dark:border-gray-600 text-dark': item.selectedSize?.name !== size.name, 'disabled opacity-25 text-decoration-line-through': size.out_of_stock }"
-                                         @click="!size.out_of_stock ? selectSizeForCombo(item.product.id, size) : null">
-                                   {{ size.name }}
-                                 </button>
-                              </div>
-                           </div>
-                        </div>
-                     </div>
-                  </div>
-
-                  <!-- RIGHT: HÓA ĐƠN TÓM TẮT & XÁC NHẬN MUA -->
-                  <div class="col-lg-4 p-4 bg-urban-effect dark:bg-[#121416] d-flex flex-column justify-content-between border-start border-light-subtle dark:border-gray-700">
-                     <div>
-                       <h5 class="fw-bold text-urban-dark dark:text-white font-sans-vn border-bottom border-secondary border-opacity-25 pb-3 mb-4">Hóa Đơn Combo</h5>
-                       <ul class="list-unstyled mb-4 font-sans-vn">
-                         <li class="d-flex justify-content-between mb-3 text-muted">
-                           <span>Tổng số lượng:</span>
-                           <span class="fw-bold text-urban-dark dark:text-white">{{ totalItemsCount }} sản phẩm</span>
-                         </li>
-                         <li class="d-flex justify-content-between mb-3 text-muted">
-                           <span>Giá trị gốc:</span>
-                           <span class="text-decoration-line-through">{{ formatCurrency(originalTotalPrice) }}</span>
-                         </li>
-                         <li class="d-flex justify-content-between mb-3 text-success">
-                           <span>Tiết kiệm Combo:</span>
-                           <div class="d-flex gap-2 align-items-center">
-                             <span class="badge bg-success bg-opacity-10 text-success rounded px-2 py-1 fw-bold">-{{ savedPercent }}%</span>
-                             <span class="fw-bold">-{{ formatCurrency(savedAmount) }}</span>
-                           </div>
-                         </li>
-                       </ul>
-                     </div>
-                     
-                     <div class="border-top border-secondary border-opacity-25 pt-4">
-                       <div class="d-flex justify-content-between align-items-center mb-4 font-sans-vn">
-                         <span class="fw-bold text-urban-dark dark:text-white fs-5">Thanh toán:</span>
-                         <span class="fw-bold text-danger display-6">{{ formatCurrency(lookbook.price_estimate) }}</span>
-                       </div>
-                       
-                       <!-- Dòng Text Trạng Thái (VD: Đã chọn 2/5 sản phẩm) -->
-                       <div class="d-flex justify-content-between align-items-center mb-3 font-sans-vn small fw-semibold">
-                         <span :class="isAllVariantsSelected ? 'text-success' : 'text-danger'">
-                           <i :class="isAllVariantsSelected ? 'bi bi-check-circle-fill' : 'bi bi-info-circle-fill'"></i>
-                           Tiến độ chọn Size/Màu:
-                         </span>
-                         <span :class="isAllVariantsSelected ? 'text-success' : 'text-danger'">
-                           {{ completedSelectionsCount }} / {{ totalItemsCount }}
-                         </span>
-                       </div>
-
-                       <!-- Progress Bar Trực Quan -->
-                       <div class="progress mb-4 bg-white dark:bg-gray-700 border border-light-subtle shadow-sm" style="height: 8px;">
-                         <div class="progress-bar" :class="isAllVariantsSelected ? 'bg-success' : 'bg-warning progress-bar-striped progress-bar-animated'" 
-                              role="progressbar" :style="{ width: (completedSelectionsCount / totalItemsCount) * 100 + '%' }"></div>
-                       </div>
-
-                       <!-- Nút Submit Gửi Payload Chuẩn Xác -->
-                       <button @click="confirmAddComboToCart" 
-                               class="btn btn-urban w-100 rounded-pill py-3 fw-bold text-uppercase tracking-wide shadow font-sans-vn position-relative overflow-hidden"
-                               :disabled="isAddingCombo || !isAllVariantsSelected">
-                         <span v-if="isAddingCombo" class="spinner-border spinner-border-sm me-2" role="status"></span>
-                         {{ isAddingCombo ? 'Đang thêm vào giỏ...' : 'Xác Nhận Đưa Vào Giỏ' }}
-                       </button>
-                     </div>
-                  </div>
-               </div>
-            </div>
-         </div>
-      </div>
-    </div>
-
-    <!-- MODALS KHÁC -->
+    <!-- MODALS -->
+    <ComboSelectionModal ref="comboModalRef" />
     <QuickViewModal :is-open="isQuickViewOpen" :product="selectedProduct" @close="isQuickViewOpen = false" />
     <CompareModal />
-
-    <!-- THÔNG BÁO MUA THÀNH CÔNG -->
-    <div class="toast-container position-fixed bottom-0 end-0 p-4" style="z-index: 1080;">
-      <div id="comboSuccessToast" class="toast align-items-center text-bg-success border-0 shadow-lg rounded-4" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="d-flex">
-          <div class="toast-body fw-medium font-sans-vn px-3 py-3">
-            <i class="bi bi-check-circle-fill me-2 fs-5 align-middle"></i> Trọn bộ phong cách đã được thêm vào giỏ hàng thành công!
-          </div>
-          <button type="button" class="btn-close btn-close-white me-3 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-      </div>
-    </div>
 
   </div>
 </template>
@@ -336,6 +193,7 @@ import { useCompareStore } from '@/stores/compareStore';
 import ProductCard from '@/components/client/ProductCard.vue';
 import QuickViewModal from '@/components/client/QuickViewModal.vue';
 import CompareModal from '@/components/client/CompareModal.vue';
+import ComboSelectionModal from '@/components/client/ComboSelectionModal.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -344,44 +202,18 @@ const compareStore = useCompareStore();
 const lookbook = ref(null);
 const isLoading = ref(true);
 
-// ==========================================
-// STATE & LOGIC MUA COMBO CẤP ĐỘ CAO
-// ==========================================
-const isComboModalOpen = ref(false);
-const isAddingCombo = ref(false);
-const comboSelections = ref({}); 
+// Tham chiếu đến Component Modal vừa tạo
+const comboModalRef = ref(null);
 
 const totalItemsCount = computed(() => {
   return lookbook.value?.products?.length || 0;
 });
 
-// Đếm số lượng sản phẩm ĐÃ CHỌN ĐỦ Variant
-const completedSelectionsCount = computed(() => {
-  let count = 0;
-  for (const id in comboSelections.value) {
-    const item = comboSelections.value[id];
-    // Nếu sản phẩm không có size/màu (Mặc định) thì coi như đủ.
-    if (!item.selectedColor?.sizes || item.selectedColor.sizes.length === 0) {
-       count++;
-    } else if (item.selectedSize && item.selectedSize.variant_id) {
-       count++; // Đã chọn size hợp lệ
-    }
-  }
-  return count;
-});
-
-// Biến boolean kiểm tra đã chọn FULL
-const isAllVariantsSelected = computed(() => {
-  return totalItemsCount.value > 0 && completedSelectionsCount.value === totalItemsCount.value;
-});
-
-// FIX LỖI NaN: Ép kiểu sang Number, nếu không hợp lệ thì gán bằng 0
 const originalTotalPrice = computed(() => {
   if (!lookbook.value || !lookbook.value.products) return 0;
   let total = 0;
   lookbook.value.products.forEach(p => {
     let price = Number(p.old_price);
-    // Ưu tiên giá cũ (old_price), nếu không có thì lấy giá bán hiện tại (price)
     if (!price || isNaN(price) || price === 0) {
       price = Number(p.price);
     }
@@ -403,111 +235,13 @@ const savedPercent = computed(() => {
   return Math.round((savedAmount.value / originalTotalPrice.value) * 100);
 });
 
-// Khởi tạo Modal (Giữ lại UX chọn sẵn size/màu đầu tiên còn hàng)
+// Kích hoạt hàm bên trong Component Con
 const openComboModal = () => {
-  if (!lookbook.value || !lookbook.value.products) return;
-  
-  comboSelections.value = {};
-  document.body.style.overflow = 'hidden'; 
-
-  lookbook.value.products.forEach(p => {
-    const firstColor = p.colors?.find(c => !c.out_of_stock) || p.colors?.[0];
-    const firstSize = firstColor?.sizes?.find(s => !s.out_of_stock) || firstColor?.sizes?.[0];
-    
-    comboSelections.value[p.id] = {
-      product: p,
-      selectedColor: firstColor,
-      selectedSize: firstSize // Nếu không có size nào khả dụng, nó sẽ undefined (đòi hỏi user tự chọn thủ công)
-    };
-  });
-
-  isComboModalOpen.value = true;
-};
-
-const closeComboModal = () => {
-  isComboModalOpen.value = false;
-  document.body.style.overflow = '';
-};
-
-// ĐÃ SỬA: Hàm chọn Màu sẽ cố gắng giữ nguyên Size đang chọn (nếu có thể)
-const selectColorForCombo = (productId, color) => {
-  if (color.out_of_stock) return;
-  
-  const item = comboSelections.value[productId];
-  
-  // Lưu lại tên Size mà người dùng đang chọn trước khi đổi màu
-  const currentSizeName = item.selectedSize?.name;
-  
-  // Đổi sang màu mới
-  item.selectedColor = color;
-  
-  // Tìm xem màu mới này có Size trùng tên với Size người dùng vừa chọn và còn hàng không
-  const matchedSize = color.sizes?.find(s => s.name === currentSizeName && !s.out_of_stock);
-  
-  if (matchedSize) {
-    // Nếu có, giữ nguyên Size đó cho họ
-    item.selectedSize = matchedSize;
-  } else {
-    // Nếu màu mới này không có Size đó hoặc đã hết hàng Size đó, tự nhảy về Size đầu tiên còn hàng
-    const availableSize = color.sizes?.find(s => !s.out_of_stock);
-    item.selectedSize = availableSize ? availableSize : null; 
+  if (comboModalRef.value && lookbook.value) {
+      comboModalRef.value.openModal(lookbook.value);
   }
 };
 
-const selectSizeForCombo = (productId, size) => {
-  if (size.out_of_stock) return;
-  comboSelections.value[productId].selectedSize = size;
-};
-
-// ==========================================
-// GỬI PAYLOAD CHUẨN XÁC LÊN SERVER
-// ==========================================
-const confirmAddComboToCart = async () => {
-  isAddingCombo.value = true;
-  try {
-    // Thu thập dữ liệu các lựa chọn thành mảng JSON đúng theo Schema DB
-    const selectionsArray = [];
-    
-    for (const id in comboSelections.value) {
-      const item = comboSelections.value[id];
-      if (item.selectedSize && item.selectedSize.variant_id) {
-        selectionsArray.push({
-          product_id: item.product.id,
-          variant_id: item.selectedSize.variant_id,
-          quantity: 1, // Lookbook thường mua 1 bộ
-          attributes: `${item.selectedColor?.name} - ${item.selectedSize?.name}` // Lưu vết
-        });
-      }
-    }
-
-    // Payload Gộp thành 1 Request chứa Lookbook ID
-    const payload = {
-      lookbook_id: lookbook.value.id,
-      quantity: 1, 
-      lookbook_selections: selectionsArray
-    };
-
-    // Yêu cầu Backend Laravel: Cần mở 1 route POST /client/cart/add-lookbook 
-    // Trong Controller, bạn đón biến $request->lookbook_id và insert vào cột lookbook_id của CartItem
-    await api.post('/client/cart/add-lookbook', payload);
-
-    closeComboModal();
-    
-    const toastEl = document.getElementById('comboSuccessToast');
-    if (toastEl && window.bootstrap) {
-      new window.bootstrap.Toast(toastEl, { delay: 3500 }).show();
-    }
-  } catch (error) {
-    console.error('Lỗi khi thêm Lookbook vào giỏ:', error);
-    alert('Không thể thêm trọn bộ vào giỏ hàng. Vui lòng thử lại sau.');
-  } finally {
-    isAddingCombo.value = false;
-  }
-};
-
-// ==========================================
-// CÁC LOGIC CHUNG KHÁC
-// ==========================================
 const emptySlotContent = [
   { icon: 'bi-magic', title: 'Phiên Bản Giới Hạn', desc: 'Mảnh ghép giới hạn sắp ra mắt' },
   { icon: 'bi-bag-heart', title: 'Hàng Sắp Về', desc: 'Cùng chờ đón đợt restock tới' },
@@ -539,7 +273,6 @@ const fetchLookbookDetail = async () => {
   }
 };
 
-// FIX LỖI NaN BẰNG CÁCH ÉP KIỂU TRƯỚC KHI FORMAT
 const formatCurrency = (val) => {
   const num = Number(val);
   if (isNaN(num)) return '0đ';
@@ -579,44 +312,26 @@ onMounted(() => {
 .hover-text-urban:hover { color: var(--color-c-hover, #547792) !important; }
 html.dark .hover-text-urban:hover { color: #fff !important; }
 
-/* BỘ FONT CHUẨN ĐỂ KHÔNG BAO GIỜ BỊ LỖI DẤU TIẾNG VIỆT */
 .font-sans-vn { font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif !important; }
 .font-decor { font-family: 'Times New Roman', Times, serif; font-style: italic; }
 
 .tracking-widest { letter-spacing: 2px; }
-.tracking-wide { letter-spacing: 1px; }
 .line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
-.last-no-border:last-child { border-bottom: none !important; padding-bottom: 0 !important; margin-bottom: 0 !important; }
 
-/* HỆ LƯỚI 5 CỘT */
 .custom-grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.5rem; }
 @media (max-width: 1199px) { .custom-grid-5 { grid-template-columns: repeat(4, 1fr); } }
 @media (max-width: 991px) { .custom-grid-5 { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 767px) { .custom-grid-5 { grid-template-columns: repeat(2, 1fr); gap: 1rem; } }
 
-/* CSS FIX CHO THẺ TRỐNG */
 .empty-slot-card { display: flex; flex-direction: column; }
 .empty-img-wrapper { aspect-ratio: 3/4; }
 .hover-border-urban:hover { border-color: var(--color-c-hover, #547792) !important; background-color: transparent !important; }
 
-/* NÚT CTAs BÁN HÀNG */
 .btn-urban { background-color: var(--color-c-dark, #213448); color: #fff; border: 1px solid var(--color-c-dark, #213448); transition: all 0.3s ease; }
 .btn-urban:hover { background-color: var(--color-c-hover, #547792); border-color: var(--color-c-hover, #547792); color: #fff; }
-.btn-urban:disabled { opacity: 0.7; pointer-events: none; background-color: #6c757d; border-color: #6c757d; }
 
 .btn-outline-urban { background-color: transparent; color: var(--color-c-dark, #213448); border: 1px solid var(--color-c-dark, #213448); transition: all 0.3s ease; }
 .btn-outline-urban:hover { background-color: var(--color-c-dark, #213448); color: #fff; }
-
-.border-urban { border: 2px solid var(--color-c-dark, #213448) !important; }
-.combo-swatch { width: 24px; height: 24px; border: 1px solid #dee2e6; cursor: pointer; }
-.combo-swatch.active { transform: scale(1.15); box-shadow: 0 0 0 2px rgba(33,52,72,0.3); }
-.combo-swatch.out-of-stock { opacity: 0.3; cursor: not-allowed; position: relative; }
-.combo-swatch.out-of-stock::after { content: ''; position: absolute; top: 50%; left: -10%; width: 120%; height: 2px; background: red; transform: rotate(-45deg); }
-
-.combo-size-btn { min-width: 40px; }
-.custom-scrollbar::-webkit-scrollbar { width: 6px; }
-.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-.custom-scrollbar::-webkit-scrollbar-thumb { background: #dee2e6; border-radius: 10px; }
 
 .transition-all { transition: all 0.3s ease; }
 .group-hover-scale { transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94); }

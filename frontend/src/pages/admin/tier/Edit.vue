@@ -27,11 +27,11 @@
                   <label class="form-label fw-bold text-dark dark:text-gray-200">Chi tiêu tối thiểu đạt hạng (VNĐ) <span class="text-danger">*</span></label>
                   <div class="input-group shadow-sm-hover">
                     <span class="input-group-text bg-white dark:bg-[#212529] dark:text-gray-400 dark:border-gray-700">₫</span>
-                    <input type="number" class="form-control py-2 dark:bg-[#212529] dark:text-white dark:border-gray-700" 
-                           v-model="form.min_spent" :class="{'is-invalid': errors.min_spent}" min="0">
+                    <!-- ĐÃ FIX: Tự động format tiền tệ trong Input -->
+                    <input type="text" class="form-control py-2 dark:bg-[#212529] dark:text-white dark:border-gray-700" 
+                           :value="displayCurrency(form.min_spent)" @input="handleCurrencyInput($event, 'min_spent')" :class="{'is-invalid': errors.min_spent}" placeholder="VD: 5.000.000">
                     <div class="invalid-feedback">{{ errors.min_spent?.[0] }}</div>
                   </div>
-                  <small class="text-danger fw-bold mt-1 d-block" v-if="form.min_spent">{{ formatCurrency(form.min_spent) }}</small>
                 </div>
 
                 <div class="col-md-6">
@@ -43,9 +43,9 @@
 
                 <div class="col-12 mt-4 pt-4 border-top dark:border-gray-700">
                   <h6 class="fw-bold text-urban mb-3"><i class="bi bi-gift-fill me-2"></i>Quyền Lợi & Ưu Đãi Áp Dụng</h6>
-                  <div class="row g-4">
-                    <div class="col-md-6">
-                      <label class="form-label fw-bold text-dark dark:text-gray-200">Phần trăm giảm giá / Đơn <span class="text-danger">*</span></label>
+                  <div class="row g-3">
+                    <div class="col-md-4">
+                      <label class="form-label fw-bold text-dark dark:text-gray-200">Giảm giá / Đơn <span class="text-danger">*</span></label>
                       <div class="input-group shadow-sm-hover">
                         <input type="number" step="0.01" class="form-control py-2 dark:bg-[#212529] dark:text-white dark:border-gray-700" 
                                v-model="form.discount_percent" :class="{'is-invalid': errors.discount_percent}" min="0" max="100">
@@ -54,8 +54,19 @@
                       </div>
                     </div>
 
-                    <div class="col-md-6">
-                      <label class="form-label fw-bold text-dark dark:text-gray-200">Lượt dịch vụ miễn phí / Năm <span class="text-danger">*</span></label>
+                    <div class="col-md-4">
+                      <label class="form-label fw-bold text-dark dark:text-gray-200">Giảm tối đa (VNĐ)</label>
+                      <div class="input-group shadow-sm-hover">
+                        <!-- ĐÃ FIX: Tự động format tiền tệ trong Input -->
+                        <input type="text" class="form-control py-2 dark:bg-[#212529] dark:text-white dark:border-gray-700 text-end" 
+                               :value="displayCurrency(form.max_discount_amount)" @input="handleCurrencyInput($event, 'max_discount_amount')" :class="{'is-invalid': errors.max_discount_amount}" placeholder="KGH để trống">
+                        <span class="input-group-text bg-white dark:bg-[#212529] dark:text-gray-400 dark:border-gray-700">₫</span>
+                        <div class="invalid-feedback">{{ errors.max_discount_amount?.[0] }}</div>
+                      </div>
+                    </div>
+
+                    <div class="col-md-4">
+                      <label class="form-label fw-bold text-dark dark:text-gray-200">Dịch vụ / Năm <span class="text-danger">*</span></label>
                       <div class="input-group shadow-sm-hover">
                         <input type="number" class="form-control py-2 dark:bg-[#212529] dark:text-white dark:border-gray-700" 
                                v-model="form.yearly_service_quota" :class="{'is-invalid': errors.yearly_service_quota}" min="0">
@@ -125,10 +136,21 @@ const previewIcon = ref(null);
 const iconInput = ref(null);
 const hasOldIcon = ref(false);
 
-const form = ref({ name: '', min_spent: 0, min_orders: 0, discount_percent: 0, yearly_service_quota: 0, icon: null, remove_icon: false });
+const form = ref({ name: '', min_spent: null, min_orders: 0, discount_percent: 0, max_discount_amount: null, yearly_service_quota: 0, icon: null, remove_icon: false });
 
 const getHeaders = () => ({ 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
-const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
+
+// ĐÃ FIX: Hàm xử lý Real-time format tiền tệ trực tiếp vào Input
+const displayCurrency = (val) => {
+  if (val === null || val === undefined || val === '') return '';
+  return new Intl.NumberFormat('vi-VN').format(val);
+};
+
+const handleCurrencyInput = (e, field) => {
+  let rawValue = e.target.value.replace(/\D/g, '');
+  form.value[field] = rawValue ? parseInt(rawValue, 10) : null;
+  e.target.value = displayCurrency(form.value[field]);
+};
 
 const fetchData = async () => {
   try {
@@ -138,6 +160,7 @@ const fetchData = async () => {
     form.value.min_spent = t.min_spent;
     form.value.min_orders = t.min_orders;
     form.value.discount_percent = t.discount_percent;
+    form.value.max_discount_amount = t.max_discount_amount;
     form.value.yearly_service_quota = t.yearly_service_quota;
     
     if (t.icon) {
@@ -166,7 +189,11 @@ const saveTier = async () => {
   isSaving.value = true; errors.value = {};
   const formData = new FormData();
   formData.append('_method', 'PUT');
-  Object.keys(form.value).forEach(key => { if(form.value[key] !== null) formData.append(key, form.value[key]); });
+  Object.keys(form.value).forEach(key => { 
+      if(form.value[key] !== null && form.value[key] !== '') {
+          formData.append(key, form.value[key]); 
+      }
+  });
 
   try {
     await axios.post(`${import.meta.env.VITE_API_BASE_URL}/admin/tiers/${tierId}`, formData, { headers: { ...getHeaders(), 'Content-Type': 'multipart/form-data' } });

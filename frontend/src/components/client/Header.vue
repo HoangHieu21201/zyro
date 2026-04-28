@@ -22,7 +22,6 @@
             <i class="bi fs-2 transition-all" :class="isMegaMenuOpen ? 'bi-x-lg' : 'bi-list'"></i>
           </button>
 
-          <!-- ĐÃ ĐỔI: Chuyển sang trang Về ZYRO với icon Stars nổi bật và sang trọng -->
           <router-link to="/about-us" class="btn btn-link p-0 border-0 hover-opacity transition-color d-none d-sm-block" 
                   :class="(isScrolled || !isHomePage || isMegaMenuOpen || isSearchOpen || isMiniCartOpen) ? 'text-dark' : 'text-white'"
                   title="Về ZYRO & Câu chuyện thương hiệu">
@@ -94,7 +93,6 @@
                   title="Giỏ hàng" @click="toggleMiniCart">
             <i class="bi fs-5 transition-all" :class="isMiniCartOpen ? 'bi-x-lg' : 'bi-bag'"></i>
             
-            <!-- ĐÃ FIX: GỌI BIẾN uniqueCartItemsCount TỪ COMPUTED THAY VÌ ITEMS.LENGTH -->
             <span v-show="!isMiniCartOpen" class="position-absolute top-0 start-100 translate-middle badge rounded-pill font-monospace transition-color shadow-sm"
                   :class="(isScrolled || !isHomePage || isMegaMenuOpen || isSearchOpen || isMiniCartOpen) ? 'bg-dark text-white' : 'bg-white text-dark'"
                   style="font-size: 0.6rem; padding: 0.25em 0.45em;">
@@ -159,9 +157,6 @@ const handleLogoError = (e) => { e.target.src = placeholderImage; };
 const headerHeight = computed(() => isScrolled.value ? 60 : 90);
 const megaMenuOffset = computed(() => headerHeight.value);
 
-// ========================================================
-// ĐÃ FIX: TÍNH TOÁN SỐ LƯỢNG GIỎ HÀNG CHUẨN XÁC THEO LOGIC MỚI
-// ========================================================
 const uniqueCartItemsCount = computed(() => {
   let count = 0;
   const comboIds = new Set();
@@ -170,19 +165,16 @@ const uniqueCartItemsCount = computed(() => {
     if (item.lookbook_id) {
       if (!comboIds.has(item.lookbook_id)) {
         comboIds.add(item.lookbook_id);
-        count++; // Tính nguyên 1 Combo là 1 sản phẩm
+        count++; 
       }
     } else {
-      count++; // Sản phẩm lẻ tính 1
+      count++; 
     }
   });
   
   return count;
 });
 
-// ========================================================
-// STATE & LOGIC AUTH (ĐĂNG NHẬP / ĐĂNG XUẤT / MENU USER)
-// ========================================================
 const isLoggedIn = ref(false);
 const userName = ref('');
 const tierColor = ref('');
@@ -199,18 +191,31 @@ const closeUserMenu = () => {
   }, 200); 
 };
 
-// Map màu cho Tên Hạng Thành Viên nếu người dùng Refresh Page
+// ĐÃ ĐỒNG BỘ: THUẬT TOÁN TÍNH MÀU VIP & NEON HSL 
 const getTierColorFromName = (name) => {
   if (!name) return '';
   const lName = name.toLowerCase();
-  if (lName.includes('khởi đầu')) return ''; // Giữ màu mặc định theo Header
+
+  if (lName.includes('khởi đầu') || lName.includes('member')) return '';
+
   if (lName.includes('fan cứng') || lName.includes('bronze')) return '#3b82f6';
-  if (lName.includes('bạc') || lName.includes('silver')) return '#94a3b8';
-  if (lName.includes('vàng') || lName.includes('gold')) return '#eab308';
-  if (lName.includes('kim cương') || lName.includes('diamond')) return '#06b6d4';
-  if (lName.includes('bạch kim') || lName.includes('platinum')) return '#8b5cf6';
-  if (lName.includes('vip')) return '#f43f5e';
-  return '';
+  if (lName.includes('đồng')) return '#f59e0b';
+  
+  // Màu Bạc Neon
+  if (lName.includes('bạc') || lName.includes('silver')) return '#00d2ff';
+  
+  if (lName.includes('vàng') || lName.includes('gold')) return '#ffc107';
+  if (lName.includes('bạch kim') || lName.includes('platinum')) return '#d946ef';
+  if (lName.includes('kim cương') || lName.includes('diamond')) return '#8b5cf6';
+  if (lName.includes('vip') || lName.includes('master')) return '#f43f5e';
+
+  // HSL Color Generator cho các hạng ngẫu nhiên
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const h = Math.abs(hash) % 360;
+  return `hsl(${h}, 90%, 55%)`;
 };
 
 const checkAuthStatus = (e) => {
@@ -223,11 +228,10 @@ const checkAuthStatus = (e) => {
       const userObj = JSON.parse(userStr);
       userName.value = userObj.full_name || userObj.fullName || userObj.name || 'Khách hàng';
 
-      // Xử lý Lấy Màu Của Hạng Thành Viên
       if (e && e.type === 'user-profile-updated' && e.detail && e.detail.tierColor) {
          tierColor.value = e.detail.tierColor;
-         if (e.detail.tierName && e.detail.tierName.toLowerCase().includes('khởi đầu')) {
-             tierColor.value = ''; // Chặn không tô màu nếu là cấp Khởi Đầu
+         if (e.detail.tierName && (e.detail.tierName.toLowerCase().includes('khởi đầu') || e.detail.tierName.toLowerCase().includes('member'))) {
+             tierColor.value = ''; 
          }
       } else {
          tierColor.value = getTierColorFromName(userObj.tier_name);
@@ -284,8 +288,6 @@ const handleLogout = () => {
     }
   });
 };
-
-// ========================================================
 
 const headerData = ref({ categories: [], lookbooks: [], trendingProducts: [] });
 

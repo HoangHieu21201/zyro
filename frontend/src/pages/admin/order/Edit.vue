@@ -156,10 +156,38 @@
                     <span class="text-muted dark:text-gray-400 small fw-semibold">Phí vận chuyển:</span>
                     <span class="text-dark dark:text-gray-200 fw-bold">{{ formatCurrency(order.shipping_fee) }}</span>
                   </div>
-                  <div class="d-flex justify-content-between mb-2 text-success" v-if="order.discount_amount > 0">
+                  
+                  <div v-if="order.flash_sale_discount > 0" class="d-flex justify-content-between mb-2 text-success">
+                    <span class="small fw-semibold">Trợ giá Flash Sale:</span>
+                    <span class="fw-bold">- {{ formatCurrency(order.flash_sale_discount) }}</span>
+                  </div>
+
+                    <div v-if="order.tier_discount > 0" class="d-flex justify-content-between mb-2 text-success">
+                    <span class="small fw-semibold">
+                       Ưu đãi Hạng (<span class="fw-bold">{{ order.discount_details?.tier_name || 'Thành viên' }}</span>)
+                       <span class="fst-italic opacity-75" v-if="order.discount_details?.tier_percent">
+                         (-{{ parseFloat(order.discount_details.tier_percent) }}%<span v-if="order.discount_details.tier_max_discount > 0">, max {{ formatCurrency(order.discount_details.tier_max_discount) }}</span>)
+                       </span>:
+                    </span>
+                    <span class="fw-bold">- {{ formatCurrency(order.tier_discount) }}</span>
+                  </div>
+
+                  <div v-if="order.voucher_discount > 0" class="d-flex justify-content-between mb-2 text-success">
+                    <span class="small fw-semibold">
+                       Giảm giá Voucher
+                       <span class="fst-italic opacity-75" v-if="order.discount_details?.voucher_code">
+                         ({{ order.discount_details.voucher_code }})
+                       </span>:
+                    </span>
+                    <span class="fw-bold">- {{ formatCurrency(order.voucher_discount) }}</span>
+                  </div>
+
+                  <!-- Fallback cho đơn cũ -->
+                  <div v-if="order.discount_amount > 0 && !order.tier_discount && !order.voucher_discount" class="d-flex justify-content-between mb-2 text-success">
                     <span class="small fw-semibold">Khuyến mãi / Voucher:</span>
                     <span class="fw-bold">- {{ formatCurrency(order.discount_amount) }}</span>
                   </div>
+
                   <div class="d-flex justify-content-between mb-2 text-info" v-if="order.refunded_amount > 0">
                     <span class="small fw-semibold">Đã hoàn tiền:</span>
                     <span class="fw-bold">- {{ formatCurrency(order.refunded_amount) }}</span>
@@ -525,6 +553,11 @@ const fetchData = async (isSilent = false) => {
     const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/orders/${orderId}`, { headers: getHeaders() });
     order.value = res.data.data;
     shippingInfoParsed.value = typeof order.value.shipping_info === 'string' ? JSON.parse(order.value.shipping_info) : order.value.shipping_info;
+
+    // ĐÃ THÊM: Parse Json payment_details (Khối tách biệt Tier Discount & Voucher)
+    if (typeof order.value.payment_details === 'string') {
+        try { order.value.payment_details = JSON.parse(order.value.payment_details); } catch(e) {}
+    }
 
     formShipping.value.tracking_number = order.value.tracking_number || '';
     formShipping.value.shipping_provider = order.value.shipping_provider || '';

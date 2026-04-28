@@ -19,6 +19,9 @@ class Order extends Model
         'user_id',
         'shipping_info',
         'sub_total',
+        'flash_sale_discount', // ĐÃ THÊM
+        'tier_discount',       // ĐÃ THÊM
+        'voucher_discount',    // ĐÃ THÊM
         'discount_amount',
         'shipping_fee',
         'total_amount',
@@ -28,6 +31,7 @@ class Order extends Model
         'payment_status',
         'transaction_id',
         'payment_details',
+        'discount_details',    // ĐÃ THÊM
         'shipping_provider',
         'tracking_number',
         'shipping_status',
@@ -39,17 +43,21 @@ class Order extends Model
     protected function casts(): array
     {
         return [
-            'user_id'         => 'integer',
-            'voucher_id'      => 'integer',
-            'shipping_info'   => 'array',
-            'payment_details' => 'array',
-            'sub_total'       => 'decimal:2',
-            'discount_amount' => 'decimal:2',
-            'shipping_fee'    => 'decimal:2',
-            'total_amount'    => 'decimal:2',
-            'refunded_amount' => 'decimal:2',
-            'created_at'      => 'datetime',
-            'updated_at'      => 'datetime',
+            'user_id'             => 'integer',
+            'voucher_id'          => 'integer',
+            'shipping_info'       => 'array',
+            'payment_details'     => 'array',
+            'discount_details'    => 'array', // ĐÃ THÊM
+            'sub_total'           => 'decimal:2',
+            'flash_sale_discount' => 'decimal:2', // ĐÃ THÊM
+            'tier_discount'       => 'decimal:2', // ĐÃ THÊM
+            'voucher_discount'    => 'decimal:2', // ĐÃ THÊM
+            'discount_amount'     => 'decimal:2',
+            'shipping_fee'        => 'decimal:2',
+            'total_amount'        => 'decimal:2',
+            'refunded_amount'     => 'decimal:2',
+            'created_at'          => 'datetime',
+            'updated_at'          => 'datetime',
         ];
     }
 

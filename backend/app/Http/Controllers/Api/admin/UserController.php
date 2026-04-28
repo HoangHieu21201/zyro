@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Order; 
 use App\Http\Requests\User\StoreUserRequest;
 use App\Http\Requests\User\UpdateUserRequest;
 use App\Events\UserEvent;
@@ -30,6 +31,10 @@ class UserController extends Controller
                 return User::withTrashed()
                     ->with(['tier'])
                     ->withCount('addresses')
+                    // ĐÃ THÊM: Tính tổng tiền trực tiếp bằng SQL để Frontend tự động phân hạng Real-time
+                    ->withSum(['orders as total_spent' => function($q) {
+                        $q->where('status', 'completed');
+                    }], 'total_amount')
                     ->orderBy('id', 'desc')
                     ->get();
             });
@@ -90,6 +95,10 @@ class UserController extends Controller
                 ->with(['addresses' => function($q) {
                     $q->orderBy('is_default', 'desc')->orderBy('id', 'desc');
                 }])
+                // Tính tổng bằng withSum cho đồng bộ logic toàn hệ thống
+                ->withSum(['orders as total_spent' => function($q) {
+                    $q->where('status', 'completed');
+                }], 'total_amount')
                 ->findOrFail($id);
                 
             return response()->json(['success' => true, 'data' => $user]);

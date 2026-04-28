@@ -86,10 +86,22 @@
                     <i class="bi bi-inbox fs-1 d-block mb-2 opacity-25"></i>Không có dữ liệu.
                   </td>
                 </tr>
-                <tr v-else v-for="user in displayUsers" :key="user.id" :class="{'bg-light opacity-75 dark:bg-[#121416]': user.deleted_at || user.status === 'locked'}">
+                <tr v-else v-for="user in displayUsers" :key="user.id" 
+                    :class="{'bg-light opacity-75 dark:bg-[#121416]': user.deleted_at || user.status === 'locked'}"
+                    :style="getRowStyle(user)">
                   <td class="px-4 py-3">
                     <div class="d-flex align-items-center">
-                      <img :src="getImageUrl(user.avatar_url)" @error="handleImageError" class="rounded-circle object-fit-cover me-3 border shadow-sm dark:border-gray-600" style="width: 45px; height: 45px;">
+                      
+                      <!-- AVATAR FRAME & GLOW -->
+                      <div class="position-relative flex-shrink-0 avatar-wrapper me-3" 
+                           :class="{'vip-glow': isTopTier(getCalculatedTier(user)?.name)}" 
+                           :style="{'--tier-color': getTierColor(getCalculatedTier(user)?.name)}">
+                        <img :src="getImageUrl(user.avatar_url)" @error="handleImageError" 
+                             class="rounded-circle object-fit-cover shadow-sm bg-white dark:bg-[#212529]" 
+                             :style="getAvatarStyle(getCalculatedTier(user)?.name)"
+                             style="width: 48px; height: 48px; position: relative; z-index: 2;">
+                      </div>
+
                       <div class="overflow-hidden">
                         <h6 class="mb-0 fw-bold text-dark dark:text-gray-200 text-truncate">{{ user.full_name }}</h6>
                         <!-- DATA MASKING: Ẩn Email -->
@@ -101,13 +113,13 @@
                   </td>
                   
                   <td class="px-4">
-                    <span class="badge border py-1.5 px-2" :class="user.tier ? 'bg-warning text-dark border-warning' : 'bg-light text-secondary dark:bg-[#2b3035] dark:text-gray-400 dark:border-gray-600'">
-                      <i class="bi bi-star-fill me-1" v-if="user.tier"></i> {{ user.tier?.name || 'Mặc định (Member)' }}
+                    <span class="badge border py-1.5 px-3 rounded-pill shadow-sm" 
+                          :style="getBadgeStyle(getCalculatedTier(user)?.name)">
+                      <i class="bi bi-star-fill me-1" v-if="getCalculatedTier(user)"></i> {{ getCalculatedTier(user)?.name || 'Mặc định (Member)' }}
                     </span>
                   </td>
                   
                   <td class="px-4 text-muted dark:text-gray-400 small text-truncate">
-                    <!-- KHÔNG ẨN SĐT -->
                     <div class="mb-1"><i class="bi bi-telephone text-urban me-1"></i>{{ user.phone || 'N/A' }}</div>
                     <div><i class="bi bi-geo-alt text-urban me-1"></i>{{ user.addresses_count || 0 }} địa chỉ lưu</div>
                   </td>
@@ -115,7 +127,7 @@
                   <td class="px-4 text-center">
                     <span v-if="user.deleted_at" class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary"><i class="bi bi-trash3-fill"></i> Đã xóa</span>
                     <div v-else class="d-flex align-items-center justify-content-center gap-1">
-                      <select class="form-select form-select-sm border shadow-sm fw-semibold flex-shrink-0 dark:bg-[#212529] dark:text-gray-200" 
+                      <select class="form-select form-select-sm border shadow-sm fw-semibold flex-shrink-0 dark:bg-[#212529] dark:text-gray-200 bg-white" 
                               style="width: 110px; font-size: 0.75rem;"
                               :class="getStatusSelectClass(user.localStatus || user.status)"
                               v-model="user.localStatus"
@@ -141,19 +153,19 @@
 
                   <td class="px-4 text-center">
                     <div class="d-flex justify-content-center gap-1">
-                      <button class="btn btn-sm btn-light dark:bg-[#2b3035] dark:border-gray-600 text-info shadow-sm border" title="Xem nhanh" @click="openQuickView(user)">
+                      <button class="btn btn-sm btn-light dark:bg-[#2b3035] dark:border-gray-600 text-info shadow-sm border bg-white" title="Xem nhanh" @click="openQuickView(user)">
                         <i class="bi bi-eye"></i>
                       </button>
                       <template v-if="!user.deleted_at">
-                        <router-link :to="{ name: 'admin-users-edit', params: { id: user.id } }" class="btn btn-sm btn-light dark:bg-[#2b3035] dark:border-gray-600 text-primary shadow-sm border" title="Chỉnh sửa & Địa chỉ">
+                        <router-link :to="{ name: 'admin-users-edit', params: { id: user.id } }" class="btn btn-sm btn-light dark:bg-[#2b3035] dark:border-gray-600 text-primary shadow-sm border bg-white" title="Chỉnh sửa & Địa chỉ">
                           <i class="bi bi-pencil-square"></i>
                         </router-link>
-                        <button class="btn btn-sm btn-light dark:bg-[#2b3035] dark:border-gray-600 text-danger shadow-sm border" @click="confirmDelete(user.id, user.full_name)" title="Xóa tài khoản">
+                        <button class="btn btn-sm btn-light dark:bg-[#2b3035] dark:border-gray-600 text-danger shadow-sm border bg-white" @click="confirmDelete(user.id, user.full_name)" title="Xóa tài khoản">
                           <i class="bi bi-trash"></i>
                         </button>
                       </template>
                       <template v-else>
-                        <button class="btn btn-sm btn-light dark:bg-[#2b3035] dark:border-gray-600 text-success shadow-sm border" @click="restoreUser(user.id)" title="Khôi phục">
+                        <button class="btn btn-sm btn-light dark:bg-[#2b3035] dark:border-gray-600 text-success shadow-sm border bg-white" @click="restoreUser(user.id)" title="Khôi phục">
                           <i class="bi bi-arrow-counterclockwise"></i> Khôi phục
                         </button>
                       </template>
@@ -171,10 +183,20 @@
             <div v-else class="d-flex flex-column gap-3">
               <div v-for="user in displayUsers" :key="user.id" 
                    class="card border-0 shadow-sm rounded-4 dark:bg-[#212529]" 
-                   :class="{'opacity-75': user.deleted_at || user.status === 'locked'}">
+                   :class="{'opacity-75': user.deleted_at || user.status === 'locked'}"
+                   :style="getRowStyle(user)">
                 <div class="card-body p-3">
                   <div class="d-flex align-items-center mb-3">
-                    <img :src="getImageUrl(user.avatar_url)" @error="handleImageError" class="rounded-circle object-fit-cover me-3 border shadow-sm dark:border-gray-600" style="width: 50px; height: 50px;">
+                    
+                    <div class="position-relative flex-shrink-0 avatar-wrapper me-3" 
+                         :class="{'vip-glow': isTopTier(getCalculatedTier(user)?.name)}" 
+                         :style="{'--tier-color': getTierColor(getCalculatedTier(user)?.name)}">
+                      <img :src="getImageUrl(user.avatar_url)" @error="handleImageError" 
+                           class="rounded-circle object-fit-cover shadow-sm bg-white dark:bg-[#212529]" 
+                           :style="getAvatarStyle(getCalculatedTier(user)?.name)"
+                           style="width: 50px; height: 50px; position: relative; z-index: 2;">
+                    </div>
+
                     <div class="overflow-hidden w-100">
                       <h6 class="mb-0 fw-bold dark:text-gray-200 text-truncate">{{ user.full_name }}</h6>
                       <small class="text-muted dark:text-gray-400 d-block text-truncate font-monospace mt-1"><i class="bi bi-envelope me-1"></i> {{ maskEmail(user.email) }}</small>
@@ -182,7 +204,10 @@
                   </div>
                   
                   <div class="d-flex justify-content-between align-items-center mb-3 border-top dark:border-gray-700 pt-3 gap-2">
-                     <span class="badge border py-1 px-2 text-truncate" style="max-width: 55%;" :class="user.tier ? 'bg-warning text-dark border-warning' : 'bg-light text-secondary dark:bg-[#2b3035] dark:border-gray-600 dark:text-gray-400'">{{ user.tier?.name || 'Thành viên' }}</span>
+                     <span class="badge border py-1 px-3 rounded-pill text-truncate shadow-sm" style="max-width: 55%;" 
+                           :style="getBadgeStyle(getCalculatedTier(user)?.name)">
+                       {{ getCalculatedTier(user)?.name || 'Thành viên' }}
+                     </span>
                      
                      <span v-if="user.deleted_at" class="text-secondary small fw-bold flex-shrink-0"><i class="bi bi-trash3-fill"></i> Đã xóa</span>
                      <span v-else-if="user.status === 'active'" class="text-success small fw-bold flex-shrink-0"><i class="bi bi-circle-fill" style="font-size: 0.5rem;"></i> Hoạt động</span>
@@ -190,13 +215,13 @@
                   </div>
 
                   <div class="d-flex gap-2">
-                    <button class="btn btn-light dark:bg-[#2b3035] dark:border-gray-600 text-info border flex-grow-1 shadow-sm" @click="openQuickView(user)"><i class="bi bi-eye"></i></button>
+                    <button class="btn btn-light dark:bg-[#2b3035] dark:border-gray-600 text-info border flex-grow-1 shadow-sm bg-white" @click="openQuickView(user)"><i class="bi bi-eye"></i></button>
                     <template v-if="!user.deleted_at">
-                      <router-link :to="{ name: 'admin-users-edit', params: { id: user.id } }" class="btn btn-light dark:bg-[#2b3035] dark:border-gray-600 text-primary border flex-grow-1 shadow-sm"><i class="bi bi-pencil-square"></i></router-link>
-                      <button class="btn btn-light dark:bg-[#2b3035] dark:border-gray-600 text-danger border flex-grow-1 shadow-sm" @click="confirmDelete(user.id, user.full_name)"><i class="bi bi-trash"></i></button>
+                      <router-link :to="{ name: 'admin-users-edit', params: { id: user.id } }" class="btn btn-light dark:bg-[#2b3035] dark:border-gray-600 text-primary border flex-grow-1 shadow-sm bg-white"><i class="bi bi-pencil-square"></i></router-link>
+                      <button class="btn btn-light dark:bg-[#2b3035] dark:border-gray-600 text-danger border flex-grow-1 shadow-sm bg-white" @click="confirmDelete(user.id, user.full_name)"><i class="bi bi-trash"></i></button>
                     </template>
                     <template v-else>
-                      <button class="btn btn-light dark:bg-[#2b3035] dark:border-gray-600 text-success border flex-grow-1 fw-bold shadow-sm" @click="restoreUser(user.id)"><i class="bi bi-arrow-counterclockwise"></i> Khôi phục</button>
+                      <button class="btn btn-light dark:bg-[#2b3035] dark:border-gray-600 text-success border flex-grow-1 fw-bold shadow-sm bg-white" @click="restoreUser(user.id)"><i class="bi bi-arrow-counterclockwise"></i> Khôi phục</button>
                     </template>
                   </div>
                 </div>
@@ -220,7 +245,7 @@
       </div>
     </div>
 
-    <!-- POPUP QUICK VIEW CHUẨN ZYRO ĐỒNG BỘ 2 CỘT -->
+    <!-- POPUP QUICK VIEW CHUẨN ZYRO ĐÃ UPDATE SKELETON -->
     <div class="modal fade" id="quickViewModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
       <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content rounded-4 border-0 shadow dark:bg-[#1a2533]">
@@ -228,16 +253,43 @@
             <h5 class="fw-bold text-dark dark:text-white"><i class="bi bi-person-vcard text-urban me-2"></i>Hồ Sơ Khách Hàng</h5>
             <button type="button" class="btn-close dark:filter dark:invert" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body p-4" v-if="selectedUser">
-            <div class="row">
-              <div class="col-md-5 text-center border-end dark:border-gray-700 mb-4 mb-md-0">
-                <div class="position-relative d-inline-block mx-auto mb-3">
-                   <img :src="getImageUrl(selectedUser.avatar_url)" @error="handleImageError" class="rounded-circle shadow-sm border border-3 border-light dark:border-gray-600 object-fit-cover" style="width: 130px; height: 130px;">
-                   <span class="position-absolute bottom-0 end-0 p-2 border border-light dark:border-gray-800 rounded-circle" :class="selectedUser.deleted_at ? 'bg-secondary' : (selectedUser.status === 'active' ? 'bg-success' : 'bg-warning')" style="width: 15px; height: 15px;"></span>
+          
+          <div class="modal-body p-4">
+            
+            <!-- ĐÃ BỔ SUNG: KHUNG SKELETON LÚC CHỜ API DỮ LIỆU -->
+            <div v-if="isQuickViewLoading" class="row pe-none animation-fade-in">
+               <div class="col-md-5 text-center border-end dark:border-gray-700 mb-4 mb-md-0 mt-3">
+                  <div class="shimmer rounded-circle mx-auto mb-3" style="width: 140px; height: 140px;"></div>
+                  <div class="shimmer rounded mx-auto mb-2" style="width: 150px; height: 28px;"></div>
+                  <div class="shimmer rounded-pill mx-auto mt-2" style="width: 100px; height: 30px;"></div>
+               </div>
+               <div class="col-md-7">
+                  <div class="bg-light dark:bg-[#212529] p-4 rounded-4 shadow-sm border border-light-subtle dark:border-gray-700 h-100 d-flex flex-column gap-4">
+                     <div v-for="i in 5" :key="i" class="d-flex justify-content-between border-bottom dark:border-gray-700 pb-3">
+                        <div class="shimmer rounded" style="width: 100px; height: 20px;"></div>
+                        <div class="shimmer rounded" style="width: 150px; height: 20px;"></div>
+                     </div>
+                     <div class="mt-auto pt-3">
+                        <div class="shimmer rounded-pill w-100" style="height: 45px;"></div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+
+            <!-- NỘI DUNG CHÍNH (Đã Tải Xong) -->
+            <div v-else-if="selectedUser" class="row animation-fade-in">
+              <div class="col-md-5 text-center border-end dark:border-gray-700 mb-4 mb-md-0 mt-3">
+                <div class="position-relative d-inline-block mx-auto mb-3 avatar-wrapper" :class="{'vip-glow': isTopTier(getCalculatedTier(selectedUser)?.name)}" :style="{'--tier-color': getTierColor(getCalculatedTier(selectedUser)?.name)}">
+                   <img :src="getImageUrl(selectedUser.avatar_url)" @error="handleImageError" 
+                        class="rounded-circle object-fit-cover bg-white dark:bg-[#212529] position-relative" 
+                        :style="getLargeAvatarStyle(getCalculatedTier(selectedUser)?.name)"
+                        style="width: 140px; height: 140px; z-index: 2;">
+                   <span class="position-absolute bottom-0 end-0 p-2 border border-light dark:border-gray-800 rounded-circle shadow-sm" :class="selectedUser.deleted_at ? 'bg-secondary' : (selectedUser.status === 'active' ? 'bg-success' : 'bg-warning')" style="width: 18px; height: 18px; right: 8px !important; bottom: 8px !important; z-index: 3;"></span>
                 </div>
-                <h5 class="fw-bold mb-1 dark:text-white">{{ selectedUser.full_name }}</h5>
-                <span class="badge rounded-pill mt-2" :class="selectedUser.tier ? 'bg-warning text-dark' : 'bg-light text-secondary dark:bg-[#2b3035] dark:text-gray-300 border dark:border-gray-600'">
-                  <i class="bi bi-star-fill me-1" v-if="selectedUser.tier"></i> {{ selectedUser.tier?.name || 'Mặc định (Member)' }}
+                <h5 class="fw-bold mb-1 dark:text-white fs-4 font-sans-vn">{{ selectedUser.full_name }}</h5>
+                <span class="badge rounded-pill mt-2 px-3 py-2 shadow-sm font-sans-vn text-uppercase tracking-wide" 
+                      :style="getBadgeStyle(getCalculatedTier(selectedUser)?.name)">
+                  <i class="bi bi-star-fill me-1" v-if="getCalculatedTier(selectedUser)"></i> {{ getCalculatedTier(selectedUser)?.name || 'Mặc định (Member)' }}
                 </span>
               </div>
               
@@ -246,14 +298,13 @@
                   
                   <div class="mb-3 pb-3 border-bottom dark:border-gray-700">
                     <span class="text-muted dark:text-gray-400 fw-semibold d-block mb-2"><i class="bi bi-envelope text-urban me-1"></i>Email bảo mật:</span>
-                    <span class="text-dark dark:text-gray-200 fw-bold font-monospace">{{ maskEmail(selectedUser.email) }}</span>
+                    <span class="text-dark dark:text-gray-200 fw-bold font-monospace fs-6">{{ maskEmail(selectedUser.email) }}</span>
                   </div>
                   
                   <div class="mb-3 pb-3 border-bottom dark:border-gray-700 d-flex justify-content-between align-items-center">
                     <span class="text-muted dark:text-gray-400 fw-semibold"><i class="bi bi-telephone text-urban me-1"></i>Số điện thoại:</span>
                     <div class="d-flex align-items-center gap-2">
                       <span class="text-dark dark:text-gray-200 fw-bold">{{ selectedUser.phone || 'Chưa cập nhật' }}</span>
-                      <!-- Nút Copy SĐT Nhanh -->
                       <button v-if="selectedUser.phone" @click="copyPhone(selectedUser.phone)" class="btn btn-sm btn-light dark:bg-[#2b3035] dark:border-gray-600 border rounded py-0 px-2 shadow-sm" title="Sao chép SĐT">
                         <i class="bi bi-copy text-urban small"></i>
                       </button>
@@ -265,7 +316,6 @@
                     <span class="text-dark dark:text-gray-200 fw-bold">{{ selectedUser.gender || 'N/A' }} <span v-if="selectedUser.birthday">({{ calculateAge(selectedUser.birthday) }}T)</span></span>
                   </div>
 
-                  <!-- ĐÃ BỔ SUNG: CHỈ SỐ CƠ THỂ -->
                   <div class="mb-3 pb-3 border-bottom dark:border-gray-700 d-flex justify-content-between align-items-center">
                     <span class="text-muted dark:text-gray-400 fw-semibold"><i class="bi bi-rulers text-urban me-1"></i>Chỉ số cơ thể (H/W):</span>
                     <span class="text-dark dark:text-gray-200 fw-bold">
@@ -281,18 +331,21 @@
                     <span class="text-dark dark:text-gray-300 fw-bold">{{ formatDateTime(selectedUser.created_at) }}</span>
                   </div>
 
-                  <!-- API Sổ Địa Chỉ trong Quick View -->
+                  <div class="mb-3 pb-3 border-bottom dark:border-gray-700 d-flex justify-content-between align-items-center">
+                    <span class="text-muted dark:text-gray-400 fw-bold"><i class="bi bi-wallet2 text-urban me-1"></i>Tổng chi tiêu:</span>
+                    <span class="text-danger fw-bold fs-6">{{ formatCurrency(selectedUser.total_spent || 0) }}</span>
+                  </div>
+
                   <div class="mb-auto">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                       <span class="text-muted dark:text-gray-400 fw-semibold"><i class="bi bi-journal-text text-urban me-1"></i>Sổ địa chỉ ({{ selectedUser.addresses?.length || 0 }}):</span>
-                      <span v-if="isQuickViewLoading" class="spinner-border spinner-border-sm text-urban"></span>
                     </div>
                     
-                    <div v-if="!isQuickViewLoading && (!selectedUser.addresses || selectedUser.addresses.length === 0)" class="text-muted small fst-italic bg-white dark:bg-[#1a2533] p-2 rounded border dark:border-gray-700">
+                    <div v-if="!selectedUser.addresses || selectedUser.addresses.length === 0" class="text-muted small fst-italic bg-white dark:bg-[#1a2533] p-2 rounded border dark:border-gray-700">
                       Chưa có địa chỉ nào được lưu.
                     </div>
                     
-                    <div v-else-if="!isQuickViewLoading" class="custom-scrollbar-y" style="max-height: 140px; overflow-y: auto; padding-right: 4px;">
+                    <div v-else class="custom-scrollbar-y pe-2" style="max-height: 120px; overflow-y: auto;">
                       <div v-for="addr in selectedUser.addresses" :key="addr.id" class="p-2 mb-2 border dark:border-gray-600 rounded bg-white dark:bg-[#1a2533] position-relative">
                         <span v-if="addr.is_default" class="badge bg-urban text-white position-absolute top-0 end-0 m-1 shadow-sm" style="font-size: 0.6rem;">Mặc định</span>
                         <div class="fw-bold text-dark dark:text-white small mb-1 pe-5">{{ addr.customer_name }} - {{ addr.customer_phone }}</div>
@@ -332,6 +385,7 @@ const router = useRouter();
 
 const users = ref([]);
 const systemModules = ref([]);
+const systemTiers = ref([]); 
 const currentPageLevel = ref(null);
 const isLoading = ref(true);
 const isFirstLoad = ref(true); 
@@ -349,6 +403,103 @@ const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bear
 const getImageUrl = (path) => path ? `http://127.0.0.1:8000/storage/${path}` : defaultImage;
 const handleImageError = (e) => { e.target.src = defaultImage; };
 
+// ===============================================
+// THUẬT TOÁN TỰ PHÂN HẠNG (AUTO-TIERING FALLBACK)
+// ===============================================
+const getCalculatedTier = (user) => {
+  if (user && user.tier) return user.tier;
+  
+  if (user && user.total_spent !== undefined && systemTiers.value.length > 0) {
+     let matchedTier = null;
+     // Ép kiểu Number để đảm bảo so sánh chuỗi tiền chính xác
+     const spent = Number(user.total_spent) || 0;
+     for (let i = 0; i < systemTiers.value.length; i++) {
+        if (spent >= Number(systemTiers.value[i].min_spent)) {
+           matchedTier = systemTiers.value[i];
+        }
+     }
+     return matchedTier;
+  }
+  
+  return null; 
+};
+
+const getTierColor = (name) => {
+  if (!name) return '#9ca3af'; 
+  const lName = name.toLowerCase();
+  
+  if (lName.includes('khởi đầu')) return '#9ca3af';
+  if (lName.includes('fan cứng') || lName.includes('đồng')) return '#3b82f6'; 
+  if (lName.includes('bạc') || lName.includes('silver')) return '#94a3b8'; 
+  if (lName.includes('vàng') || lName.includes('gold')) return '#eab308'; 
+  if (lName.includes('kim cương') || lName.includes('diamond')) return '#06b6d4'; 
+  if (lName.includes('bạch kim') || lName.includes('platinum')) return '#8b5cf6'; 
+
+  return '#547792'; 
+};
+
+// Hàm định nghĩa xem có vẽ Hào quang hay không
+const isTopTier = (name) => {
+  if (!name) return false;
+  const n = name.toLowerCase();
+  return !n.includes('khởi đầu') && !n.includes('mới') && !n.includes('member');
+};
+
+// ĐÃ THÊM: Tạo Background màu nhạt tương ứng với Hạng của User
+const getRowStyle = (user) => {
+  if (user.deleted_at || user.status === 'locked') return {}; 
+  
+  const tier = getCalculatedTier(user);
+  const color = getTierColor(tier?.name);
+  
+  // Nếu là màu mặc định (xám/ghi) thì không tô nền để bảng đỡ bị xỉn màu
+  if (color === '#9ca3af' || color === '#547792') return {};
+
+  // Chuyển Hex sang RGBA với Opacity 8% cho rõ hơn 1 xíu
+  let r = parseInt(color.slice(1, 3), 16);
+  let g = parseInt(color.slice(3, 5), 16);
+  let b = parseInt(color.slice(5, 7), 16);
+  
+  return { backgroundColor: `rgba(${r}, ${g}, ${b}, 0.08)` };
+};
+
+const getAvatarStyle = (tierName) => {
+  const color = getTierColor(tierName);
+  return {
+    border: `2px solid ${color}`,
+    padding: '2px', 
+  };
+};
+
+const getLargeAvatarStyle = (tierName) => {
+  const color = getTierColor(tierName);
+  return {
+    border: `4px solid ${color}`,
+    padding: '4px',
+  };
+};
+
+const getBadgeStyle = (tierName) => {
+  const color = getTierColor(tierName);
+  const getContrast = (hexcolor) => {
+      hexcolor = hexcolor.replace("#", "");
+      if (hexcolor.length === 3) hexcolor = hexcolor.split('').map(c => c + c).join('');
+      const r = parseInt(hexcolor.substr(0,2),16);
+      const g = parseInt(hexcolor.substr(2,2),16);
+      const b = parseInt(hexcolor.substr(4,2),16);
+      const yiq = ((r*299)+(g*587)+(b*114))/1000;
+      return (yiq >= 128) ? '#111111' : '#ffffff';
+  };
+  
+  if(!tierName) return { backgroundColor: '#f8f9fa', color: '#6c757d', border: '1px solid #dee2e6' };
+  
+  return { 
+    backgroundColor: color, 
+    color: getContrast(color),
+    border: `1px solid ${color}` 
+  };
+};
+
 const getLevelColor = (level) => {
   if(!level) return 'bg-secondary';
   const l = parseInt(level);
@@ -361,6 +512,8 @@ const getLevelColor = (level) => {
     default: return 'bg-light dark:bg-gray-700 text-secondary dark:text-gray-300 border-secondary'; 
   }
 };
+
+const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0);
 
 const formatDateTime = (dateString) => {
   if(!dateString) return '';
@@ -415,9 +568,10 @@ const fetchData = async (isSilent = false) => {
   else if (!isFirstLoad.value) isLoading.value = true;
   
   try {
-    const [resUsers, resModules] = await Promise.all([
+    const [resUsers, resModules, resTiers] = await Promise.all([
       axios.get('http://127.0.0.1:8000/api/v1/admin/users', { headers: getHeaders() }),
-      axios.get('http://127.0.0.1:8000/api/v1/admin/modules', { headers: getHeaders() })
+      axios.get('http://127.0.0.1:8000/api/v1/admin/modules', { headers: getHeaders() }),
+      axios.get('http://127.0.0.1:8000/api/v1/admin/tiers', { headers: getHeaders() }).catch(() => ({data: {data: []}}))
     ]);
 
     const rawData = Array.isArray(resUsers.data.data) ? resUsers.data.data : [];
@@ -429,6 +583,10 @@ const fetchData = async (isSilent = false) => {
     systemModules.value = resModules.data.data;
     const currentModule = systemModules.value.find(m => m.module_code === (route.meta?.moduleCode || 'admin_users'));
     if (currentModule) currentPageLevel.value = currentModule.required_level;
+
+    systemTiers.value = Array.isArray(resTiers.data.data) ? resTiers.data.data : [];
+    // ĐẢM BẢO CHUỖI ĐƯỢC CHUYỂN SANG NUMBER ĐỂ SORT ĐÚNG
+    systemTiers.value.sort((a, b) => Number(a.min_spent) - Number(b.min_spent));
     
   } catch (err) { 
     console.error('Lỗi khi tải dữ liệu', err); 
@@ -493,7 +651,7 @@ onBeforeUnmount(() => {
 });
 
 const openQuickView = async (u) => {
-  selectedUser.value = u;
+  selectedUser.value = null; // Reset
   if (!quickViewModalInstance) quickViewModalInstance = new window.bootstrap.Modal(document.getElementById('quickViewModal'));
   quickViewModalInstance.show();
   
@@ -601,9 +759,41 @@ onUnmounted(() => {
 html.dark .tab-badge { background-color: #2b3035; color: #adb5bd; border-color: #495057; }
 html.dark .active-badge { background-color: rgba(255, 255, 255, 0.1) !important; color: #fff !important; border-color: #fff !important; }
 
+.font-sans-vn { font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif !important; }
+
+/* AVATAR GLOW EFFECT DÀNH RIÊNG CHO LIST VÀ QUICKVIEW */
+.avatar-wrapper { position: relative; border-radius: 50%; display: inline-flex; }
+.vip-glow::before {
+  content: ''; position: absolute; top: -3px; left: -3px; right: -3px; bottom: -3px;
+  border-radius: 50%; z-index: 1;
+  background: var(--tier-color);
+  filter: blur(8px);
+  animation: pulse-glow 2s infinite alternate;
+}
+@keyframes pulse-glow {
+  0% { opacity: 0.5; filter: blur(5px); transform: scale(0.98); }
+  100% { opacity: 1; filter: blur(12px); transform: scale(1.05); }
+}
+
 .custom-scrollbar-y::-webkit-scrollbar { width: 4px; }
 .custom-scrollbar-y::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar-y::-webkit-scrollbar-thumb { background: var(--color-c-light, #94B4C1); border-radius: 10px; }
 
 .transition-all { transition: all 0.3s ease; }
+.animation-fade-in { animation: fadeIn 0.4s ease-in-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+/* SKELETON CSS */
+.shimmer {
+  background: #e2e8f0;
+  background-image: linear-gradient(to right, #e2e8f0 0%, #f1f5f9 20%, #e2e8f0 40%, #e2e8f0 100%);
+  background-repeat: no-repeat;
+  background-size: 800px 100%;
+  animation: placeholderShimmer 1.5s infinite linear;
+}
+html.dark .shimmer {
+  background: #2b3035;
+  background-image: linear-gradient(to right, #2b3035 0%, #343a40 20%, #2b3035 40%, #2b3035 100%);
+}
+@keyframes placeholderShimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
 </style>

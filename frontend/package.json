@@ -6,9 +6,9 @@
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
   },
-  "scripts": {
+"scripts": {
     "dev:vue": "vite",
-    "dev:php": "cd ../backend && php artisan serve",
+    "dev:php": "cd ../backend && php artisan optimize:clear && php artisan serve",
     "dev:reverb": "cd ../backend && php artisan reverb:start",
     "dev:queue": "cd ../backend && php artisan queue:work",
     "dev": "concurrently -k -p \"[{name}]\" -n \"VUE,PHP,REVERB,QUEUE\" -c \"cyan.bold,blue.bold,magenta.bold,yellow.bold\" \"npm run dev:vue\" \"npm run dev:php\" \"npm run dev:reverb\" \"npm run dev:queue\"",
