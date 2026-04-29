@@ -93,6 +93,7 @@ class ClientCheckoutController extends Controller
                 $customerPhone = $request->customer_phone;
                 $customerEmail = $request->customer_email;
                 $customerAddress = $request->customer_address;
+                $city = $request->customer_address; 
 
                 if ($request->user_address_id && $user) {
                     $address = UserAddress::where('user_id', $user->id)->find($request->user_address_id);
@@ -100,6 +101,7 @@ class ClientCheckoutController extends Controller
                         $customerName = $address->customer_name;
                         $customerPhone = $address->customer_phone;
                         $customerAddress = $address->shipping_address . ', ' . $address->ward . ', ' . $address->district . ', ' . $address->city;
+                        $city = $address->city;
                     }
                 }
 
@@ -116,12 +118,14 @@ class ClientCheckoutController extends Controller
                     if ($item->variant_id) {
                         $variant = $variants->get($item->variant_id);
                         
-                        if (!$variant || $variant->stock_quantity < $item->quantity) {
-                            $pName = $variant && $variant->product ? $variant->product->name : 'Sản phẩm';
-                            throw new \Exception("{$pName} không đủ số lượng trong kho.");
+                        $availableStock = $variant->stock_quantity - ($variant->reserved_stock ?? 0);
+                        
+                        if (!$variant || $availableStock < $item->quantity) {
+                            $pName = $variant && $variant->product ? $variant->product->name : 'sản phẩm';
+                            throw new \Exception("{$pName} không đủ số lượng khả dụng (chỉ còn {$availableStock} sản phẩm).");
                         }
 
-                        $variant->stock_quantity -= $item->quantity;
+                        $variant->reserved_stock = ($variant->reserved_stock ?? 0) + $item->quantity;
                         $variant->save();
 
                         $itemPrice = $totals['fs_variant_prices'][$variant->id] ?? ($variant->promotional_price ?? $variant->price);
@@ -154,18 +158,18 @@ class ClientCheckoutController extends Controller
                     DB::table('vouchers')->where('id', $totals['voucher_id'])->increment('usage_count');
                 }
 
-                $shippingFee = (float) $request->shipping_fee;
+                $shippingFee = $this->calculateShippingFee($totals['subtotal_after_tier'], $city);
+                
                 $finalTotalAmount = max($totals['final_total'] + $shippingFee, 0);
                 $totalDiscountAmount = $totals['tier_discount'] + $totals['voucher_discount'];
 
                 $orderCode = 'ZYRO' . strtoupper(Str::random(8));
 
-                $paymentDetails = null;
+                $orderNote = $request->order_note;
                 if ($request->require_vat && $request->vat_info) {
-                    $paymentDetails = [
-                        'require_vat' => true,
-                        'vat_info'    => $request->vat_info
-                    ];
+                    $vat = $request->vat_info;
+                    $vatStr = " [YÊU CẦU XUẤT VAT] Công ty: {$vat['company_name']} - MST: {$vat['tax_code']} - Đ/C: {$vat['address']}";
+                    $orderNote = $orderNote ? $orderNote . $vatStr : trim($vatStr);
                 }
 
                 $order = Order::create([
@@ -178,7 +182,7 @@ class ClientCheckoutController extends Controller
                         'address' => $customerAddress,
                         'origin_city' => 'Hà Nội' 
                     ],
-                    'order_note'          => $request->order_note,
+                    'order_note'          => $orderNote,
                     'sub_total'           => $totals['sub_total'],
                     'flash_sale_discount' => $totals['flash_sale_discount'],
                     'tier_discount'       => $totals['tier_discount'],       
@@ -189,7 +193,7 @@ class ClientCheckoutController extends Controller
                     'voucher_id'          => $totals['voucher_id'], 
                     'payment_method'      => $request->payment_method, 
                     'payment_status'      => 'unpaid',
-                    'payment_details'     => $paymentDetails,
+                    'payment_details'     => null, 
                     'discount_details'    => [
                         'tier_name'         => $totals['tier_name'],
                         'tier_percent'      => $totals['tier_percent'],
@@ -216,8 +220,7 @@ class ClientCheckoutController extends Controller
                 ]);
 
                 if ($request->payment_method === 'cod') {
-                    $cart->items()->delete();
-                    $cart->delete();
+                    $this->clearCartAfterPayment($order);
                     $this->sendOrderConfirmationEmail($order);
 
                     return response()->json([
@@ -245,6 +248,20 @@ class ClientCheckoutController extends Controller
         } finally {
             $lock->release();
         }
+    }
+
+    private function calculateShippingFee($totalAmount, $cityStr)
+    {
+        if ($totalAmount >= 1000000) {
+            return 0;
+        }
+
+        $city = mb_strtolower($cityStr, 'UTF-8');
+        if (str_contains($city, 'hà nội') || str_contains($city, 'hồ chí minh')) {
+            return 30000;
+        }
+
+        return 40000;
     }
 
     private function calculateOrderTotals($cartItems, $variants, $user, $voucherCode = null)
@@ -325,6 +342,7 @@ class ClientCheckoutController extends Controller
             $voucher = DB::table('vouchers')
                 ->where('code', $voucherCode)
                 ->where('status', 'active')
+                ->lockForUpdate() 
                 ->where(function ($q) {
                     $q->whereNull('start_time')->orWhere('start_time', '<=', now());
                 })
@@ -350,6 +368,8 @@ class ClientCheckoutController extends Controller
                     $voucherDiscount = $voucher->discount_value;
                 }
                 $voucherId = $voucher->id;
+
+                $voucherDiscount = min($voucherDiscount, $subtotalAfterTier);
             } else {
                 throw new \Exception("Mã giảm giá không hợp lệ hoặc đơn hàng chưa đạt tối thiểu " . number_format($voucher->min_spend ?? 0) . "đ (sau khi áp dụng Hạng).");
             }
@@ -387,8 +407,8 @@ class ClientCheckoutController extends Controller
         $amount = (string) round($order->total_amount);
         $orderId = $order->order_code . "_" . time(); 
 
-        $redirectUrl = env('FRONTEND_URL', 'http://localhost:5173') . '/checkout/momo-return';
-        $ipnUrl = url('/api/v1/client/checkout/momo-return');
+        $redirectUrl = url('/api/v1/client/checkout/momo-return');
+        $ipnUrl = url('/api/v1/client/checkout/momo-ipn');
 
         $extraData = "";
         $requestId = time() . "";
@@ -423,42 +443,115 @@ class ClientCheckoutController extends Controller
         throw new \Exception("MoMo API Error: " . ($result['message'] ?? 'Lỗi tạo link thanh toán'));
     }
 
+    // ========================================================
+    // BẢO MẬT 1: HÀM KIỂM TRA CHỮ KÝ TỪ MOMO
+    // ========================================================
+    private function verifyMomoSignature(Request $request): bool
+    {
+        $accessKey = env('MOMO_ACCESS_KEY', 'klm05TvNBzhg7h7j');
+        $secretKey = env('MOMO_SECRET_KEY', 'at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa');
+
+        $rawHash = "accessKey=" . $accessKey .
+            "&amount=" . $request->amount .
+            "&extraData=" . $request->extraData .
+            "&message=" . $request->message .
+            "&orderId=" . $request->orderId .
+            "&orderInfo=" . $request->orderInfo .
+            "&orderType=" . $request->orderType .
+            "&partnerCode=" . $request->partnerCode .
+            "&payType=" . $request->payType .
+            "&requestId=" . $request->requestId .
+            "&responseTime=" . $request->responseTime .
+            "&resultCode=" . $request->resultCode .
+            "&transId=" . $request->transId;
+
+        $signature = hash_hmac("sha256", $rawHash, $secretKey);
+        return hash_equals($signature, (string) $request->signature);
+    }
+
+    // ========================================================
+    // BẢO MẬT 2: HÀM RETURN (CHỈ DÙNG ĐỂ REDIRECT TRÌNH DUYỆT KHÁCH - KHÔNG ĐƯỢC CHẠM VÀO DATABASE)
+    // ========================================================
     public function momoReturn(Request $request)
     {
+        $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
         $parts = explode('_', $request->orderId);
         $orderCode = $parts[0] ?? '';
 
-        $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
+        if (!$this->verifyMomoSignature($request)) {
+            return redirect($frontendUrl . '/checkout/failed?order=' . $orderCode);
+        }
 
         if ($request->resultCode == 0) {
-            Order::where('order_code', $orderCode)->update(['payment_status' => 'paid']);
-            $order = Order::with('items')->where('order_code', $orderCode)->first();
-
-            if ($order) {
-                $cart = null;
-                
-                if ($order->user_id) {
-                    $cart = Cart::where('user_id', $order->user_id)->first();
-                } else {
-                    $cart = Cart::whereHas('items', function ($query) use ($order) {
-                        $variantIds = $order->items->pluck('variant_id')->toArray();
-                        $query->whereIn('variant_id', $variantIds);
-                    })->whereNull('user_id')->first();
-                }
-
-                if ($cart) {
-                    $cart->items()->delete();
-                    $cart->delete();
-                }
-
-                $this->sendOrderConfirmationEmail($order);
-            }
-
             return redirect($frontendUrl . '/checkout/success?order=' . $orderCode);
         }
 
-        $this->cancelOrderAndRestoreStock($orderCode);
         return redirect($frontendUrl . '/checkout/failed?order=' . $orderCode);
+    }
+
+    // ========================================================
+    // BẢO MẬT 3: HÀM WEBHOOK IPN (SERVER-TO-SERVER: NƠI DUY NHẤT ĐƯỢC PHÉP CHỐT ĐƠN ĐÃ THANH TOÁN)
+    // ========================================================
+    public function momoIpn(Request $request)
+    {
+        if (!$this->verifyMomoSignature($request)) {
+            return response()->json(['message' => 'Invalid signature'], 400);
+        }
+
+        $parts = explode('_', $request->orderId);
+        $orderCode = $parts[0] ?? '';
+
+        $order = Order::with('items')->where('order_code', $orderCode)->first();
+        if (!$order) {
+            return response()->json(['message' => 'Order not found'], 404);
+        }
+
+        if ($order->payment_status === 'paid') {
+            return response()->json(['message' => 'Success'], 204);
+        }
+
+        if ($request->resultCode == 0) {
+            
+            // GÓC KHUẤT CHÍ MẠNG (AMOUNT SPOOFING): KIỂM TRA SỐ TIỀN THỰC TẾ KHÁCH ĐÃ TRẢ
+            $momoAmount = (float) $request->amount;
+            $orderAmount = (float) round($order->total_amount);
+
+            if ($momoAmount !== $orderAmount) {
+                Log::warning("CẢNH BÁO BẢO MẬT: MoMo Amount Mismatch! Đơn hàng: {$orderCode}, Tiền MoMo trả về: {$momoAmount}, Tiền đúng trong DB: {$orderAmount}");
+                return response()->json(['message' => 'Amount mismatch'], 400);
+            }
+
+            // Mọi thứ an toàn 100%, ghi nhận thanh toán
+            $order->update([
+                'payment_status' => 'paid',
+                'transaction_id' => $request->transId,
+                'payment_details' => $request->all() 
+            ]);
+            $this->clearCartAfterPayment($order);
+            $this->sendOrderConfirmationEmail($order);
+        } else {
+            $this->cancelOrderAndRestoreStock($orderCode);
+        }
+
+        return response()->json(['message' => 'Success'], 204);
+    }
+
+    private function clearCartAfterPayment($order)
+    {
+        $cart = null;
+        if ($order->user_id) {
+            $cart = Cart::where('user_id', $order->user_id)->first();
+        } else {
+            $cart = Cart::whereHas('items', function ($query) use ($order) {
+                $variantIds = $order->items->pluck('variant_id')->toArray();
+                $query->whereIn('variant_id', $variantIds);
+            })->whereNull('user_id')->first();
+        }
+
+        if ($cart) {
+            $cart->items()->delete();
+            $cart->delete();
+        }
     }
 
     private function sendOrderConfirmationEmail($order)
@@ -501,7 +594,7 @@ class ClientCheckoutController extends Controller
 
             foreach ($order->items as $item) {
                 if ($item->variant_id) { 
-                    ProductVariant::where('id', $item->variant_id)->increment('stock_quantity', $item->quantity);
+                    ProductVariant::where('id', $item->variant_id)->decrement('reserved_stock', $item->quantity);
                 }
             }
         }

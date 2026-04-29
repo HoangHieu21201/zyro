@@ -15,7 +15,7 @@
         <div class="row g-4 g-lg-5">
           <!-- SIDEBAR: ĐIỀU HƯỚNG THÔNG TIN -->
           <div class="col-lg-3 d-none d-lg-block">
-            <InfoNavigation currentRoute="/shipping-policy" />
+            <InfoNavigation currentRoute="/return-policy" />
           </div>
 
           <!-- MAIN CONTENT -->

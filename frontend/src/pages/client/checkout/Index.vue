@@ -1,10 +1,9 @@
 <template>
   <div class="checkout-page-wrapper pb-5 mb-5" style="padding-top: 30px;">
-    
     <div class="pt-5 mt-4">
       <div class="zyro-container">
         
-        <!-- BREADCRUMB -->
+        <!-- breadcrumb -->
         <nav aria-label="breadcrumb" class="mb-4">
           <ol class="breadcrumb small fw-semibold text-uppercase font-sans-vn" style="letter-spacing: 0.5px;">
             <li class="breadcrumb-item"><router-link to="/" class="text-decoration-none text-muted hover-text-dark">Trang chủ</router-link></li>
@@ -17,6 +16,7 @@
           <h2 class="fw-bold text-c-dark dark:text-white m-0 text-uppercase tracking-widest font-sans-vn" style="letter-spacing: 2px;">Thanh toán an toàn</h2>
         </div>
 
+        <!-- skeleton chờ tải dữ liệu -->
         <div v-if="isInitLoading" class="row g-5 mb-5 pe-none animation-fade-in">
           <div class="col-lg-7">
              <div class="bg-white dark:bg-[#1a2533] p-4 rounded-4 shadow-sm border border-light-subtle dark:border-gray-700 mb-4">
@@ -45,17 +45,16 @@
             <form @submit.prevent="placeOrder" autocomplete="off">
             <div class="row g-5">
                 
-                <!-- CỘT TRÁI: THÔNG TIN GIAO HÀNG & THANH TOÁN -->
+                <!-- cột trái -->
                 <div class="col-lg-7">
                 
-                <!-- 1. THÔNG TIN LIÊN HỆ & GIAO HÀNG -->
+                <!-- 1. thông tin liên hệ và giao hàng -->
                 <div class="mb-5">
                     <h5 class="fw-bold text-c-dark dark:text-white mb-4 d-flex align-items-center font-sans-vn">
                     <span class="step-number rounded-circle d-flex align-items-center justify-content-center me-2 shadow-sm" style="width: 28px; height: 28px; font-size: 0.9rem;">1</span> 
                     Thông tin giao hàng
                     </h5>
                     
-                    <!-- BỘ CHỌN SỔ ĐỊA CHỈ THÔNG MINH -->
                     <div v-if="savedAddresses.length > 0" class="mb-4 p-3 bg-urban-soft-box rounded-4 border border-urban-soft transition-all">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <h6 class="fw-bold text-urban m-0 font-sans-vn"><i class="bi bi-journal-bookmark-fill me-2"></i>Chọn từ sổ địa chỉ</h6>
@@ -86,7 +85,7 @@
                         <input type="email" class="form-control custom-input" v-model="form.email" required placeholder="Nhập địa chỉ email">
                     </div>
 
-                    <!-- TỈNH THÀNH -->
+                    <!-- tỉnh thành -->
                     <div class="col-md-4 mt-3 position-relative">
                         <label class="form-label small fw-bold text-muted text-uppercase">Tỉnh/Thành phố <span class="text-danger">*</span></label>
                         <input type="text" class="form-control custom-input dropdown-search-input" 
@@ -102,7 +101,7 @@
                         </ul>
                     </div>
 
-                    <!-- QUẬN HUYỆN -->
+                    <!-- quận huyện -->
                     <div class="col-md-4 mt-3 position-relative">
                         <label class="form-label small fw-bold text-muted text-uppercase">Quận/Huyện <span class="text-danger">*</span></label>
                         <input type="text" class="form-control custom-input dropdown-search-input" 
@@ -118,7 +117,7 @@
                         </ul>
                     </div>
 
-                    <!-- PHƯỜNG XÃ -->
+                    <!-- phường xã -->
                     <div class="col-md-4 mt-3 position-relative">
                         <label class="form-label small fw-bold text-muted text-uppercase">Phường/Xã <span class="text-danger">*</span></label>
                         <input type="text" class="form-control custom-input dropdown-search-input" 
@@ -146,7 +145,7 @@
                     </div>
                 </div>
 
-                <!-- 2. PHƯƠNG THỨC VẬN CHUYỂN -->
+                <!-- 2. phương thức vận chuyển -->
                 <div class="mb-5 font-sans-vn">
                     <h5 class="fw-bold text-c-dark dark:text-white mb-4 d-flex align-items-center">
                     <span class="step-number rounded-circle d-flex align-items-center justify-content-center me-2 shadow-sm" style="width: 28px; height: 28px; font-size: 0.9rem;">2</span> 
@@ -170,7 +169,7 @@
                     </label>
                 </div>
 
-                <!-- 3. PHƯƠNG THỨC THANH TOÁN -->
+                <!-- 3. phương thức thanh toán -->
                 <div class="mb-5 font-sans-vn">
                     <h5 class="fw-bold text-c-dark dark:text-white mb-4 d-flex align-items-center">
                     <span class="step-number rounded-circle d-flex align-items-center justify-content-center me-2 shadow-sm" style="width: 28px; height: 28px; font-size: 0.9rem;">3</span> 
@@ -178,7 +177,6 @@
                     </h5>
                     
                     <div class="d-flex flex-column gap-3">
-                    <!-- COD -->
                     <label class="card rounded-4 shadow-sm cursor-pointer payment-method-card" :class="form.payment_method === 'cod' ? 'active-card' : 'inactive-card'">
                         <div class="card-body p-3 d-flex align-items-center">
                         <input class="form-check-input fs-4 m-0 me-3 custom-radio" type="radio" name="paymentMethod" value="cod" v-model="form.payment_method">
@@ -194,7 +192,6 @@
                         </div>
                     </label>
 
-                    <!-- MOMO -->
                     <label class="card rounded-4 shadow-sm cursor-pointer payment-method-card" :class="form.payment_method === 'momo' ? 'active-card' : 'inactive-card'">
                         <div class="card-body p-3 d-flex align-items-center">
                         <input class="form-check-input fs-4 m-0 me-3 custom-radio" type="radio" name="paymentMethod" value="momo" v-model="form.payment_method">
@@ -212,7 +209,7 @@
                     </div>
                 </div>
 
-                <!-- 4. YÊU CẦU XUẤT HÓA ĐƠN VAT -->
+                <!-- 4. xuất hóa đơn vat -->
                 <div class="mb-5 font-sans-vn">
                     <div class="form-check d-flex align-items-center mb-3 p-0">
                     <input class="form-check-input ms-0 me-2 custom-radio fs-5" type="checkbox" id="requireVAT" v-model="requireVAT">
@@ -247,19 +244,19 @@
 
                 </div>
 
-                <!-- CỘT PHẢI: TỔNG KẾT ĐƠN HÀNG (STICKY) -->
+                <!-- cột phải -->
                 <div class="col-lg-5">
                 <div class="card shadow-sm rounded-4 summary-box sticky-top p-4 p-md-5" style="top: 100px;">
                     <h5 class="fw-bold text-c-dark dark:text-white mb-4 border-bottom border-light-subtle dark:border-gray-700 pb-3 text-uppercase tracking-wide font-sans-vn">
                     Tổng Kết Đơn Hàng
                     </h5>
 
-                    <!-- DANH SÁCH SẢN PHẨM MUA LẺ VÀ COMBO -->
+                    <!-- danh sách sản phẩm -->
                     <div class="custom-scrollbar-y p-3 ms-n3 mb-4 font-sans-vn" style="max-height: 350px; overflow-y: auto; overflow-x: visible;">
                     
                     <template v-for="(group, gIdx) in cartGroups" :key="'grp'+gIdx">
 
-                        <!-- LOẠI 1: GÓI COMBO LOOKBOOK -->
+                        <!-- combo -->
                         <div v-if="group.isLookbook" 
                             class="mb-3 pb-3 border-bottom border-light-subtle dark:border-gray-700 position-relative transition-all"
                             :class="{'pe-none opacity-50': updatingItemId === 'combo_' + group.lookbook_id}">
@@ -300,7 +297,6 @@
                             </div>
                         </div>
                         
-                        <!-- DROPDOWN CHI TIẾT COMBO -->
                         <div v-show="expandedGroups.includes(group.lookbook_id)" class="combo-details mt-3 pt-3 border-top border-light-subtle dark:border-gray-700 ps-2">
                             <div class="d-flex flex-column gap-2">
                                 <div v-for="item in group.items" :key="'cb_item_'+item.variant_id" class="d-flex align-items-center gap-3">
@@ -317,7 +313,7 @@
                         </div>
                         </div>
 
-                        <!-- LOẠI 2: SẢN PHẨM LẺ BÌNH THƯỜNG -->
+                        <!-- sản phẩm lẻ -->
                         <template v-else>
                         <div v-for="item in group.items" :key="'cartItem'+item.variant_id" 
                             class="d-flex gap-3 mb-3 pb-3 border-bottom border-light-subtle dark:border-gray-700 position-relative transition-all"
@@ -360,7 +356,7 @@
                     </template>
                     </div>
 
-                    <!-- DROPDOWN VOUCHER -->
+                    <!-- mã khuyến mãi -->
                     <div class="mb-4">
                     <div class="d-flex justify-content-between align-items-center mb-2 voucher-dropdown-container position-relative font-sans-vn">
                         <label class="form-label small fw-bold text-muted text-uppercase tracking-wide m-0">Mã ưu đãi / Khuyến mãi</label>
@@ -433,13 +429,12 @@
                     </div>
                     </div>
 
-                    <!-- CHI TIẾT TÍNH TIỀN THEO WATERFALL -->
+                    <!-- chi tiết tính tiền -->
                     <div class="d-flex justify-content-between mb-2 text-c-dark dark:text-gray-300 small font-sans-vn">
                       <span>Tạm tính ({{ cartStore.totalQuantity }} SP)</span>
                       <span class="fw-semibold">{{ formatCurrency(cartStore.totalPrice) }}</span>
                     </div>
 
-                    <!-- ĐÃ FIX: Hiển thị minh bạch Cơ sở tính toán Hạng (Cơ sở % và Max Discount) -->
                     <div class="d-flex justify-content-between mb-2 text-success small font-sans-vn" v-if="tierDiscountAmount > 0">
                       <span>
                         Ưu đãi Hạng <span class="fw-bold">{{ currentTierData?.name }}</span>
@@ -450,7 +445,6 @@
                       <span class="fw-bold">- {{ formatCurrency(tierDiscountAmount) }}</span>
                     </div>
 
-                    <!-- ĐÃ FIX: Hiển thị minh bạch Cơ sở tính toán Voucher -->
                     <div class="d-flex justify-content-between mb-2 text-success small font-sans-vn" v-if="voucherDiscountAmount > 0">
                       <span>
                         Giảm giá Voucher
@@ -467,7 +461,7 @@
                       <span class="fw-bold" v-else>{{ formatCurrency(shippingFee) }}</span>
                     </div>
 
-                    <!-- TỔNG CỘNG -->
+                    <!-- tổng cộng -->
                     <div class="d-flex justify-content-between align-items-center pt-3 border-top border-light-subtle dark:border-gray-700 mb-4 font-sans-vn">
                       <span class="fw-bold text-uppercase fs-5 text-c-dark dark:text-white">Tổng Cộng</span>
                       <div class="text-end">
@@ -485,7 +479,6 @@
                     Bằng việc bấm Đặt hàng, bạn đồng ý với <router-link to="/terms-of-service" target="_blank" class="text-c-dark dark:text-gray-300 text-decoration-underline">Điều khoản sử dụng</router-link> của ZYRO.
                     </p>
 
-                    <!-- Trust Badges -->
                     <div class="mt-4 pt-3 border-top border-light-subtle dark:border-gray-700 d-flex justify-content-center gap-3 opacity-75">
                     <i class="bi bi-shield-check fs-4 text-c-dark dark:text-gray-400" title="Thanh toán an toàn 100%"></i>
                     <i class="bi bi-arrow-return-left fs-4 text-c-dark dark:text-gray-400" title="Đổi trả dễ dàng"></i>
@@ -552,9 +545,7 @@ const selectedCouponCode = ref('');
 const appliedCouponValid = ref(false);
 const isVoucherDropdownOpen = ref(false);
 
-// ==========================================
-// STATE LOGIC TIER & WATERFALL MATH
-// ==========================================
+// state logic
 const allTiers = ref([]);
 const totalSpent = ref(0);
 
@@ -569,7 +560,7 @@ const currentTierData = computed(() => {
   return current;
 });
 
-// ĐÃ FIX: Tính toán ưu đãi hạng có giới hạn số tiền max_discount_amount
+// tính toán ưu đãi hạng
 const tierDiscountAmount = computed(() => {
     if (!currentTierData.value || !currentTierData.value.discount_percent) return 0;
     let amount = (cartStore.totalPrice * currentTierData.value.discount_percent) / 100;
@@ -586,7 +577,6 @@ const subtotalAfterTier = computed(() => {
 
 
 const FREESHIP_THRESHOLD = 1000000;
-const SHIPPING_COST = 30000;
 
 const requireVAT = ref(false);
 const vatInfo = ref({ company_name: '', tax_code: '', email: '', address: '' });
@@ -938,7 +928,6 @@ const applyPromo = () => {
      return;
   }
 
-  // Waterfall check Voucher against Subtotal AFTER Tier Discount
   if (subtotalAfterTier.value < coupon.min_spend) {
      appliedCouponValid.value = false;
      ZyroSwal.toastError(`Đơn hàng cần đạt tối thiểu ${formatCurrency(coupon.min_spend)} sau khi áp dụng Hạng để dùng mã này.`);
@@ -966,7 +955,6 @@ watch(() => subtotalAfterTier.value, (newTotal) => {
   }
 });
 
-// ĐÃ FIX: Nhận diện cấu trúc giảm giá (Nhãn hiển thị) cho Mã giảm giá
 const appliedVoucherInfo = computed(() => {
   if (!appliedCouponValid.value || !selectedCouponCode.value) return null;
   const coupon = availableCoupons.value.find(c => c.code.toUpperCase() === selectedCouponCode.value.toUpperCase());
@@ -1003,7 +991,16 @@ const voucherDiscountAmount = computed(() => {
   return amount;
 });
 
-const shippingFee = computed(() => subtotalAfterTier.value >= FREESHIP_THRESHOLD ? 0 : SHIPPING_COST);
+// tự động tính phí vận chuyển dựa trên địa chỉ (hợp bộ với backend)
+const shippingFee = computed(() => {
+  if (subtotalAfterTier.value >= FREESHIP_THRESHOLD) return 0;
+
+  const province = addressHelper.province ? addressHelper.province.toLowerCase() : '';
+  if (province.includes('hà nội') || province.includes('hồ chí minh')) {
+      return 30000;
+  }
+  return 40000;
+});
 
 const finalTotal = computed(() => {
   const total = subtotalAfterTier.value + shippingFee.value - voucherDiscountAmount.value;
@@ -1037,7 +1034,6 @@ const placeOrder = async () => {
       order_note: form.value.note,
       payment_method: form.value.payment_method, 
       coupon_code: appliedCouponValid.value ? selectedCouponCode.value : null,
-      shipping_fee: shippingFee.value, 
       require_vat: requireVAT.value,
       vat_info: requireVAT.value ? vatInfo.value : null
     };
@@ -1133,7 +1129,7 @@ html.dark .border-urban-soft { border-color: rgba(255, 255, 255, 0.1) !important
 
 .step-number { background-color: var(--color-c-dark); color: white; }
 
-/* INPUT CHUNG */
+/* input chung */
 .custom-input {
   background-color: #ffffff;
   border: 1.5px solid var(--color-c-light); 
@@ -1153,7 +1149,7 @@ html.dark .custom-input { background-color: #1a2533; border-color: #373b3e; colo
 }
 html.dark .custom-input:focus { background-color: #212529; box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1) !important; }
 
-/* SELECT DROPDOWN */
+/* select dropdown */
 select.custom-input {
   cursor: pointer; appearance: none;
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23547792' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
@@ -1164,7 +1160,7 @@ select.custom-input.placeholder-active { color: #6c757d; font-weight: 400 !impor
 html.dark select.custom-input.placeholder-active { color: #adb5bd; }
 select.custom-input option:disabled { color: #aaa; font-style: italic; }
 
-/* NÚT XÓA GIỎ HÀNG */
+/* xóa giỏ hàng */
 .btn-delete-circle {
   position: absolute;
   top: 1rem; right: 0.5rem;
@@ -1178,7 +1174,7 @@ select.custom-input option:disabled { color: #aaa; font-style: italic; }
 html.dark .btn-delete-circle { border-color: #ef4444; color: #ef4444; }
 html.dark .btn-delete-circle:hover { background: #ef4444; color: #fff; }
 
-/* ẨN NÚT MŨI TÊN TRONG Ô INPUT NUMBER */
+/* ẩn mũi tên input number */
 .no-spinners::-webkit-outer-spin-button,
 .no-spinners::-webkit-inner-spin-button {
   -webkit-appearance: none;
@@ -1188,7 +1184,7 @@ html.dark .btn-delete-circle:hover { background: #ef4444; color: #fff; }
   -moz-appearance: textfield;
 }
 
-/* HIỆU ỨNG 3 CHẤM */
+/* hiệu ứng loader */
 .bouncing-loader { display: flex; align-items: center; justify-content: center; gap: 6px; z-index: 10; }
 .bouncing-loader span { display: block; width: 8px; height: 8px; background-color: var(--color-c-hover, #547792); border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
 html.dark .bouncing-loader span { background-color: #94B4C1; }
@@ -1196,7 +1192,7 @@ html.dark .bouncing-loader span { background-color: #94B4C1; }
 .bouncing-loader span:nth-child(2) { animation-delay: -0.16s; }
 @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.3); } }
 
-/* PAYMENT CARDS */
+/* payment cards */
 .payment-method-card { border: 1.5px solid var(--color-c-effect); background-color: #ffffff; transition: all 0.2s ease-in-out; }
 html.dark .payment-method-card { border-color: #373b3e; background-color: transparent; }
 .payment-method-card:hover { border-color: var(--color-c-light); }
@@ -1206,7 +1202,7 @@ html.dark .active-card { border-color: var(--color-c-light) !important; backgrou
 html.dark .icon-box { background-color: #212529; border-color: #373b3e !important; }
 .active-card .icon-box { color: var(--color-c-dark); border-color: var(--color-c-hover) !important; }
 
-/* Utils */
+/* utils */
 .z-index-1 { z-index: 1; }
 .z-index-2 { z-index: 2; }
 .z-index-dropdown { z-index: 1050; }
@@ -1241,7 +1237,7 @@ html.dark .summary-box, html.dark .vat-box { background-color: #1a2533; border-c
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 
-/* SKELETON CSS CHUẨN XÁC */
+/* skeleton css chuẩn xác */
 .shimmer {
   background: #e2e8f0;
   background-image: linear-gradient(to right, #e2e8f0 0%, #f1f5f9 20%, #e2e8f0 40%, #e2e8f0 100%);
