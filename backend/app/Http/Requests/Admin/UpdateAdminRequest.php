@@ -1,11 +1,11 @@
 <?php
 
-// File: backend/app/Http/Requests/Admin/UpdateAdminRequest.php
-
 namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use App\Models\Admin;
+use App\Models\Role;
 
 class UpdateAdminRequest extends FormRequest
 {
@@ -16,7 +16,7 @@ class UpdateAdminRequest extends FormRequest
 
     public function rules(): array
     {
-        $adminId = $this->route('admin');
+        $adminId = $this->route('admin') ?? $this->route('id');
 
         return [
             'fullname' => ['required', 'string', 'min:3', 'max:100'],
@@ -46,22 +46,37 @@ class UpdateAdminRequest extends FormRequest
         return [
             'fullname.required'  => 'Họ tên không được để trống.',
             'fullname.min'       => 'Họ tên quá ngắn (Tối thiểu 3 ký tự).',
-            'fullname.max'       => 'Họ tên không được vượt quá 100 ký tự.',
-            
-            'email.required'     => 'Email không được để trống.',
-            'email.email'        => 'Định dạng email không hợp lệ.',
             'email.unique'       => 'Email này đã bị trùng lặp với nhân sự khác.',
-            
             'password.min'       => 'Mật khẩu mới phải có ít nhất 6 ký tự.',
-            'password.max'       => 'Mật khẩu vượt quá giới hạn hệ thống.',
-            'password.confirmed' => 'Xác nhận mật khẩu mới không khớp. Vui lòng kiểm tra lại.',
-            
+            'password.confirmed' => 'Xác nhận mật khẩu mới không khớp.',
             'role_id.required'   => 'Vui lòng chọn chức vụ cho tài khoản.',
-            'role_id.exists'     => 'Chức vụ này không tồn tại hoặc đã bị xóa.',
-            
-            'phone.regex'        => 'Số điện thoại không hợp lệ (Vui lòng nhập SĐT Việt Nam).',
-            'avatar.image'       => 'File tải lên bắt buộc phải là hình ảnh.',
-            'avatar.max'         => 'Dung lượng ảnh không được vượt quá 5MB.',
+            'phone.regex'        => 'Số điện thoại không hợp lệ.',
         ];
+    }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $adminId = $this->route('admin') ?? $this->route('id');
+            $targetAdmin = Admin::find($adminId);
+            
+            if (!$targetAdmin) return;
+
+            $currentUser = $this->user();
+            $currentUserLevel = $currentUser?->role->level ?? 999;
+            $newRoleId = $this->input('role_id');
+
+            if ($newRoleId && $newRoleId != $targetAdmin->role_id) {
+                
+                if ($targetAdmin->id === $currentUser?->id && $currentUserLevel !== 1) {
+                    $validator->errors()->add('role_id', 'Lỗi bảo mật: Bạn không thể tự thay đổi chức vụ của chính mình.');
+                }
+
+                $targetRole = Role::find($newRoleId);
+                if ($targetRole && $currentUserLevel >= $targetRole->level && $currentUserLevel !== 1) {
+                    $validator->errors()->add('role_id', 'Lỗi phân quyền: Bạn không thể thăng cấp nhân sự này lên chức vụ ngang hoặc cao hơn quyền của mình.');
+                }
+            }
+        });
     }
 }

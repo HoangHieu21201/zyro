@@ -1,7 +1,5 @@
 <?php
 
-// File: backend/app/Http/Controllers/Api/Admin/AdminController.php
-
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
@@ -19,7 +17,6 @@ class AdminController extends Controller
 {
     private string $cacheKey = 'admin_users_list';
 
-    // Danh sách nhân sự
     public function index(): JsonResponse
     {
         try {
@@ -33,11 +30,12 @@ class AdminController extends Controller
         }
     }
 
-    // Tạo mới Admin
     public function store(StoreAdminRequest $request): JsonResponse
     {
         try {
+            // Dữ liệu đã được quét qua bức tường lửa tại StoreAdminRequest
             $data = $request->validated();
+            
             $data['password'] = Hash::make($data['password']);
             $data['email_verified_at'] = now();
             $data['status'] = $data['status'] ?? 'active';
@@ -50,7 +48,6 @@ class AdminController extends Controller
             $admin->load('role');
 
             Cache::forget($this->cacheKey);
-
             broadcast(new AdminEvent('created', $admin))->toOthers();
 
             return response()->json(['success' => true, 'message' => 'Tạo tài khoản thành công!', 'data' => $admin], 201);
@@ -59,7 +56,6 @@ class AdminController extends Controller
         }
     }
 
-    // Chi tiết nhân sự
     public function show($id): JsonResponse
     {
         try {
@@ -70,18 +66,18 @@ class AdminController extends Controller
         }
     }
 
-    //Cập nhật thông tin nhân sự
     public function update(UpdateAdminRequest $request, $id): JsonResponse
     {
         try {
             $admin = Admin::findOrFail($id);
-            /** @var \App\Models\Admin|null $currentUser */
             $currentUser = $request->user();
 
+            // Bảo vệ tuyệt đối Founder
             if ($admin->id == 1 && $currentUser?->id != 1) {
                 return response()->json(['success' => false, 'message' => 'Bạn không có quyền sửa tài khoản của Người sáng lập!'], 403);
             }
 
+            // Dữ liệu đã được phân quyền và kiểm tra chặt chẽ ở UpdateAdminRequest
             $data = $request->validated();
 
             if (!empty($data['password'])) {
@@ -106,7 +102,6 @@ class AdminController extends Controller
             $admin->load('role');
 
             Cache::forget($this->cacheKey);
-
             broadcast(new AdminEvent('updated', $admin))->toOthers();
 
             return response()->json(['success' => true, 'message' => 'Cập nhật tài khoản thành công!']);
@@ -121,6 +116,9 @@ class AdminController extends Controller
             $admin = Admin::findOrFail($id);
             /** @var \App\Models\Admin|null $currentUser */
             $currentUser = $request->user();
+            
+            // Lấy level của người đang thao tác
+            $currentUserLevel = $currentUser?->role->level ?? 999;
 
             if ($admin->id == 1) {
                 return response()->json(['success' => false, 'message' => 'Không thể xóa Người sáng lập của hệ thống!'], 403);
@@ -130,10 +128,15 @@ class AdminController extends Controller
                 return response()->json(['success' => false, 'message' => 'Bạn không thể tự khóa/xóa chính mình đang thao tác!'], 400);
             }
 
+            // BỨC TƯỜNG LỬA: Cấp dưới không được xóa cấp trên hoặc ngang hàng
+            $targetLevel = $admin->role->level ?? 999;
+            if ($currentUserLevel >= $targetLevel && $currentUserLevel !== 1) {
+                return response()->json(['success' => false, 'message' => 'Bạn không có quyền xóa tài khoản của người có chức vụ ngang bằng hoặc cao hơn mình!'], 403);
+            }
+
             $admin->delete();
 
             Cache::forget($this->cacheKey);
-
             broadcast(new AdminEvent('deleted', $admin))->toOthers();
             
             return response()->json(['success' => true, 'message' => 'Đã chuyển tài khoản vào thùng rác!']);
@@ -155,7 +158,6 @@ class AdminController extends Controller
             $admin->load('role');
 
             Cache::forget($this->cacheKey);
-
             broadcast(new AdminEvent('restored', $admin))->toOthers();
 
             return response()->json(['success' => true, 'message' => 'Đã khôi phục tài khoản nhân viên thành công!']);

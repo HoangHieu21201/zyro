@@ -49,6 +49,14 @@ class VoucherController extends Controller
             $data['code'] = strtoupper($data['code']);
             $data['usage_count'] = 0; 
 
+            // =========================================================
+            // ĐÃ BỔ SUNG: Vệ sinh dữ liệu (Sanitize Data) trước khi lưu
+            // Chuyển rỗng hoặc 0 thành Null để Database hiểu là "Không giới hạn"
+            // =========================================================
+            if (empty($data['usage_limit']) || $data['usage_limit'] <= 0) $data['usage_limit'] = null;
+            if (empty($data['usage_limit_per_user']) || $data['usage_limit_per_user'] <= 0) $data['usage_limit_per_user'] = null;
+            if (empty($data['max_discount_amount']) || $data['max_discount_amount'] <= 0) $data['max_discount_amount'] = null;
+
             $voucher = Voucher::create($data);
 
             $this->clearCache();
@@ -76,6 +84,13 @@ class VoucherController extends Controller
             $voucher = Voucher::findOrFail($id);
             $data = $request->validated();
             $data['code'] = strtoupper($data['code']);
+
+            // =========================================================
+            // ĐÃ BỔ SUNG: Vệ sinh dữ liệu (Sanitize Data) trước khi lưu
+            // =========================================================
+            if (empty($data['usage_limit']) || $data['usage_limit'] <= 0) $data['usage_limit'] = null;
+            if (empty($data['usage_limit_per_user']) || $data['usage_limit_per_user'] <= 0) $data['usage_limit_per_user'] = null;
+            if (empty($data['max_discount_amount']) || $data['max_discount_amount'] <= 0) $data['max_discount_amount'] = null;
 
             $voucher->update($data);
 
@@ -110,6 +125,7 @@ class VoucherController extends Controller
         try {
             $voucher = Voucher::findOrFail($id);
 
+            // Logic khóa mã cũ này rất thông minh để tránh lỗi Duplicate Code khi tạo mã mới
             $voucher->code = $voucher->code . '_del_' . time();
             $voucher->save();
             $voucher->delete();
@@ -129,6 +145,8 @@ class VoucherController extends Controller
             $voucher = Voucher::withTrashed()->findOrFail($id);
             
             $originalCode = preg_replace('/_del_\d+$/', '', $voucher->code);
+            
+            // Kiểm tra xem trong thời gian mã này bị xóa, có ai tạo mã mới trùng tên không
             if (Voucher::where('code', $originalCode)->whereNull('deleted_at')->exists()) {
                 return response()->json(['success' => false, 'message' => 'Mã Code này đã bị sử dụng trong thời gian bị xóa, không thể khôi phục.'], 400);
             }
