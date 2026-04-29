@@ -1,7 +1,5 @@
 <?php
 
-// File: backend/app/Http/Requests/Voucher/StoreVoucherRequest.php
-
 namespace App\Http\Requests\Voucher;
 
 use Illuminate\Foundation\Http\FormRequest;
@@ -17,18 +15,16 @@ class StoreVoucherRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // ĐÃ THÊM min:3
             'name'                 => ['required', 'string', 'min:3', 'max:255'],
             'code'                 => [
                 'required',
                 'string',
                 'min:4',
                 'max:30',
-                'regex:/^[A-Z0-9]+$/', // Mã chỉ gồm chữ IN HOA và số
+                'regex:/^[A-Z0-9]+$/',
                 Rule::unique('vouchers', 'code')->whereNull('deleted_at')
             ],
             'discount_type'        => ['required', 'string', Rule::in(['fixed', 'percent'])],
-            // ĐÃ THÊM MAX ĐỂ CHỐNG TRÀN SỐ DỮ LIỆU CỦA DATABASE
             'discount_value'       => ['required', 'numeric', 'min:0', 'max:9999999999'],
             'max_discount_amount'  => ['nullable', 'numeric', 'min:0', 'max:9999999999'],
             'min_spend'            => ['required', 'numeric', 'min:0', 'max:9999999999'],
