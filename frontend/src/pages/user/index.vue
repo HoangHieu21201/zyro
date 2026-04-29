@@ -1,6 +1,7 @@
 <template>
-  <div class="home-page-wrapper">
-    <HeroBanner :banners="homeData.hero_banners" />
+   <div class="home-page-wrapper">
+    <!-- ĐÃ FIX: Truyền cờ isLoading vào HeroBanner để kích hoạt Skeleton -->
+    <HeroBanner :banners="homeData.hero_banners" :is-loading="isLoading" />
 
     <!-- ĐÃ FIX: Chuyển @compare thành compareStore.add -->
     <FlashSaleSection 

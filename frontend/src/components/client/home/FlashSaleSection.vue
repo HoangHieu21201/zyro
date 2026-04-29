@@ -1,5 +1,4 @@
 <template>
-  <!-- HIỂN THỊ KHI ĐANG LOADING HOẶC KHI CÓ DỮ LIỆU SẢN PHẨM -->
   <section v-if="isLoading || (flashSale && flashSale.products && flashSale.products.length > 0)" class="flash-sale-section py-5" style="background-color: #ffb482;">
     <div class="zyro-container">
       <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
@@ -21,22 +20,21 @@
       </div>
 
       <div class="zyro-product-grid">
-        <!-- ============================================== -->
-        <!-- SKELETON LOADING (Ánh trắng cho nền Cam)        -->
-        <!-- ============================================== -->
         <template v-if="isLoading">
           <div v-for="i in 5" :key="'fs-skel-' + i" class="skeleton-card w-100" aria-hidden="true">
-             <div class="skeleton-img-wrapper shimmer-orange rounded-3 mb-3 w-100" style="aspect-ratio: 3/4;"></div>
+             <div class="skeleton-img-wrapper shimmer-orange rounded-3 mb-3 w-100"></div>
              <div class="product-info px-1 w-100">
-               <div class="skeleton-price shimmer-orange mb-2" style="height: 22px; width: 45%; border-radius: 4px;"></div>
-               <div class="skeleton-title shimmer-orange mb-3" style="height: 16px; width: 90%; border-radius: 4px;"></div>
+               <div class="skeleton-price shimmer-orange mb-2"></div>
+               <div class="skeleton-title shimmer-orange mb-3"></div>
+               <div class="d-flex gap-2">
+                  <div class="skeleton-swatch shimmer-orange rounded-circle"></div>
+                  <div class="skeleton-swatch shimmer-orange rounded-circle"></div>
+                  <div class="skeleton-swatch shimmer-orange rounded-circle"></div>
+               </div>
              </div>
           </div>
         </template>
 
-        <!-- ============================================== -->
-        <!-- SẢN PHẨM THẬT                                  -->
-        <!-- ============================================== -->
         <template v-else-if="flashSale && flashSale.products">
           <ProductCard class="h-100" v-for="product in flashSale.products.slice(0, 5)" :key="'fs' + product.id" :product="product"
             @quick-view="$emit('quick-view', $event)" @compare="$emit('compare', $event)" @wishlist="$emit('wishlist', $event)" @options="$emit('options', $event)" />
@@ -50,7 +48,6 @@
 import { ref, onUnmounted, watch } from 'vue';
 import ProductCard from '@/components/client/ProductCard.vue';
 
-// ĐÃ THÊM: Prop isLoading
 const props = defineProps({ 
   flashSale: Object,
   isLoading: Boolean 
@@ -62,7 +59,7 @@ const countdown = ref({ days: '00', hours: '00', minutes: '00', seconds: '00' })
 let timerInterval = null;
 
 const updateCountdown = () => {
-  if (!props.flashSale) return; // Bảo vệ khi đang loading (flashSale = null)
+  if (!props.flashSale) return;
   
   const now = new Date().getTime();
   const startTime = new Date(props.flashSale.start_time).getTime();
@@ -105,13 +102,13 @@ onUnmounted(() => { if(timerInterval) clearInterval(timerInterval); });
 .hover-scale:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15); }
 .transition-all { transition: all 0.3s ease; }
 
-/* ======================================================
-   SKELETON DÀNH RIÊNG CHO NỀN CAM (ÁNH TRẮNG LẤP LÁNH)
-====================================================== */
 .skeleton-card { width: 100%; }
+.skeleton-img-wrapper { aspect-ratio: 3 / 4; background-color: rgba(255, 255, 255, 0.3); }
+.skeleton-price { height: 22px; width: 45%; border-radius: 4px; background-color: rgba(255, 255, 255, 0.3); }
+.skeleton-title { height: 16px; width: 90%; border-radius: 4px; background-color: rgba(255, 255, 255, 0.3); }
+.skeleton-swatch { width: 18px; height: 18px; background-color: rgba(255, 255, 255, 0.3); }
 
 .shimmer-orange {
-  background: rgba(255, 255, 255, 0.3);
   background-image: linear-gradient(
     to right, 
     rgba(255, 255, 255, 0.15) 0%, 
@@ -124,7 +121,6 @@ onUnmounted(() => { if(timerInterval) clearInterval(timerInterval); });
   animation: placeholderShimmerOrange 1.5s infinite linear;
 }
 html.dark .shimmer-orange {
-  background: rgba(0, 0, 0, 0.2);
   background-image: linear-gradient(to right, rgba(0, 0, 0, 0.1) 0%, rgba(255, 255, 255, 0.15) 20%, rgba(0, 0, 0, 0.1) 40%, rgba(0, 0, 0, 0.1) 100%);
 }
 

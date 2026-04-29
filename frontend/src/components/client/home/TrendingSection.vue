@@ -10,10 +10,8 @@
       </div>
 
       <div class="zyro-product-grid">
-        <!-- BANNER BÊN TRÁI -->
         <div class="banner-span-2 position-relative rounded-4 overflow-hidden group cursor-pointer shadow-sm w-100 h-100">
           
-          <!-- ĐÃ FIX: Lấy data.banner.image từ Backend, dùng fallback /client_placeholder.png từ public folder -->
           <img :src="data?.banner?.image || '/client_placeholder.png'" 
                class="position-absolute top-0 start-0 w-100 h-100 object-fit-cover object-position-top transition-transform group-hover-zoom" 
                :alt="data?.banner?.title || 'Trending Banner'"
@@ -25,14 +23,27 @@
             <h2 class="text-white fw-bold mb-2 text-shadow-lg text-uppercase tracking-widest">{{ data?.banner?.title || 'Độ Dáng Ngày Hè' }}</h2>
             <p class="text-white mb-3 text-shadow fw-medium">Tự tin tỏa sáng mọi góc nhìn!</p>
             
-            <!-- Link theo URL của banner, nếu không có thì trỏ về /category -->
             <router-link :to="data?.banner?.url || '/category'" class="btn btn-light rounded-pill px-4 fw-bold shadow-sm pe-auto">
               Khám phá ngay <i class="bi bi-arrow-right"></i>
             </router-link>
           </div>
         </div>
 
-        <div v-if="isLoading" class="banner-span-3 text-center py-5 w-100 d-flex justify-content-center align-items-center"><span class="spinner-border text-muted"></span></div>
+        <template v-if="isLoading">
+          <div v-for="i in 8" :key="'ts-skel-' + i" class="skeleton-card w-100" aria-hidden="true">
+             <div class="skeleton-img-wrapper shimmer rounded-3 mb-3 w-100"></div>
+             <div class="product-info px-1 w-100">
+               <div class="skeleton-price shimmer mb-2"></div>
+               <div class="skeleton-title shimmer mb-3"></div>
+               <div class="d-flex gap-2">
+                 <div class="skeleton-swatch shimmer rounded-circle"></div>
+                 <div class="skeleton-swatch shimmer rounded-circle"></div>
+                 <div class="skeleton-swatch shimmer rounded-circle"></div>
+               </div>
+             </div>
+          </div>
+        </template>
+        
         <div v-else-if="currentProducts.length === 0" class="banner-span-3 text-center py-5 w-100 d-flex justify-content-center align-items-center text-muted fst-italic">Chưa có sản phẩm.</div>
         
         <div style="display: contents;" v-else>
@@ -78,7 +89,25 @@ html.dark .section-tabs .nav-link { color: #adb5bd; } html.dark .section-tabs .n
 .text-shadow { text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5); } .text-shadow-lg { text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7); }
 .tracking-widest { letter-spacing: 2px; } .tracking-wide { letter-spacing: 1px; }
 .transition-all { transition: all 0.3s ease; }
-
-/* Thêm class object-position-top để lỡ xài ảnh người mẫu thì không bị mất đầu */
 .object-position-top { object-position: top center; }
+
+.skeleton-card { width: 100%; }
+.skeleton-img-wrapper { aspect-ratio: 3 / 4; background-color: #f0f0f0; }
+.skeleton-price { height: 22px; width: 45%; border-radius: 4px; background-color: #f0f0f0; }
+.skeleton-title { height: 16px; width: 90%; border-radius: 4px; background-color: #f0f0f0; }
+.skeleton-swatch { width: 18px; height: 18px; background-color: #f0f0f0; }
+html.dark .skeleton-img-wrapper, html.dark .skeleton-price, html.dark .skeleton-title, html.dark .skeleton-swatch { background-color: #2b3035; }
+
+.shimmer {
+  background: #f6f7f8;
+  background-image: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
+  background-repeat: no-repeat;
+  background-size: 800px 100%;
+  animation: placeholderShimmer 1.5s infinite linear;
+}
+html.dark .shimmer {
+  background: #2b3035;
+  background-image: linear-gradient(to right, #2b3035 0%, #343a40 20%, #2b3035 40%, #2b3035 100%);
+}
+@keyframes placeholderShimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
 </style>

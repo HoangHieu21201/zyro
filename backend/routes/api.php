@@ -28,7 +28,7 @@ use App\Http\Controllers\Api\Admin\FlashSaleController;
 use App\Http\Controllers\Api\Admin\DashboardController;
 use App\Http\Controllers\Api\Admin\InventoryController;
 use App\Http\Controllers\Api\Admin\NotificationController;
-use App\Http\Controllers\Api\admin\AdminContactController;
+use App\Http\Controllers\Api\Admin\AdminContactController;
 
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Client\HomeController;
@@ -66,6 +66,10 @@ Route::prefix('v1/admin')->group(function () {
         Route::post('logout', [AdminAuthController::class, 'logout']);
         Route::post('profile/info', [AdminProfileController::class, 'updateInfo']);
         Route::put('profile/password', [AdminProfileController::class, 'updatePassword']);
+
+        // quản lý liên hệ hộp thư
+        Route::post('contacts/{id}/reply', [AdminContactController::class, 'reply']);
+        Route::apiResource('contacts', AdminContactController::class);
 
         Route::middleware(['check.module:admin_staff'])->group(function () {
             Route::post('admins/{id}/restore', [AdminController::class, 'restore']);
@@ -144,9 +148,6 @@ Route::prefix('v1/admin')->group(function () {
             Route::apiResource('reviews', ReviewController::class)->except(['store', 'update']);
         });
 
-        Route::post('contacts/{id}/reply', [\App\Http\Controllers\Api\admin\AdminContactController::class, 'reply']);
-        Route::apiResource('contacts', \App\Http\Controllers\Api\admin\AdminContactController::class);
-
         Route::middleware(['check.module:admin_wishlists'])->group(function () {
             Route::apiResource('wishlists', WishlistController::class)->only(['index', 'destroy']);
         });
@@ -160,13 +161,13 @@ Route::prefix('v1/admin')->group(function () {
         });
 
         Route::middleware(['check.module:admin_flash_sales'])->group(function () {
-            Route::patch('flash_sales/{id}/status', [\App\Http\Controllers\Api\Admin\FlashSaleController::class, 'updateStatus']);
-            Route::apiResource('flash_sales', \App\Http\Controllers\Api\Admin\FlashSaleController::class);
+            Route::patch('flash_sales/{id}/status', [FlashSaleController::class, 'updateStatus']);
+            Route::apiResource('flash_sales', FlashSaleController::class);
         });
 
         Route::prefix('inventory')->group(function () {
             Route::get('variants', [InventoryController::class, 'getVariants']);
-            Route::put('variants/bulk-stock', [InventoryController::class, 'bulkUpdateVariantStock']); // Thêm dòng này
+            Route::put('variants/bulk-stock', [InventoryController::class, 'bulkUpdateVariantStock']);
             Route::put('variants/{id}/stock', [InventoryController::class, 'updateVariantStock']);
             Route::get('lookbooks', [InventoryController::class, 'getLookbooks']);
             Route::put('lookbooks/{id}/limit', [InventoryController::class, 'updateLookbookLimit']);
@@ -213,7 +214,6 @@ Route::prefix('v1/client')->group(function () {
         Route::post('cart/add-lookbook', [CartController::class, 'addLookbook']);
     });
 
-
     Route::middleware('auth:sanctum')->prefix('user')->group(function () {
         Route::get('/profile', [ClientProfileController::class, 'getProfile']);
         Route::put('/profile', [ClientProfileController::class, 'updateProfile']);
@@ -227,7 +227,6 @@ Route::prefix('v1/client')->group(function () {
         Route::post('/orders/{id}/cancel', [ClientOrderController::class, 'cancel']);
         Route::post('/orders/{id}/return', [ClientOrderController::class, 'requestReturn']);
         Route::post('/orders/{id}/buy-again', [ClientOrderController::class, 'buyAgain']);
-        Route::get('/orders/{id}/review-items', [ClientReviewController::class, 'getItemsForReview']);
 
         Route::get('/wishlist', [ClientWishlistController::class, 'index']);
         Route::post('/wishlist/toggle', [ClientWishlistController::class, 'toggle']);
@@ -241,6 +240,8 @@ Route::prefix('v1/client')->group(function () {
         Route::post('/process', [ClientCheckoutController::class, 'processCheckout']);
     });
 
+    // luồng return cho trình duyệt khách (chỉ redirect)
     Route::get('/checkout/momo-return', [ClientCheckoutController::class, 'momoReturn']);
-    Route::post('/checkout/momo-return', [ClientCheckoutController::class, 'momoReturn']);
+    // luồng ipn ngầm cho server momo (nơi kiểm tra số tiền và chốt đơn)
+    Route::post('/checkout/momo-ipn', [ClientCheckoutController::class, 'momoIpn']);
 });

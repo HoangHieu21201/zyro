@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 
 class ClientReviewController extends Controller
 {
-    // Lấy TẤT CẢ sản phẩm kèm dữ liệu Đánh giá cũ (nếu có)
+    // lấy tất cả sản phẩm kèm dữ liệu đánh giá cũ (nếu có)
     public function getItemsForReview($orderId)
     {
         try {
@@ -23,13 +23,13 @@ class ClientReviewController extends Controller
             $items = $order->items->map(function ($item) use ($orderId) {
                 $itemData = $item->toArray();
                 
-                // Lấy dữ liệu đánh giá cũ nếu đã từng đánh giá
+                // lấy dữ liệu đánh giá cũ nếu đã từng đánh giá
                 $oldReview = Review::where('order_id', $orderId)
                                     ->where('product_id', $item->product_id)
                                     ->first();
                                     
                 $itemData['is_reviewed'] = $oldReview ? true : false;
-                $itemData['review_data'] = $oldReview; // Trả về frontend để hiện lại lên form
+                $itemData['review_data'] = $oldReview; 
                 return $itemData;
             });
 
@@ -40,7 +40,7 @@ class ClientReviewController extends Controller
         }
     }
 
-    // Update hoặc Create Review mới
+    // tạo mới hoặc cập nhật review
     public function store(Request $request)
     {
         try {
@@ -49,6 +49,8 @@ class ClientReviewController extends Controller
                 'reviews' => 'required|array',
                 'reviews.*.product_id' => 'required|integer|exists:products,id',
                 'reviews.*.rating' => 'required|integer|min:1|max:5',
+                // bổ sung: chặn ảnh quá nặng hoặc file không phải là ảnh
+                'reviews.*.images.*' => 'nullable|image|max:5120', 
             ]);
 
             $user = Auth::user();
@@ -58,24 +60,30 @@ class ClientReviewController extends Controller
                 return response()->json(['success' => false, 'message' => 'Đơn hàng chưa hoàn thành.'], 400);
             }
 
-            $reviewsData = $request->allFiles()['reviews'] ?? []; 
             $inputs = $request->input('reviews', []);
 
             foreach ($inputs as $index => $itemReview) {
                 $oldReview = Review::where('order_id', $order->id)->where('product_id', $itemReview['product_id'])->first();
 
-                // Mặc định giữ lại ảnh cũ
+                // mặc định giữ lại ảnh cũ
                 $imagePaths = $oldReview ? $oldReview->images : []; 
 
-                // Nếu có upload ảnh mới thì GHI ĐÈ luôn ảnh cũ
-                if (isset($reviewsData[$index]['images'])) {
+                // sửa lỗi intelephense: lấy file an toàn qua helper của laravel
+                $uploadedImages = $request->file("reviews.{$index}.images");
+
+                // nếu có upload ảnh mới thì ghi đè
+                if ($uploadedImages) {
                     $imagePaths = [];
-                    foreach ($reviewsData[$index]['images'] as $image) {
+                    // ép kiểu mảng để intelephense không báo lỗi
+                    $imagesArray = is_array($uploadedImages) ? $uploadedImages : [$uploadedImages];
+                    
+                    foreach ($imagesArray as $image) {
+                        /** @var \Illuminate\Http\UploadedFile $image */
                         $imagePaths[] = $image->store('reviews', 'public');
                     }
                 }
 
-                // Dùng updateOrCreate: Nếu có rồi thì Cập nhật, chưa có thì Tạo mới
+                // nếu có rồi thì cập nhật, chưa có thì tạo mới
                 Review::updateOrCreate(
                     [
                         'order_id' => $order->id,

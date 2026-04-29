@@ -22,7 +22,6 @@ class ProcessCheckoutRequest extends FormRequest
             'user_address_id'  => ['nullable', 'integer', 'exists:user_addresses,id'],
             'order_note'       => ['nullable', 'string', 'max:1000'],
             'payment_method'   => ['required', 'in:cod,momo,vnpay'],
-            'shipping_fee'     => ['required', 'numeric', 'min:0'],
             'coupon_code'      => ['nullable', 'string', 'exists:vouchers,code'],
             
             'require_vat'      => ['nullable', 'boolean'],

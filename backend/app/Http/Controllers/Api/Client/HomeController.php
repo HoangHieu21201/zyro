@@ -32,7 +32,6 @@ class HomeController extends Controller
                         'target_url' => $b->target_url
                     ]);
 
-                // ĐÃ FIX: Eager load thêm category.parent để lấy được danh mục cha
                 $flashSale = FlashSale::where('status', 'active')
                     ->where('end_time', '>', now())
                     ->orderBy('start_time', 'asc')
@@ -73,7 +72,6 @@ class HomeController extends Controller
                     ];
                 }
 
-                // ĐÃ FIX: Eager load thêm category.parent cho danh sách chung
                 $baseQuery = Product::where('status', 'published')->with(['category.parent', 'brand', 'variants.attributeValues.attribute']);
 
                 $parentCategories = Category::whereNull('parent_id')->where('status', 'active')->orderBy('sort_order')->get(['id', 'name', 'slug']);
@@ -113,7 +111,6 @@ class HomeController extends Controller
                         ->map(fn($p) => $this->formatProduct($p));
                 }
 
-                // ĐÃ FIX: Eager load thêm category.parent cho Lookbook
                 $lookbooks = Lookbook::where('status', 'published')
                     ->with(['items.product.category.parent', 'items.product.brand', 'items.product.variants.attributeValues.attribute'])
                     ->orderBy('id', 'desc')
@@ -131,16 +128,13 @@ class HomeController extends Controller
                             'id' => $lb->id,
                             'name' => $lb->name,
                             'slug' => $lb->slug,
-                            'description' => $lb->description, // ĐÃ BỔ SUNG: Dùng làm Subtitle trong MegaMenu
+                            'description' => $lb->description, 
                             'main_image' => $this->getImageUrl($lb->main_image),
                             'price_estimate' => $lb->total_price_estimate,
                             'products' => $lbProducts
                         ];
                     });
 
-                // =======================================================
-                // ĐÃ THÊM: XÂY DỰNG CÂY DANH MỤC 3 CẤP CHO MEGA MENU
-                // =======================================================
                 $megaMenuCategories = Category::whereNull('parent_id')
                     ->where('status', 'active')
                     ->orderBy('sort_order')
@@ -148,7 +142,6 @@ class HomeController extends Controller
                         $q->where('status', 'active')
                           ->orderBy('sort_order')
                           ->with(['products' => function($q2) {
-                              // Lấy sẵn 4 sản phẩm mới nhất làm danh sách thả xuống
                               $q2->where('status', 'published')->orderBy('id', 'desc');
                           }]);
                     }])
@@ -164,7 +157,6 @@ class HomeController extends Controller
                                     'name' => $child->name,
                                     'slug' => $child->slug,
                                     'image' => $this->getImageUrl($child->thumbnail),
-                                    // Dùng hàm take(4) của Collection để lấy 4 sản phẩm đầu tiên
                                     'products' => $child->products->take(4)->pluck('name')->toArray()
                                 ];
                             })->values()->toArray()
@@ -188,7 +180,7 @@ class HomeController extends Controller
                         'products' => $kidsProducts
                     ],
                     'lookbooks' => $lookbooks,
-                    'mega_menu_categories' => $megaMenuCategories // ĐÃ THÊM: Truyền dữ liệu riêng cho Mega Menu
+                    'mega_menu_categories' => $megaMenuCategories 
                 ];
             });
 
@@ -227,9 +219,6 @@ class HomeController extends Controller
         return '#' . substr(md5($colorName), 0, 6);
     }
 
-    // ========================================================
-    // ĐÃ FIX: LẤY ĐẦY ĐỦ BRAND, CATEGORY VÀ CHUẨN HÓA LOGIC SIZE
-    // ========================================================
     private function formatProduct(Product $product): array
     {
         $defaultVariant = $product->variants->where('is_default', true)->first() ?? $product->variants->first();
@@ -249,7 +238,6 @@ class HomeController extends Controller
             $colorHex = null;
             $sizeName = null;
 
-            // Bóc tách Màu & Size (Kể cả khi người dùng không đặt tên chuẩn)
             foreach ($variant->attributeValues as $attrVal) {
                 $attr = $attrVal->attribute;
                 $attrName = $attr ? mb_strtolower($attr->name, 'UTF-8') : '';
@@ -258,7 +246,6 @@ class HomeController extends Controller
                     $colorName = $attrVal->value;
                     $colorHex = $attrVal->meta_value ?: $this->getVietnameseColorHex($colorName);
                 } else {
-                    // Nếu gặp nhiều thuộc tính khác màu, ta ghép nối lại (vd: "S - Cotton")
                     if ($sizeName) {
                         $sizeName .= ' - ' . $attrVal->value;
                     } else {
@@ -294,7 +281,6 @@ class HomeController extends Controller
                     $colors[$colorName]['out_of_stock'] = false;
                 }
 
-                // Gắn size vào mảng sizes của màu tương ứng (Chống lặp)
                 if ($sizeName) {
                     $exists = false;
                     foreach ($colors[$colorName]['sizes'] as $s) {
@@ -324,7 +310,6 @@ class HomeController extends Controller
             ];
         }
 
-        // ĐÃ BỔ SUNG: Ghép chuỗi Danh mục Cha | Danh mục Con
         $categoryData = null;
         if ($product->category) {
             $catName = $product->category->parent ? $product->category->parent->name . ' | ' . $product->category->name : $product->category->name;
@@ -353,7 +338,6 @@ class HomeController extends Controller
     {
         try {
             $categoryId = $request->query('category_id');
-            // ĐÃ FIX: Eager load chuẩn chỉnh
             $baseQuery = Product::where('status', 'published')->with(['category.parent', 'brand', 'variants.attributeValues.attribute']);
 
             if (!$categoryId || $categoryId === 'all') {
@@ -374,28 +358,21 @@ class HomeController extends Controller
         }
     }
 
-    // ========================================================
-    // ĐÃ THÊM: HÀM LẤY CHI TIẾT SẢN PHẨM (PRODUCT DETAIL)
-    // ========================================================
     public function getProductDetail($id): JsonResponse
     {
         try {
-            // Lấy SP kèm theo Danh mục, Thương hiệu, Thư viện ảnh, Biến thể
             $product = Product::where('status', 'published')
                 ->with(['category.parent', 'brand', 'images', 'variants.attributeValues.attribute'])
                 ->findOrFail($id);
 
-            // Tái sử dụng hàm format chuẩn của hệ thống để lấy màu sắc, size
             $formatted = $this->formatProduct($product);
             
-            // Bổ sung các trường chi tiết cần thiết cho riêng trang Detail
             $formatted['description'] = $product->description;
             $formatted['care_instructions'] = $product->care_instructions;
             $formatted['specifications'] = $product->specifications;
             $formatted['size_guide_url'] = $product->size_guide_url;
             $formatted['sku'] = $product->variants->first()?->sku ?? 'N/A';
             
-            // Bổ sung mảng Thư viện ảnh (Gallery)
             $gallery = [];
             if ($product->thumbnail_image) {
                 $gallery[] = $this->getImageUrl($product->thumbnail_image);
@@ -412,7 +389,7 @@ class HomeController extends Controller
     }
 
     // ========================================================
-    // ĐÃ THÊM: HÀM LẤY DỮ LIỆU TRANG DANH MỤC SẢN PHẨM
+    // ĐÃ FIX: NHẬN CÁC THAM SỐ LỌC (GIÁ, KÍCH CỠ, MÀU SẮC) TỪ FRONTEND
     // ========================================================
     public function getCategoryPageData(Request $request): JsonResponse
     {
@@ -420,13 +397,19 @@ class HomeController extends Controller
             $slug = $request->query('slug');
             $search = $request->query('search');
             $sort = $request->query('sort', 'newest');
+            
+            // Nhận tham số bộ lọc
+            $minPrice = $request->query('min_price');
+            $maxPrice = $request->query('max_price');
+            $colors = $request->query('colors');
+            $sizes = $request->query('sizes');
 
             $category = null;
             $subCategories = collect([]);
 
             $baseQuery = Product::where('status', 'published')->with(['category.parent', 'brand', 'variants.attributeValues.attribute']);
 
-            // 1. Nếu có Slug danh mục -> Lọc theo Cây danh mục
+            // 1. Lọc theo danh mục
             if ($slug) {
                 $category = Category::where('slug', $slug)->where('status', 'active')->first();
                 if ($category) {
@@ -434,19 +417,16 @@ class HomeController extends Controller
                     $baseQuery->whereIn('category_id', $catIds);
                     
                     if ($category->parent_id) {
-                        // Nếu là danh mục con -> Hiện các anh em cùng cấp
                         $subCategories = Category::where('parent_id', $category->parent_id)->where('status', 'active')->get();
                     } else {
-                        // Nếu là danh mục cha -> Hiện các con của nó
                         $subCategories = Category::where('parent_id', $category->id)->where('status', 'active')->get();
                     }
                 }
             } else {
-                // Nếu không có slug, lấy các danh mục gốc
                 $subCategories = Category::whereNull('parent_id')->where('status', 'active')->get();
             }
 
-            // 2. Nếu có từ khóa tìm kiếm (Từ Modal truyền qua)
+            // 2. Lọc theo từ khóa tìm kiếm
             if ($search) {
                 $baseQuery->where(function($q) use ($search) {
                     $q->where('name', 'ilike', '%' . $search . '%')
@@ -454,7 +434,32 @@ class HomeController extends Controller
                 });
             }
 
-            // 3. Sắp xếp
+            // 3. ÁP DỤNG BỘ LỌC (FILTERING)
+            // Lọc theo khoảng giá
+            if ($minPrice !== null || $maxPrice !== null) {
+                $baseQuery->where(function($q) use ($minPrice, $maxPrice) {
+                    // Lọc trên base_price của bảng products (Giá chung)
+                    if ($minPrice !== null) $q->where('base_price', '>=', $minPrice);
+                    if ($maxPrice !== null) $q->where('base_price', '<=', $maxPrice);
+                });
+            }
+
+            // Lọc xuyên thấu vào bảng biến thể để tìm Màu sắc và Kích cỡ
+            if ($colors) {
+                $colorArr = explode(',', $colors);
+                $baseQuery->whereHas('variants.attributeValues', function($q) use ($colorArr) {
+                    $q->whereIn('value', $colorArr);
+                });
+            }
+
+            if ($sizes) {
+                $sizeArr = explode(',', $sizes);
+                $baseQuery->whereHas('variants.attributeValues', function($q) use ($sizeArr) {
+                    $q->whereIn('value', $sizeArr);
+                });
+            }
+
+            // 4. Sắp xếp
             switch ($sort) {
                 case 'best_sales': $baseQuery->orderBy('sales_count', 'desc'); break;
                 case 'price_asc': $baseQuery->orderBy('base_price', 'asc'); break;
@@ -462,13 +467,14 @@ class HomeController extends Controller
                 case 'newest': default: $baseQuery->orderBy('id', 'desc'); break;
             }
 
-            // 4. Lấy 4 SP nổi bật (Top View) cho khung đỏ
+            // 5. Lấy 4 SP nổi bật (Dùng clone để không ảnh hưởng query chính)
             $highlightProducts = (clone $baseQuery)->orderBy('view_count', 'desc')->limit(4)->get()->map(fn($p) => $this->formatProduct($p));
             
-            // 5. Phân trang SP chính (Mỗi lần tải thêm 12 SP)
+            // 6. Phân trang SP chính
             $productsPaginator = $baseQuery->paginate(12);
             $mainProducts = collect($productsPaginator->items())->map(fn($p) => $this->formatProduct($p));
 
+            // Trả về data kèm theo danh sách các filter có sẵn để Frontend vẽ UI
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -478,7 +484,24 @@ class HomeController extends Controller
                     'products' => $mainProducts,
                     'current_page' => $productsPaginator->currentPage(),
                     'last_page' => $productsPaginator->lastPage(),
-                    'total' => $productsPaginator->total()
+                    'total' => $productsPaginator->total(),
+                    
+                    // Gửi danh sách tùy chọn lọc chuẩn cho ngành thời trang
+                    'available_filters' => [
+                        'sizes' => ['S', 'M', 'L', 'XL', 'XXL', 'Freesize'],
+                        'colors' => [
+                            ['name' => 'Đen', 'hex' => '#171717'],
+                            ['name' => 'Trắng', 'hex' => '#ffffff'],
+                            ['name' => 'Đỏ', 'hex' => '#ef4444'],
+                            ['name' => 'Xanh biển', 'hex' => '#3b82f6'],
+                            ['name' => 'Xanh rêu', 'hex' => '#4d7c0f'],
+                            ['name' => 'Vàng', 'hex' => '#eab308'],
+                            ['name' => 'Hồng', 'hex' => '#f472b6'],
+                            ['name' => 'Nâu', 'hex' => '#78350f'],
+                            ['name' => 'Xám', 'hex' => '#9ca3af'],
+                            ['name' => 'Be', 'hex' => '#f5f5dc'],
+                        ]
+                    ]
                 ]
             ]);
 
@@ -487,15 +510,12 @@ class HomeController extends Controller
         }
     }
 
-    // ========================================================
-    // ĐÃ FIX: TRÍCH XUẤT FULL DANH MỤC & NHẬN FILTER TỪ FRONTEND
-    // ========================================================
     public function getFlashSalePageData(Request $request): JsonResponse
     {
         try {
             $page = (int) $request->query('page', 1);
-            $categoryFilter = $request->query('category', 'all'); // Lọc danh mục
-            $sortFilter = $request->query('sort', 'default');     // Sắp xếp
+            $categoryFilter = $request->query('category', 'all'); 
+            $sortFilter = $request->query('sort', 'default');    
             $perPage = 12;
 
             $flashSale = FlashSale::where('status', 'active')
@@ -517,7 +537,6 @@ class HomeController extends Controller
 
             $fsProducts = [];
             
-            // 1. Trích xuất sản phẩm và tính giá
             foreach ($flashSale->items as $item) {
                 if (!$item->variant || !$item->variant->product || $item->variant->product->status !== 'published') continue;
 
@@ -541,7 +560,6 @@ class HomeController extends Controller
 
             $fsProductsList = array_values($fsProducts);
 
-            // 2. LẤY ĐẦY ĐỦ CÁC DANH MỤC TRƯỚC KHI LỌC/PHÂN TRANG
             $availableCategories = [];
             foreach ($fsProductsList as $p) {
                 $catName = isset($p['category']['name']) ? explode(' | ', $p['category']['name'])[0] : 'Sản phẩm khác';
@@ -551,7 +569,6 @@ class HomeController extends Controller
             }
             sort($availableCategories);
 
-            // 3. LỌC THEO DANH MỤC TỪ FRONTEND
             if ($categoryFilter !== 'all') {
                 $fsProductsList = array_filter($fsProductsList, function($p) use ($categoryFilter) {
                     $catName = isset($p['category']['name']) ? explode(' | ', $p['category']['name'])[0] : 'Sản phẩm khác';
@@ -559,7 +576,6 @@ class HomeController extends Controller
                 });
             }
 
-            // 4. SẮP XẾP THEO FRONTEND
             if ($sortFilter === 'price_asc') {
                 usort($fsProductsList, fn($a, $b) => $a['price'] <=> $b['price']);
             } elseif ($sortFilter === 'price_desc') {
@@ -568,7 +584,6 @@ class HomeController extends Controller
                 usort($fsProductsList, fn($a, $b) => ($b['discount_percent'] ?? 0) <=> ($a['discount_percent'] ?? 0));
             }
 
-            // 5. PHÂN TRANG
             $total = count($fsProductsList);
             $lastPage = ceil($total / $perPage) ?: 1;
             $offset = ($page - 1) * $perPage;
@@ -599,20 +614,15 @@ class HomeController extends Controller
         }
     }
 
-    // ========================================================
-    // ĐÃ THÊM MỚI: HÀM LẤY DANH SÁCH LOOKBOOK (INDEX PAGE)
-    // ========================================================
     public function getLookbookPageData(Request $request): JsonResponse
     {
         try {
-            // Phân trang mỗi lần tải 8 lookbook
             $paginator = Lookbook::where('status', 'published')
                 ->with(['items.product.category.parent', 'items.product.brand', 'items.product.variants.attributeValues.attribute'])
                 ->orderBy('id', 'desc')
                 ->paginate(8);
 
             $lookbooks = collect($paginator->items())->map(function ($lb) {
-                // Tái sử dụng logic formatProduct cho các SP bên trong
                 $lbProducts = $lb->items->map(function ($item) {
                     if ($item->product && $item->product->status === 'published') {
                         return $this->formatProduct($item->product);
@@ -627,7 +637,7 @@ class HomeController extends Controller
                     'description' => $lb->description,
                     'main_image' => $this->getImageUrl($lb->main_image),
                     'price_estimate' => $lb->total_price_estimate,
-                    'products' => $lbProducts // Trả về SP để frontend có thể preview nhanh nếu muốn
+                    'products' => $lbProducts 
                 ];
             });
 
@@ -645,9 +655,6 @@ class HomeController extends Controller
         }
     }
 
-    // ========================================================
-    // ĐÃ THÊM MỚI: HÀM LẤY CHI TIẾT 1 LOOKBOOK (DETAIL PAGE)
-    // ========================================================
     public function getLookbookDetail($slug): JsonResponse
     {
         try {
@@ -676,6 +683,46 @@ class HomeController extends Controller
             return response()->json(['success' => true, 'data' => $data]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Không tìm thấy Bộ sưu tập này'], 404);
+        }
+    }
+
+    /**
+     * TÌM KIẾM SẢN PHẨM TRỰC TIẾP
+     */
+    public function searchProducts(Request $request)
+    {
+        try {
+            $keyword = $request->input('q') ?? $request->input('keyword');
+
+            if (empty($keyword)) {
+                return response()->json([
+                    'success' => true,
+                    'data' => []
+                ]);
+            }
+
+            $products = \App\Models\Product::where('status', 'published')
+                ->where('name', 'ILIKE', '%' . $keyword . '%')
+                ->limit(10) 
+                ->get();
+
+            $formattedProducts = $products->map(function($product) {
+                $product->thumbnail_image = $product->thumbnail_image 
+                    ? (str_starts_with($product->thumbnail_image, 'http') ? $product->thumbnail_image : asset('storage/' . ltrim($product->thumbnail_image, '/')))
+                    : null;
+                return $product;
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $formattedProducts
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi tìm kiếm: ' . $e->getMessage()
+            ], 500);
         }
     }
 }
