@@ -12,21 +12,32 @@ use Illuminate\Http\Request;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\ProductVariant;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 
 class CartController extends Controller
 {
-    public function index(): JsonResponse
+    private function resolveUserOrSession(Request $request)
     {
-        $user = Auth::user();
+        $user = auth('sanctum')->user();
+        $sessionId = $request->header('X-Cart-Session-Id');
+        return [$user, $sessionId];
+    }
 
-        $cart = Cart::firstOrCreate(
-            ['user_id' => $user->id],
-            ['expired_at' => Carbon::now()->addDays(30)]
-        );
+    public function index(Request $request): JsonResponse
+    {
+        [$user, $sessionId] = $this->resolveUserOrSession($request);
+
+        if (!$user && !$sessionId) {
+            return response()->json(['success' => true, 'data' => [], 'cart_count' => 0]);
+        }
+
+        if ($user) {
+            $cart = Cart::firstOrCreate(['user_id' => $user->id], ['expired_at' => Carbon::now()->addDays(30)]);
+        } else {
+            $cart = Cart::firstOrCreate(['session_id' => $sessionId], ['expired_at' => Carbon::now()->addDays(30)]);
+        }
 
         $cartItems = $cart->items()
             ->with(['variant.attributeValues.attribute', 'variant.product', 'lookbook'])
@@ -37,7 +48,7 @@ class CartController extends Controller
             $product = $variant ? $variant->product : null;
 
             $isAvailable = $variant && $product && $product->status === 'published' && !$product->trashed();
-
+            
             $currentStock = $variant ? ($variant->stock_quantity - ($variant->reserved_stock ?? 0)) : 0;
             $stockWarning = $isAvailable && ($item->quantity > $currentStock) ? true : false;
 
@@ -76,7 +87,7 @@ class CartController extends Controller
         }
 
         return response()->json([
-            'success' => true,
+            'success' => true, 
             'data' => $formattedItems,
             'cart_count' => $cartCount
         ]);
@@ -84,9 +95,13 @@ class CartController extends Controller
 
     public function add(AddToCartRequest $request): JsonResponse
     {
-        $user = Auth::user();
+        [$user, $sessionId] = $this->resolveUserOrSession($request);
 
-        $lockKey = 'cart_action_lock_' . $user->id;
+        if (!$user && !$sessionId) {
+            return response()->json(['success' => false, 'message' => 'Hệ thống không nhận diện được phiên làm việc.'], 400);
+        }
+        
+        $lockKey = 'cart_action_lock_' . ($user ? 'u_' . $user->id : 's_' . $sessionId);
         $lock = Cache::lock($lockKey, 3);
 
         if (!$lock->get()) {
@@ -105,15 +120,16 @@ class CartController extends Controller
 
             $currentStock = $variant->stock_quantity - ($variant->reserved_stock ?? 0);
 
-            $cart = Cart::firstOrCreate(
-                ['user_id' => $user->id],
-                ['expired_at' => Carbon::now()->addDays(30)]
-            );
-
+            if ($user) {
+                $cart = Cart::firstOrCreate(['user_id' => $user->id], ['expired_at' => Carbon::now()->addDays(30)]);
+            } else {
+                $cart = Cart::firstOrCreate(['session_id' => $sessionId], ['expired_at' => Carbon::now()->addDays(30)]);
+            }
+            
             $existingItem = CartItem::where('cart_id', $cart->id)
-                ->where('variant_id', $variantId)
-                ->whereNull('lookbook_id')
-                ->first();
+                                    ->where('variant_id', $variantId)
+                                    ->whereNull('lookbook_id') 
+                                    ->first();
 
             $totalRequested = $existingItem ? $existingItem->quantity + $quantity : $quantity;
 
@@ -131,14 +147,15 @@ class CartController extends Controller
             } else {
                 CartItem::create([
                     'cart_id' => $cart->id,
-                    'product_id' => $variant->product_id,
+                    'product_id' => $variant->product_id, 
                     'variant_id' => $variantId,
                     'quantity' => $quantity,
-                    'lookbook_id' => null
+                    'lookbook_id' => null 
                 ]);
             }
 
             return response()->json(['success' => true, 'message' => 'Đã thêm vào giỏ hàng.']);
+            
         } finally {
             $lock->release();
         }
@@ -146,10 +163,13 @@ class CartController extends Controller
 
     public function updateQuantity(UpdateCartRequest $request, $itemId): JsonResponse
     {
-        $user = Auth::user();
+        [$user, $sessionId] = $this->resolveUserOrSession($request);
 
-        // khóa thao tác update để chống user spam click nút + -
-        $lockKey = 'cart_action_lock_' . $user->id;
+        if (!$user && !$sessionId) {
+            return response()->json(['success' => false, 'message' => 'Phiên làm việc đã hết hạn.'], 400);
+        }
+
+        $lockKey = 'cart_action_lock_' . ($user ? 'u_' . $user->id : 's_' . $sessionId);
         $lock = Cache::lock($lockKey, 3);
 
         if (!$lock->get()) {
@@ -157,34 +177,47 @@ class CartController extends Controller
         }
 
         try {
-            $quantity = $request->input('quantity');
-            $cart = Cart::where('user_id', $user->id)->first();
+            $quantity = (int) $request->input('quantity');
+            
+            if ($quantity <= 0 || $quantity > 50) {
+                return response()->json(['success' => false, 'message' => 'Lỗi bảo mật: Số lượng cập nhật không hợp lệ (Giới hạn: 1 - 50 sản phẩm).'], 400);
+            }
 
+            $cart = $user ? Cart::where('user_id', $user->id)->first() : Cart::where('session_id', $sessionId)->first();
             if (!$cart) return response()->json(['success' => false, 'message' => 'Giỏ hàng trống.'], 404);
 
             $cartItem = CartItem::where('cart_id', $cart->id)->find($itemId);
             if (!$cartItem) return response()->json(['success' => false, 'message' => 'Sản phẩm không có trong giỏ.'], 404);
 
-            // góc khuất 3: update đồng loạt nếu là hàng combo để chống vỡ cấu trúc
+            // =========================================================================================
+            // ĐÃ FIX QUY LUẬT TỶ LỆ COMBO BẰNG TOÁN HỌC (Multiplier = NewQty / OldQty)
+            // Khách có xé lẻ request ở Frontend thì Backend vẫn tự cân bằng lại TẤT CẢ các món trong Combo
+            // =========================================================================================
             if ($cartItem->lookbook_id) {
                 $comboItems = CartItem::where('cart_id', $cart->id)->where('lookbook_id', $cartItem->lookbook_id)->get();
+                
+                // Tính hệ số thay đổi dựa trên sản phẩm cụ thể vừa bị gửi Request
+                $oldQty = $cartItem->quantity;
+                $ratio = $quantity / $oldQty; 
 
-                // kiểm tra tồn kho cho tất cả món trong combo
+                // Quét kho toàn bộ Combo trước khi áp dụng để đảm bảo an toàn
                 foreach ($comboItems as $cItem) {
+                    $targetQty = round($cItem->quantity * $ratio);
                     $v = ProductVariant::find($cItem->variant_id);
                     $stock = $v ? ($v->stock_quantity - ($v->reserved_stock ?? 0)) : 0;
-                    if (!$v || $quantity > $stock) {
-                        return response()->json(['success' => false, 'message' => "Một sản phẩm trong bộ sưu tập chỉ còn {$stock} chiếc."], 400);
+                    
+                    if (!$v || $targetQty > $stock) {
+                        return response()->json(['success' => false, 'message' => "Một sản phẩm trong bộ sưu tập chỉ còn {$stock} chiếc, không đủ để tăng số lượng Combo."], 400);
                     }
                 }
-
-                // an toàn rồi thì update cả mảng
+                
+                // An toàn -> Áp dụng nhân hệ số cho toàn bộ món đồ trong Combo (Giữ nguyên cấu trúc Lookbook)
                 foreach ($comboItems as $cItem) {
-                    $cItem->quantity = $quantity;
+                    $cItem->quantity = round($cItem->quantity * $ratio);
                     $cItem->save();
                 }
             } else {
-                // xử lý hàng lẻ bình thường
+                // Sản phẩm lẻ thì cập nhật bình thường
                 $variant = ProductVariant::find($cartItem->variant_id);
                 $currentStock = $variant ? ($variant->stock_quantity - ($variant->reserved_stock ?? 0)) : 0;
 
@@ -202,16 +235,16 @@ class CartController extends Controller
         }
     }
 
-    public function remove($itemId): JsonResponse
+    public function remove(Request $request, $itemId): JsonResponse
     {
-        $user = Auth::user();
-        $cart = Cart::where('user_id', $user->id)->first();
-
+        [$user, $sessionId] = $this->resolveUserOrSession($request);
+        $cart = $user ? Cart::where('user_id', $user->id)->first() : Cart::where('session_id', $sessionId)->first();
+        
         if ($cart) {
             $cartItem = CartItem::where('cart_id', $cart->id)->find($itemId);
-
+            
             if ($cartItem) {
-                // góc khuất 3: xóa đồng loạt nếu là hàng combo
+                // LUÔN LUÔN DUY TRÌ: Đã xóa là xóa sạch nguyên Combo (Atomic Delete)
                 if ($cartItem->lookbook_id) {
                     CartItem::where('cart_id', $cart->id)->where('lookbook_id', $cartItem->lookbook_id)->delete();
                 } else {
@@ -224,9 +257,13 @@ class CartController extends Controller
 
     public function addLookbook(AddLookbookCartRequest $request): JsonResponse
     {
-        $user = Auth::user();
+        [$user, $sessionId] = $this->resolveUserOrSession($request);
 
-        $lockKey = 'cart_action_lock_' . $user->id;
+        if (!$user && !$sessionId) {
+            return response()->json(['success' => false, 'message' => 'Thiếu thông tin phiên làm việc.'], 400);
+        }
+        
+        $lockKey = 'cart_action_lock_' . ($user ? 'u_' . $user->id : 's_' . $sessionId);
         $lock = Cache::lock($lockKey, 3);
 
         if (!$lock->get()) {
@@ -242,36 +279,32 @@ class CartController extends Controller
                 return response()->json(['success' => false, 'message' => 'Vui lòng chọn sản phẩm trong combo.'], 400);
             }
 
-            $cart = Cart::firstOrCreate(
-                ['user_id' => $user->id],
-                ['expired_at' => Carbon::now()->addDays(30)]
-            );
+            if ($user) {
+                $cart = Cart::firstOrCreate(['user_id' => $user->id], ['expired_at' => Carbon::now()->addDays(30)]);
+            } else {
+                $cart = Cart::firstOrCreate(['session_id' => $sessionId], ['expired_at' => Carbon::now()->addDays(30)]);
+            }
 
             DB::beginTransaction();
             try {
-                // ========================================================
-                // GÓC KHUẤT 1: TÌM SỐ LƯỢNG COMBO TỐI ĐA CÓ THỂ THÊM VÀO
-                // (Chống vỡ cấu trúc Combo do 1 món bị thiếu tồn kho)
-                // ========================================================
                 $maxCombosToAdd = $requestedCombos;
 
                 foreach ($selections as $item) {
                     $variant = ProductVariant::with('product')->find($item['variant_id']);
-
+                    
                     if (!$variant || !$variant->product || $variant->product->status !== 'published') {
-                        $maxCombosToAdd = 0; // có 1 sp ngừng bán -> hủy toàn bộ combo
+                        $maxCombosToAdd = 0; 
                         break;
                     }
 
                     $currentStock = $variant->stock_quantity - ($variant->reserved_stock ?? 0);
                     $existingItem = CartItem::where('cart_id', $cart->id)
-                        ->where('variant_id', $item['variant_id'])
-                        ->where('lookbook_id', $lookbookId)
-                        ->first();
+                                            ->where('variant_id', $item['variant_id'])
+                                            ->where('lookbook_id', $lookbookId)
+                                            ->first();
 
                     $existingQty = $existingItem ? $existingItem->quantity : 0;
-
-                    // tính số combo cho phép với sp hiện tại
+                    
                     $multiplier = (int)($item['quantity'] ?? 1);
                     if ($multiplier <= 0) $multiplier = 1;
 
@@ -288,26 +321,23 @@ class CartController extends Controller
                     return response()->json(['success' => false, 'message' => 'Một số sản phẩm trong bộ sưu tập đã cạn kho hoặc bạn đã đạt giới hạn mua.'], 400);
                 }
 
-                // Nếu maxCombos + existing bị đẩy > 50, ép xuống 50 để chống bypass
-                // Mặc định ZYRO tối đa 50 item mỗi loại
                 $finalAddedCombos = min($maxCombosToAdd, 50);
-
-                // Lưu các món vào giỏ với số lượng đã được chốt (finalAddedCombos)
                 $addedCount = 0;
+
                 foreach ($selections as $item) {
                     $variantId = $item['variant_id'];
                     $multiplier = (int)($item['quantity'] ?? 1);
                     if ($multiplier <= 0) $multiplier = 1;
-
+                    
                     $itemQty = $multiplier * $finalAddedCombos;
                     $attributes = $item['attributes'] ?? null;
 
                     $variant = ProductVariant::find($variantId);
-
+                    
                     $existingItem = CartItem::where('cart_id', $cart->id)
-                        ->where('variant_id', $variantId)
-                        ->where('lookbook_id', $lookbookId)
-                        ->first();
+                                            ->where('variant_id', $variantId)
+                                            ->where('lookbook_id', $lookbookId)
+                                            ->first();
 
                     $totalQty = $existingItem ? $existingItem->quantity + $itemQty : $itemQty;
                     if ($totalQty > 50) $totalQty = 50;
@@ -331,93 +361,106 @@ class CartController extends Controller
                 }
 
                 DB::commit();
-
+                
                 $msg = "Đã thêm bộ sưu tập vào giỏ hàng.";
                 if ($finalAddedCombos < $requestedCombos) {
                     $msg = "Chỉ thêm được $finalAddedCombos combo do giới hạn tồn kho.";
                 }
-
+                
                 return response()->json(['success' => true, 'message' => $msg]);
+
             } catch (\Exception $e) {
                 DB::rollBack();
                 return response()->json(['success' => false, 'message' => 'Lỗi thêm Lookbook: ' . $e->getMessage()], 500);
             }
         } finally {
-            $lock->release();
+            $lock->release(); 
         }
     }
 
     public function merge(MergeCartRequest $request): JsonResponse
     {
-        $user = Auth::user();
-        $localItems = $request->input('local_items', []);
-
-        if (empty($localItems)) {
-            return response()->json(['success' => true]);
+        $user = auth('sanctum')->user();
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Bạn cần đăng nhập để đồng bộ giỏ hàng.'], 401);
         }
 
-        $cart = Cart::firstOrCreate(
-            ['user_id' => $user->id],
-            ['expired_at' => Carbon::now()->addDays(30)]
-        );
+        $lockKey = 'cart_action_lock_u_' . $user->id;
+        $lock = Cache::lock($lockKey, 5);
 
-        DB::beginTransaction();
+        if (!$lock->get()) {
+            return response()->json(['success' => false, 'message' => 'Hệ thống đang đồng bộ, vui lòng thao tác chậm lại.'], 429);
+        }
+
         try {
-            foreach ($localItems as $item) {
-                $variantId = $item['variant_id'];
-                $quantity = (int) $item['quantity'];
+            $localItems = $request->input('local_items', []);
 
-                // góc khuất 2: đọc thêm lookbook_id từ frontend truyền lên
-                $lookbookId = $item['lookbook_id'] ?? null;
-                $selections = $item['lookbook_selections'] ?? null;
-
-                $variant = ProductVariant::with('product')->find($variantId);
-
-                if (!$variant || !$variant->product || $variant->product->status !== 'published') {
-                    continue;
-                }
-
-                $currentStock = $variant->stock_quantity - ($variant->reserved_stock ?? 0);
-
-                // query chính xác phân biệt hàng combo và hàng lẻ
-                $query = CartItem::where('cart_id', $cart->id)
-                    ->where('variant_id', $variantId);
-
-                if ($lookbookId) {
-                    $query->where('lookbook_id', $lookbookId);
-                } else {
-                    $query->whereNull('lookbook_id');
-                }
-
-                $existingItem = $query->first();
-
-                $totalRequested = $existingItem ? $existingItem->quantity + $quantity : $quantity;
-                if ($totalRequested > 50) $totalRequested = 50;
-                if ($totalRequested > $currentStock) $totalRequested = $currentStock;
-                if ($totalRequested <= 0) continue;
-
-                if ($existingItem) {
-                    $existingItem->quantity = $totalRequested;
-                    if ($lookbookId && $selections) {
-                        $existingItem->lookbook_selections = $selections;
-                    }
-                    $existingItem->save();
-                } else {
-                    CartItem::create([
-                        'cart_id' => $cart->id,
-                        'product_id' => $variant->product_id,
-                        'variant_id' => $variantId,
-                        'quantity' => $totalRequested,
-                        'lookbook_id' => $lookbookId,
-                        'lookbook_selections' => $selections
-                    ]);
-                }
+            if (empty($localItems)) {
+                return response()->json(['success' => true]);
             }
-            DB::commit();
-            return response()->json(['success' => true, 'message' => 'Đồng bộ giỏ hàng thành công']);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['success' => false, 'message' => 'Lỗi đồng bộ giỏ hàng'], 500);
+
+            $cart = Cart::firstOrCreate(
+                ['user_id' => $user->id],
+                ['expired_at' => Carbon::now()->addDays(30)]
+            );
+
+            DB::beginTransaction();
+            try {
+                foreach ($localItems as $item) {
+                    $variantId = $item['variant_id'];
+                    $quantity = (int) $item['quantity'];
+                    
+                    $lookbookId = $item['lookbook_id'] ?? null;
+                    $selections = $item['lookbook_selections'] ?? null;
+
+                    $variant = ProductVariant::with('product')->find($variantId);
+                    
+                    if (!$variant || !$variant->product || $variant->product->status !== 'published') {
+                        continue;
+                    }
+
+                    $currentStock = $variant->stock_quantity - ($variant->reserved_stock ?? 0);
+
+                    $query = CartItem::where('cart_id', $cart->id)->where('variant_id', $variantId);
+                                     
+                    if ($lookbookId) {
+                        $query->where('lookbook_id', $lookbookId);
+                    } else {
+                        $query->whereNull('lookbook_id');
+                    }
+                    
+                    $existingItem = $query->first();
+
+                    $totalRequested = $existingItem ? $existingItem->quantity + $quantity : $quantity;
+                    if ($totalRequested > 50) $totalRequested = 50;
+                    if ($totalRequested > $currentStock) $totalRequested = $currentStock;
+                    if ($totalRequested <= 0) continue;
+
+                    if ($existingItem) {
+                        $existingItem->quantity = $totalRequested;
+                        if ($lookbookId && $selections) {
+                            $existingItem->lookbook_selections = $selections;
+                        }
+                        $existingItem->save();
+                    } else {
+                        CartItem::create([
+                            'cart_id' => $cart->id,
+                            'product_id' => $variant->product_id,
+                            'variant_id' => $variantId,
+                            'quantity' => $totalRequested,
+                            'lookbook_id' => $lookbookId,
+                            'lookbook_selections' => $selections
+                        ]);
+                    }
+                }
+                DB::commit();
+                return response()->json(['success' => true, 'message' => 'Đồng bộ giỏ hàng thành công']);
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return response()->json(['success' => false, 'message' => 'Lỗi đồng bộ giỏ hàng'], 500);
+            }
+        } finally {
+            $lock->release();
         }
     }
 
