@@ -126,23 +126,29 @@ class CartController extends Controller
                 $cart = Cart::firstOrCreate(['session_id' => $sessionId], ['expired_at' => Carbon::now()->addDays(30)]);
             }
             
+            // ĐÃ FIX BẢO MẬT KHO: Tính TỔNG số lượng biến thể này ĐANG CÓ trong toàn bộ giỏ (Cả hàng lẻ + hàng combo)
+            $totalExistingInCart = CartItem::where('cart_id', $cart->id)
+                                           ->where('variant_id', $variantId)
+                                           ->sum('quantity');
+
+            if (($totalExistingInCart + $quantity) > $currentStock) {
+                return response()->json(['success' => false, 'message' => "Tổng sản phẩm này trong giỏ (kể cả combo & lẻ) đã vượt quá tồn kho ({$currentStock} chiếc)."], 400);
+            }
+
+            // Backend lấy item lẻ ra để cập nhật
             $existingItem = CartItem::where('cart_id', $cart->id)
                                     ->where('variant_id', $variantId)
                                     ->whereNull('lookbook_id') 
                                     ->first();
 
-            $totalRequested = $existingItem ? $existingItem->quantity + $quantity : $quantity;
+            $totalRequestedStandalone = $existingItem ? $existingItem->quantity + $quantity : $quantity;
 
-            if ($totalRequested > 50) {
-                return response()->json(['success' => false, 'message' => 'Bạn chỉ được mua tối đa 50 sản phẩm loại này.'], 400);
-            }
-
-            if ($totalRequested > $currentStock) {
-                return response()->json(['success' => false, 'message' => "Sản phẩm chỉ còn {$currentStock} chiếc trong kho."], 400);
+            if ($totalRequestedStandalone > 50) {
+                return response()->json(['success' => false, 'message' => 'Bạn chỉ được mua lẻ tối đa 50 sản phẩm loại này.'], 400);
             }
 
             if ($existingItem) {
-                $existingItem->quantity = $totalRequested;
+                $existingItem->quantity = $totalRequestedStandalone;
                 $existingItem->save();
             } else {
                 CartItem::create([
@@ -189,40 +195,44 @@ class CartController extends Controller
             $cartItem = CartItem::where('cart_id', $cart->id)->find($itemId);
             if (!$cartItem) return response()->json(['success' => false, 'message' => 'Sản phẩm không có trong giỏ.'], 404);
 
-            // =========================================================================================
-            // ĐÃ FIX QUY LUẬT TỶ LỆ COMBO BẰNG TOÁN HỌC (Multiplier = NewQty / OldQty)
-            // Khách có xé lẻ request ở Frontend thì Backend vẫn tự cân bằng lại TẤT CẢ các món trong Combo
-            // =========================================================================================
             if ($cartItem->lookbook_id) {
                 $comboItems = CartItem::where('cart_id', $cart->id)->where('lookbook_id', $cartItem->lookbook_id)->get();
                 
-                // Tính hệ số thay đổi dựa trên sản phẩm cụ thể vừa bị gửi Request
                 $oldQty = $cartItem->quantity;
                 $ratio = $quantity / $oldQty; 
 
-                // Quét kho toàn bộ Combo trước khi áp dụng để đảm bảo an toàn
                 foreach ($comboItems as $cItem) {
                     $targetQty = round($cItem->quantity * $ratio);
                     $v = ProductVariant::find($cItem->variant_id);
                     $stock = $v ? ($v->stock_quantity - ($v->reserved_stock ?? 0)) : 0;
                     
-                    if (!$v || $targetQty > $stock) {
-                        return response()->json(['success' => false, 'message' => "Một sản phẩm trong bộ sưu tập chỉ còn {$stock} chiếc, không đủ để tăng số lượng Combo."], 400);
+                    // Tính tổng số lượng CÁC MÓN KHÁC (cùng variant) trong giỏ TRỪ CHÍNH MÓN ĐANG SỬA
+                    $otherQtyInCart = CartItem::where('cart_id', $cart->id)
+                                              ->where('variant_id', $cItem->variant_id)
+                                              ->where('id', '!=', $cItem->id)
+                                              ->sum('quantity');
+
+                    if (!$v || ($targetQty + $otherQtyInCart) > $stock) {
+                        return response()->json(['success' => false, 'message' => "Sản phẩm trong bộ sưu tập đã cạn kho, không đủ để tăng số lượng Combo."], 400);
                     }
                 }
                 
-                // An toàn -> Áp dụng nhân hệ số cho toàn bộ món đồ trong Combo (Giữ nguyên cấu trúc Lookbook)
                 foreach ($comboItems as $cItem) {
                     $cItem->quantity = round($cItem->quantity * $ratio);
                     $cItem->save();
                 }
             } else {
-                // Sản phẩm lẻ thì cập nhật bình thường
                 $variant = ProductVariant::find($cartItem->variant_id);
                 $currentStock = $variant ? ($variant->stock_quantity - ($variant->reserved_stock ?? 0)) : 0;
 
-                if (!$variant || $quantity > $currentStock) {
-                    return response()->json(['success' => false, 'message' => "Chỉ còn {$currentStock} sản phẩm trong kho.", 'current_stock' => $currentStock], 400);
+                // Tính tổng số lượng hàng Combo đang giam giữ TRỪ CHÍNH HÀNG LẺ NÀY
+                $otherQtyInCart = CartItem::where('cart_id', $cart->id)
+                                          ->where('variant_id', $cartItem->variant_id)
+                                          ->where('id', '!=', $cartItem->id)
+                                          ->sum('quantity');
+
+                if (!$variant || ($quantity + $otherQtyInCart) > $currentStock) {
+                    return response()->json(['success' => false, 'message' => "Tổng sản phẩm này trong giỏ (kể cả combo) đã chạm mức tồn kho ({$currentStock}).", 'current_stock' => $currentStock], 400);
                 }
 
                 $cartItem->quantity = $quantity;
@@ -244,7 +254,6 @@ class CartController extends Controller
             $cartItem = CartItem::where('cart_id', $cart->id)->find($itemId);
             
             if ($cartItem) {
-                // LUÔN LUÔN DUY TRÌ: Đã xóa là xóa sạch nguyên Combo (Atomic Delete)
                 if ($cartItem->lookbook_id) {
                     CartItem::where('cart_id', $cart->id)->where('lookbook_id', $cartItem->lookbook_id)->delete();
                 } else {
@@ -298,18 +307,33 @@ class CartController extends Controller
                     }
 
                     $currentStock = $variant->stock_quantity - ($variant->reserved_stock ?? 0);
-                    $existingItem = CartItem::where('cart_id', $cart->id)
+                    
+                    // ĐÃ FIX: Tính TỔNG số lượng sản phẩm này ĐÃ CÓ trong giỏ (Cả lẻ và Combo khác)
+                    $totalExistingInCart = CartItem::where('cart_id', $cart->id)
+                                                   ->where('variant_id', $item['variant_id'])
+                                                   ->sum('quantity');
+
+                    $existingItemInThisCombo = CartItem::where('cart_id', $cart->id)
                                             ->where('variant_id', $item['variant_id'])
                                             ->where('lookbook_id', $lookbookId)
                                             ->first();
 
-                    $existingQty = $existingItem ? $existingItem->quantity : 0;
+                    $existingQtyInThisCombo = $existingItemInThisCombo ? $existingItemInThisCombo->quantity : 0;
                     
+                    // Lượng hàng đã chiếm dụng BÊN NGOÀI combo hiện tại
+                    $externalQtyInCart = $totalExistingInCart - $existingQtyInThisCombo;
+
                     $multiplier = (int)($item['quantity'] ?? 1);
                     if ($multiplier <= 0) $multiplier = 1;
 
-                    $availableForNew = $currentStock - $existingQty;
-                    $possibleCombos = floor($availableForNew / $multiplier);
+                    // Tồn kho thực sự còn lại cho Combo này
+                    $availableForNew = $currentStock - $externalQtyInCart - $existingQtyInThisCombo;
+                    
+                    if ($availableForNew <= 0) {
+                        $possibleCombos = 0;
+                    } else {
+                        $possibleCombos = floor($availableForNew / $multiplier);
+                    }
 
                     if ($possibleCombos < $maxCombosToAdd) {
                         $maxCombosToAdd = $possibleCombos;
@@ -318,7 +342,7 @@ class CartController extends Controller
 
                 if ($maxCombosToAdd <= 0) {
                     DB::rollBack();
-                    return response()->json(['success' => false, 'message' => 'Một số sản phẩm trong bộ sưu tập đã cạn kho hoặc bạn đã đạt giới hạn mua.'], 400);
+                    return response()->json(['success' => false, 'message' => 'Một số sản phẩm trong bộ sưu tập đã chạm ngưỡng tồn kho (Bao gồm hàng có sẵn trong giỏ).'], 400);
                 }
 
                 $finalAddedCombos = min($maxCombosToAdd, 50);
@@ -339,11 +363,10 @@ class CartController extends Controller
                                             ->where('lookbook_id', $lookbookId)
                                             ->first();
 
-                    $totalQty = $existingItem ? $existingItem->quantity + $itemQty : $itemQty;
-                    if ($totalQty > 50) $totalQty = 50;
+                    $totalQtyInCombo = $existingItem ? $existingItem->quantity + $itemQty : $itemQty;
 
                     if ($existingItem) {
-                        $existingItem->quantity = $totalQty;
+                        $existingItem->quantity = $totalQtyInCombo;
                         $existingSelections = is_array($existingItem->lookbook_selections) ? $existingItem->lookbook_selections : [];
                         $existingItem->lookbook_selections = array_merge($existingSelections, ['attributes' => $attributes]);
                         $existingItem->save();
@@ -352,7 +375,7 @@ class CartController extends Controller
                             'cart_id' => $cart->id,
                             'product_id' => $variant->product_id,
                             'variant_id' => $variantId,
-                            'quantity' => $totalQty,
+                            'quantity' => $totalQtyInCombo,
                             'lookbook_id' => $lookbookId,
                             'lookbook_selections' => ['attributes' => $attributes]
                         ]);
@@ -364,7 +387,7 @@ class CartController extends Controller
                 
                 $msg = "Đã thêm bộ sưu tập vào giỏ hàng.";
                 if ($finalAddedCombos < $requestedCombos) {
-                    $msg = "Chỉ thêm được $finalAddedCombos combo do giới hạn tồn kho.";
+                    $msg = "Chỉ thêm được $finalAddedCombos combo do bị giới hạn bởi tồn kho.";
                 }
                 
                 return response()->json(['success' => true, 'message' => $msg]);
@@ -420,6 +443,10 @@ class CartController extends Controller
                     }
 
                     $currentStock = $variant->stock_quantity - ($variant->reserved_stock ?? 0);
+                    
+                    $qtyAlreadyInCart = CartItem::where('cart_id', $cart->id)
+                                                ->where('variant_id', $variantId)
+                                                ->sum('quantity');
 
                     $query = CartItem::where('cart_id', $cart->id)->where('variant_id', $variantId);
                                      
@@ -430,10 +457,17 @@ class CartController extends Controller
                     }
                     
                     $existingItem = $query->first();
+                    $existingQty = $existingItem ? $existingItem->quantity : 0;
+                    
+                    $externalQty = $qtyAlreadyInCart - $existingQty;
+                    $availableSpace = $currentStock - $externalQty;
 
-                    $totalRequested = $existingItem ? $existingItem->quantity + $quantity : $quantity;
+                    if ($availableSpace <= 0) continue;
+
+                    $totalRequested = $existingQty + $quantity;
                     if ($totalRequested > 50) $totalRequested = 50;
-                    if ($totalRequested > $currentStock) $totalRequested = $currentStock;
+                    if ($totalRequested > $availableSpace) $totalRequested = $availableSpace;
+                    
                     if ($totalRequested <= 0) continue;
 
                     if ($existingItem) {

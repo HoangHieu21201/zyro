@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes; // ĐÃ THÊM: Hỗ trợ Xóa Mềm
 
 use Illuminate\Support\Facades\Cache;
 use App\Events\ClientHomeUpdated;
@@ -11,7 +12,7 @@ use App\Events\FlashSaleEvent;
 
 class FlashSale extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes; // ĐÃ KÍCH HOẠT XÓA MỀM
 
     protected $table = 'flash_sales';
 
@@ -28,7 +29,7 @@ class FlashSale extends Model
     {
         return [
             'start_time' => 'datetime',
-            'end_time' => 'datetime',
+            'end_time'   => 'datetime',
         ];
     }
 
@@ -41,7 +42,6 @@ class FlashSale extends Model
         });
         static::deleted(function ($model) {
             broadcast(new FlashSaleEvent('deleted', $model));
-
             Cache::forget('client_home_data_dev');
             broadcast(new ClientHomeUpdated());
         });

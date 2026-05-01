@@ -19,8 +19,8 @@ class StoreProductRequest extends FormRequest
             'slug'              => ['required', 'string', 'min:3', 'max:255', Rule::unique('products', 'slug')->whereNull('deleted_at')],
             'category_id'       => ['required', 'integer', 'exists:categories,id'],
             'brand_id'          => ['nullable', 'integer', 'exists:brands,id'],
-            // Khóa chặt giá tiền, không cho âm, không cho tràn số
-            'base_price'        => ['required', 'numeric', 'min:0', 'max:9999999999'], 
+            // ĐÃ FIX: Giá cơ sở tối thiểu phải là 1.000đ
+            'base_price'        => ['required', 'numeric', 'min:1000', 'max:9999999999'], 
             'description'       => ['nullable', 'string', 'max:5000'],
             'care_instructions' => ['nullable', 'string', 'max:2000'],
             'gender'            => ['nullable', 'string', 'max:50', Rule::in(['Unisex', 'Men', 'Women', 'Kids'])],
@@ -32,7 +32,6 @@ class StoreProductRequest extends FormRequest
             'gallery_images'    => ['nullable', 'array', 'max:8'],
             'gallery_images.*'  => ['image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
             
-            // FIX CHÍ MẠNG: Bắt buộc gửi lên JSON hợp lệ, chặn chuỗi text rác gây lỗi Logic phía sau
             'variants_data'     => ['required', 'json'], 
         ];
     }
@@ -54,7 +53,7 @@ class StoreProductRequest extends FormRequest
             
             'base_price.required'      => 'Vui lòng nhập giá cơ sở tham khảo.',
             'base_price.numeric'       => 'Giá cơ sở phải là một số.',
-            'base_price.min'           => 'Giá cơ sở không được là số âm.',
+            'base_price.min'           => 'Giá cơ sở tối thiểu phải là 1.000đ.',
             'base_price.max'           => 'Giá cơ sở vượt quá giới hạn hệ thống.',
             
             'description.max'          => 'Mô tả sản phẩm không được vượt quá 5000 ký tự.',
@@ -70,5 +69,33 @@ class StoreProductRequest extends FormRequest
             'variants_data.required'   => 'Lỗi dữ liệu: Cần ít nhất 1 biến thể.',
             'variants_data.json'       => 'Lỗi cấu trúc: Dữ liệu biến thể không đúng chuẩn JSON.',
         ];
+    }
+
+    /**
+     * ĐÃ FIX: QUÉT X-QUANG VÀO TẬN BÊN TRONG CHUỖI JSON ĐỂ KIỂM TRA GIÁ TỪNG BIẾN THỂ
+     */
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            if ($this->has('variants_data')) {
+                $variants = json_decode($this->input('variants_data'), true);
+                if (is_array($variants)) {
+                    foreach ($variants as $index => $v) {
+                        // 1. Chống bán giá 0đ
+                        if (!isset($v['price']) || $v['price'] < 1000) {
+                            $validator->errors()->add('variants_data', "Biến thể [{$v['sku']}] có giá bán ra không hợp lệ (Tối thiểu phải 1.000đ).");
+                        }
+                        // 2. Giá vốn không được âm
+                        if (isset($v['cost_price']) && $v['cost_price'] < 0) {
+                            $validator->errors()->add('variants_data', "Biến thể [{$v['sku']}] có giá nhập vốn không được là số âm.");
+                        }
+                        // 3. Khuyến mãi vô lý (Khuyến mãi đắt hơn cả giá gốc)
+                        if (isset($v['promotional_price']) && $v['promotional_price'] > $v['price']) {
+                            $validator->errors()->add('variants_data', "Biến thể [{$v['sku']}] có Giá khuyến mãi cao hơn cả Giá bán ra.");
+                        }
+                    }
+                }
+            }
+        });
     }
 }

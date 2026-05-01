@@ -22,7 +22,6 @@ class ProductController extends Controller
         Cache::forget($this->cacheKey);
     }
 
-    // Lấy danh sách sản phẩm
     public function index(): JsonResponse
     {
         try {
@@ -40,7 +39,6 @@ class ProductController extends Controller
         }
     }
 
-    // Khởi tạo sản phẩm mới
     public function store(StoreProductRequest $request): JsonResponse
     {
         try {
@@ -106,14 +104,17 @@ class ProductController extends Controller
         }
     }
 
-    // Xem chi tiết
     public function show($id): JsonResponse
     {
         try {
             $product = Product::withTrashed()
                 ->with(['category', 'brand', 'images'])
                 ->with(['variants.attributeValues.attribute'])
-                ->findOrFail($id);
+                ->find($id);
+
+            if (!$product) {
+                return response()->json(['success' => false, 'message' => 'Sản phẩm không tồn tại trong hệ thống.'], 404);
+            }
                 
             return response()->json(['success' => true, 'data' => $product]);
         } catch (\Exception $e) {
@@ -121,12 +122,17 @@ class ProductController extends Controller
         }
     }
 
-    // Cập nhật trạng thái
     public function updateStatus(Request $request, $id): JsonResponse
     {
         $request->validate(['status' => 'required|in:published,draft,hidden']);
         try {
-            $product = Product::findOrFail($id);
+            // ĐÃ FIX: Bắt lỗi sạch sẽ nếu lỡ thao tác trên sản phẩm đã bị xóa
+            $product = Product::find($id);
+            
+            if (!$product) {
+                return response()->json(['success' => false, 'message' => 'Sản phẩm này không tồn tại hoặc đang nằm trong thùng rác!'], 404);
+            }
+
             $product->update(['status' => $request->status]);
             
             $this->clearCache();
@@ -140,12 +146,17 @@ class ProductController extends Controller
         }
     }
 
-    // Cập nhật sản phẩm & biến thể
     public function update(UpdateProductRequest $request, $id): JsonResponse
     {
         try {
             $product = DB::transaction(function () use ($request, $id) {
-                $product = Product::findOrFail($id);
+                // ĐÃ FIX: Cho phép Admin sửa thông tin cả những sản phẩm đang nằm trong thùng rác bằng withTrashed()
+                $product = Product::withTrashed()->find($id);
+                
+                if (!$product) {
+                    throw new \Exception('Không tìm thấy sản phẩm để cập nhật.');
+                }
+
                 $data = $request->validated();
                 $data['is_featured'] = filter_var($data['is_featured'] ?? false, FILTER_VALIDATE_BOOLEAN);
 
@@ -231,11 +242,16 @@ class ProductController extends Controller
         }
     }
 
-    // Đưa vào thùng rác
     public function destroy($id): JsonResponse
     {
         try {
-            $product = Product::findOrFail($id);
+            // ĐÃ FIX: Tránh lỗi khi Admin bấm xóa 1 sản phẩm đã nằm trong thùng rác
+            $product = Product::find($id);
+
+            if (!$product) {
+                return response()->json(['success' => false, 'message' => 'Sản phẩm này không tồn tại hoặc đã được đưa vào thùng rác từ trước!'], 404);
+            }
+
             $product->slug = $product->slug . '-deleted-' . time();
             $product->save();
             $product->delete();
@@ -249,11 +265,15 @@ class ProductController extends Controller
         }
     }
 
-    // Khôi phục
     public function restore($id): JsonResponse
     {
         try {
-            $product = Product::withTrashed()->findOrFail($id);
+            $product = Product::withTrashed()->find($id);
+            
+            if (!$product) {
+                return response()->json(['success' => false, 'message' => 'Sản phẩm không tồn tại.'], 404);
+            }
+
             $originalSlug = preg_replace('/-deleted-\d+$/', '', $product->slug);
             
             if (Product::where('slug', $originalSlug)->whereNull('deleted_at')->exists()) {

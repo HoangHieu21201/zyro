@@ -39,12 +39,15 @@ class FlashSaleItem extends Model
     protected static function booted()
     {
         $trigger = function ($model) {
-            if ($model->flashSale) {
-                event(new \App\Events\FlashSaleEvent('updated', $model->flashSale));
-            }
+            try {
+                if ($model->flashSale) {
+                    event(new \App\Events\FlashSaleEvent('updated', $model->flashSale));
+                }
 
-            \Illuminate\Support\Facades\Cache::forget('client_home_data_dev');
-            event(new \App\Events\ClientHomeUpdated());
+                \Illuminate\Support\Facades\Cache::forget('client_home_data_dev');
+                event(new \App\Events\ClientHomeUpdated());
+            } catch (\Exception $e) {
+            }
         };
 
         static::saved($trigger);

@@ -358,12 +358,19 @@ class HomeController extends Controller
         }
     }
 
-    public function getProductDetail($id): JsonResponse
+    // ĐÃ FIX TOÀN VẸN: Cho phép tìm kiếm URL bằng Slug hoặc ID 
+    public function getProductDetail($idOrSlug): JsonResponse
     {
         try {
             $product = Product::where('status', 'published')
                 ->with(['category.parent', 'brand', 'images', 'variants.attributeValues.attribute'])
-                ->findOrFail($id);
+                ->where(function ($query) use ($idOrSlug) {
+                    $query->where('slug', $idOrSlug);
+                    if (is_numeric($idOrSlug)) {
+                        $query->orWhere('id', $idOrSlug);
+                    }
+                })
+                ->firstOrFail();
 
             $formatted = $this->formatProduct($product);
             
@@ -388,9 +395,6 @@ class HomeController extends Controller
         }
     }
 
-    // ========================================================
-    // ĐÃ FIX: NHẬN CÁC THAM SỐ LỌC (GIÁ, KÍCH CỠ, MÀU SẮC) TỪ FRONTEND
-    // ========================================================
     public function getCategoryPageData(Request $request): JsonResponse
     {
         try {
@@ -398,7 +402,6 @@ class HomeController extends Controller
             $search = $request->query('search');
             $sort = $request->query('sort', 'newest');
             
-            // Nhận tham số bộ lọc
             $minPrice = $request->query('min_price');
             $maxPrice = $request->query('max_price');
             $colors = $request->query('colors');
@@ -409,7 +412,6 @@ class HomeController extends Controller
 
             $baseQuery = Product::where('status', 'published')->with(['category.parent', 'brand', 'variants.attributeValues.attribute']);
 
-            // 1. Lọc theo danh mục
             if ($slug) {
                 $category = Category::where('slug', $slug)->where('status', 'active')->first();
                 if ($category) {
@@ -426,7 +428,6 @@ class HomeController extends Controller
                 $subCategories = Category::whereNull('parent_id')->where('status', 'active')->get();
             }
 
-            // 2. Lọc theo từ khóa tìm kiếm
             if ($search) {
                 $baseQuery->where(function($q) use ($search) {
                     $q->where('name', 'ilike', '%' . $search . '%')
@@ -434,17 +435,13 @@ class HomeController extends Controller
                 });
             }
 
-            // 3. ÁP DỤNG BỘ LỌC (FILTERING)
-            // Lọc theo khoảng giá
             if ($minPrice !== null || $maxPrice !== null) {
                 $baseQuery->where(function($q) use ($minPrice, $maxPrice) {
-                    // Lọc trên base_price của bảng products (Giá chung)
                     if ($minPrice !== null) $q->where('base_price', '>=', $minPrice);
                     if ($maxPrice !== null) $q->where('base_price', '<=', $maxPrice);
                 });
             }
 
-            // Lọc xuyên thấu vào bảng biến thể để tìm Màu sắc và Kích cỡ
             if ($colors) {
                 $colorArr = explode(',', $colors);
                 $baseQuery->whereHas('variants.attributeValues', function($q) use ($colorArr) {
@@ -459,7 +456,6 @@ class HomeController extends Controller
                 });
             }
 
-            // 4. Sắp xếp
             switch ($sort) {
                 case 'best_sales': $baseQuery->orderBy('sales_count', 'desc'); break;
                 case 'price_asc': $baseQuery->orderBy('base_price', 'asc'); break;
@@ -467,14 +463,11 @@ class HomeController extends Controller
                 case 'newest': default: $baseQuery->orderBy('id', 'desc'); break;
             }
 
-            // 5. Lấy 4 SP nổi bật (Dùng clone để không ảnh hưởng query chính)
             $highlightProducts = (clone $baseQuery)->orderBy('view_count', 'desc')->limit(4)->get()->map(fn($p) => $this->formatProduct($p));
             
-            // 6. Phân trang SP chính
             $productsPaginator = $baseQuery->paginate(12);
             $mainProducts = collect($productsPaginator->items())->map(fn($p) => $this->formatProduct($p));
 
-            // Trả về data kèm theo danh sách các filter có sẵn để Frontend vẽ UI
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -486,7 +479,6 @@ class HomeController extends Controller
                     'last_page' => $productsPaginator->lastPage(),
                     'total' => $productsPaginator->total(),
                     
-                    // Gửi danh sách tùy chọn lọc chuẩn cho ngành thời trang
                     'available_filters' => [
                         'sizes' => ['S', 'M', 'L', 'XL', 'XXL', 'Freesize'],
                         'colors' => [

@@ -399,14 +399,16 @@ const lookbookImages = ref([
   'https://images.unsplash.com/photo-1551163943-3f6a855d1153?w=400',
 ]);
 
+// ĐÃ FIX: Hỗ trợ nhấn vào các sản phẩm liên quan bên dưới chạy bằng Slug thay vì ID
 const handleGoToDetail = (prod) => {
-  router.push(`/product/${prod.id}`);
+  router.push(`/product/${prod.slug || prod.id}`);
 };
 
 const fetchProductDetail = async () => {
   isLoading.value = true;
   try {
-    const res = await api.get(`/client/products/${route.params.id}`);
+    // ĐÃ FIX: Lấy tham số theo "slug" thay vì "id" do đã đổi router
+    const res = await api.get(`/client/products/${route.params.slug}`);
     if (res.data.success) {
       product.value = res.data.data;
       initSelectors(); 
@@ -496,8 +498,9 @@ watch(selectedColor, (newColor) => {
   }
 });
 
-watch(() => route.params.id, (newId) => {
-    if (newId) {
+// ĐÃ FIX: Watch theo "slug" thay vì "id" do đã đổi router
+watch(() => route.params.slug, (newSlug) => {
+    if (newSlug) {
         window.scrollTo({ top: 0, behavior: 'smooth' });
         fetchProductDetail();
     }

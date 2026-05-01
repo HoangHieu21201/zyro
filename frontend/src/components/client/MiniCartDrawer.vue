@@ -82,7 +82,7 @@
                          @click="toggleGroup(group.lookbook_id)"
                          :alt="group.lookbook_name">
                          
-                    <!-- Cột thông tin Combo -->
+                    <!-- Cột thông định Combo -->
                     <div class="flex-grow-1">
                       <div class="d-flex justify-content-between align-items-start mb-2">
                         <div class="cursor-pointer" @click="toggleGroup(group.lookbook_id)">
@@ -127,7 +127,10 @@
                          
                          <div class="flex-grow-1">
                            <h6 class="fw-bold text-dark dark:text-gray-200 mb-1 line-clamp-1 font-sans-vn" style="font-size: 0.85rem;">
-                             {{ item.product_name }}
+                             <!-- ĐÃ FIX: Chuyển sang hàm goToProduct -->
+                             <a href="#" class="text-decoration-none text-dark dark:text-gray-200 hover-text-urban transition-color" @click.prevent="goToProduct(item)">
+                               {{ item.product_name }}
+                             </a>
                            </h6>
                            <div class="d-flex justify-content-between align-items-center">
                              <span class="text-secondary dark:text-gray-400 font-sans-vn" style="font-size: 0.75rem;">
@@ -160,9 +163,10 @@
                     <div class="flex-grow-1 d-flex flex-column justify-content-between py-1">
                       <div>
                         <h6 class="fw-bold text-dark dark:text-gray-200 mb-1 line-clamp-2 font-sans-vn" style="font-size: 0.9rem;" :title="item.product_name">
-                          <router-link :to="`/product/${item.product_slug || item.product_id}`" class="text-decoration-none text-dark dark:text-gray-200 hover-text-urban transition-color" @click="$emit('close')">
+                          <!-- ĐÃ FIX: Chuyển sang hàm goToProduct -->
+                          <a href="#" class="text-decoration-none text-dark dark:text-gray-200 hover-text-urban transition-color" @click.prevent="goToProduct(item)">
                             {{ item.product_name }}
-                          </router-link>
+                          </a>
                         </h6>
                         <div class="d-flex flex-wrap gap-2 mt-1">
                           <span class="d-inline-flex align-items-center bg-light dark:bg-gray-700 text-secondary dark:text-gray-300 border dark:border-gray-600 px-2 py-1 rounded fw-medium font-sans-vn" style="font-size: 0.75rem;">
@@ -233,6 +237,8 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue';
+// ĐÃ THÊM: Import useRouter
+import { useRouter } from 'vue-router';
 import { useCartStore } from '@/stores/cartStore';
 
 const props = defineProps({
@@ -241,6 +247,7 @@ const props = defineProps({
 
 const emit = defineEmits(['close']);
 const cartStore = useCartStore();
+const router = useRouter(); // ĐÃ THÊM
 
 // Track id đang cập nhật
 const updatingItemId = ref(null);
@@ -259,9 +266,6 @@ const freeshipProgress = computed(() => {
   return percent > 100 ? 100 : percent;
 });
 
-// ========================================================
-// ĐÃ FIX: TÍNH SỐ LƯỢNG GIỎ HÀNG CHUẨN XÁC THEO NHÓM COMBO VÀ SP LẺ
-// ========================================================
 const uniqueCartItemsCount = computed(() => {
   let count = 0;
   const comboIds = new Set();
@@ -280,7 +284,6 @@ const uniqueCartItemsCount = computed(() => {
   return count;
 });
 
-// THUẬT TOÁN GOM NHÓM ĐÃ NÂNG CẤP LẤY ẢNH & TÊN TỪ API
 const cartGroups = computed(() => {
   const result = [];
   const normalGroup = { isLookbook: false, items: [] };
@@ -313,6 +316,15 @@ const cartGroups = computed(() => {
 
   return result;
 });
+
+// ĐÃ THÊM: HÀM ĐIỀU HƯỚNG TỚI CHI TIẾT SẢN PHẨM (CHUẨN SEO)
+const goToProduct = (item) => {
+  emit('close'); 
+  const targetPath = item.product_slug || item.product_id;
+  router.push(`/product/${targetPath}`).then(() => {
+     window.scrollTo(0, 0); 
+  });
+};
 
 const toggleGroup = (id) => {
   if (expandedGroups.value.includes(id)) {

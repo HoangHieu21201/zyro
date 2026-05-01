@@ -110,7 +110,6 @@ class ClientCheckoutController extends Controller
                     ->whereIn('id', array_unique($variantIdsToLock))
                     ->orderBy('id')->lockForUpdate()->get()->keyBy('id');
 
-                // ĐÃ FIX (GÓC KHUẤT TRÙM CUỐI): Truyền Email và SĐT xuống để xác minh Giới hạn Voucher Cá nhân của Guest
                 $totals = $this->calculateOrderTotals($cart->items, $variants, $user, $request->coupon_code, $customerEmail, $customerPhone);
 
                 $orderItemsData = [];
@@ -221,7 +220,6 @@ class ClientCheckoutController extends Controller
                     'changed_by_type' => $user ? get_class($user) : null,
                 ]);
 
-                // Xóa sản phẩm khỏi giỏ hàng NGAY SAU KHI TẠO ĐƠN (Kể cả MoMo)
                 $this->clearCartAfterPayment($order);
 
                 if ($request->payment_method === 'cod') {
@@ -369,10 +367,6 @@ class ClientCheckoutController extends Controller
 
             if ($voucher && $subtotalAfterTier >= $voucher->min_spend) {
                 
-                // =========================================================================================
-                // ĐÃ FIX (GÓC KHUẤT TRÙM CUỐI): CHẶN KHÁCH VÃNG LAI BÒN RÚT MÃ GIẢM GIÁ
-                // Check Lịch sử đặt hàng của Guest qua Email / Số điện thoại 
-                // =========================================================================================
                 if ($voucher->usage_limit_per_user) {
                     $usageQuery = DB::table('orders')
                         ->where('voucher_id', $voucher->id)
@@ -537,10 +531,6 @@ class ClientCheckoutController extends Controller
             return response()->json(['message' => 'Order not found'], 404);
         }
 
-        if ($order->payment_status === 'paid') {
-            return response()->json(['message' => 'Success'], 204);
-        }
-
         if ($request->resultCode == 0) {
             
             $momoAmount = (float) $request->amount;
@@ -551,13 +541,28 @@ class ClientCheckoutController extends Controller
                 return response()->json(['message' => 'Amount mismatch'], 400);
             }
 
-            DB::transaction(function () use ($order, $request) {
+            // =========================================================================================
+            // ĐÃ FIX (GÓC KHUẤT 1): SỬ DỤNG ATOMIC UPDATE ĐỂ BẬT NGƯỢC RACE CONDITION
+            // =========================================================================================
+            $isProcessed = false;
+
+            DB::transaction(function () use ($order, $request, &$isProcessed) {
                 
-                $order->update([
-                    'payment_status' => 'paid',
-                    'transaction_id' => $request->transId,
-                    'payment_details' => $request->all() 
-                ]);
+                // Cập nhật Nguyên tử: Chỉ update nếu payment_status vẫn đang là 'unpaid'
+                $updatedRows = Order::where('id', $order->id)
+                                    ->where('payment_status', 'unpaid')
+                                    ->update([
+                                        'payment_status' => 'paid',
+                                        'transaction_id' => $request->transId,
+                                        'payment_details' => $request->all() 
+                                    ]);
+
+                // Nếu $updatedRows === 0 nghĩa là có IPN khác đã chiếm quyền cập nhật xong rồi
+                if ($updatedRows === 0) {
+                    return; // Thoát ngay, không trừ kho nữa
+                }
+
+                $isProcessed = true; // Đánh dấu IPN này là người thắng cuộc
 
                 foreach ($order->items as $item) {
                     if ($item->variant_id) {
@@ -569,6 +574,12 @@ class ClientCheckoutController extends Controller
                 }
             });
 
+            // Kẻ đến sau bị bật ra, trả về 200 cho MoMo vui vẻ
+            if (!$isProcessed) {
+                return response()->json(['message' => 'Success (Already processed)'], 200);
+            }
+
+            // Chỉ người thắng cuộc mới được quyền gửi email
             $this->sendOrderConfirmationEmail($order);
 
         } else {

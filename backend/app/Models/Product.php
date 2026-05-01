@@ -8,9 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 use Illuminate\Support\Facades\Cache;
 use App\Events\ClientHomeUpdated;
-use App\Events\ProductEvent;
 
-// ĐÃ THÊM: Import model để dọn dẹp rác
 use App\Models\FlashSaleItem;
 use App\Models\LookbookItem;
 
@@ -65,36 +63,31 @@ class Product extends Model
      */
     protected static function booted()
     {
-        // Viết 1 hàm dọn dẹp chung dùng cho cả 2 sự kiện: Cập nhật & Xóa
         $cleanupRelations = function ($model) {
-            // 1. Lấy tất cả ID biến thể của sản phẩm này
-            $variantIds = clone $model->variants()->withTrashed()->pluck('id')->toArray();
+            // ĐÃ KIỂM TRA KỸ: Tuyệt đối không có chữ 'clone' ở đây
+            $variantIds = $model->variants()->withTrashed()->pluck('id')->toArray();
             
             if (!empty($variantIds)) {
-                // Tự động gỡ các biến thể này khỏi mọi Flash Sale đang chứa nó
                 FlashSaleItem::whereIn('variant_id', $variantIds)->delete();
             }
 
-            // 2. Tự động gỡ sản phẩm này khỏi các Bộ sưu tập (Lookbook)
             LookbookItem::where('product_id', $model->id)->delete();
         };
 
         static::saved(function ($model) use ($cleanupRelations) {
-            // NẾU TRẠNG THÁI BỊ ĐỔI THÀNH NHÁP HOẶC ẨN -> Kích hoạt dọn dẹp
-            if ($model->isDirty('status') && $model->status !== 'published') {
+            // Chỉ dọn dẹp Flash Sale/Lookbook khi trạng thái vừa bị chuyển thành Nháp/Ẩn
+            if ($model->wasChanged('status') && $model->status !== 'published') {
                 $cleanupRelations($model);
             }
 
-            broadcast(new ProductEvent('updated', $model));
             Cache::forget('client_home_data_dev');
             broadcast(new ClientHomeUpdated());
         });
 
         static::deleted(function ($model) use ($cleanupRelations) {
-            // KHI SẢN PHẨM BỊ XÓA MỀM (Cho vào thùng rác) -> Kích hoạt dọn dẹp
+            // Sản phẩm bị xóa -> Chắc chắn phải dọn dẹp
             $cleanupRelations($model);
 
-            broadcast(new ProductEvent('deleted', $model));
             Cache::forget('client_home_data_dev');
             broadcast(new ClientHomeUpdated());
         });

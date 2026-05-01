@@ -41,19 +41,26 @@ use App\Http\Controllers\Api\Client\ClientOrderController;
 use App\Http\Controllers\Api\Client\ClientReviewController;
 use App\Http\Controllers\Api\Client\ForgotPasswordController;
 use App\Http\Controllers\Api\Client\ContactController;
+use App\Http\Controllers\Api\Auth\GoogleAuthController;
 
 Broadcast::routes(['middleware' => ['auth:sanctum']]);
 
 Route::prefix('v1/admin')->group(function () {
 
-    Route::post('login', [AdminAuthController::class, 'login']);
-    Route::post('register', [AdminAuthController::class, 'register']);
-    Route::post('forgot-password', [AdminAuthController::class, 'forgotPassword']);
+    // ========================================================
+    // ĐÃ FIX BẢO MẬT: BỌC RATE LIMITING CHO TOÀN BỘ AUTH ADMIN
+    // ========================================================
+    // Chống Brute-force dò mật khẩu Admin (Giới hạn 10 lần / 1 phút)
+    Route::middleware('throttle:10,1')->post('login', [AdminAuthController::class, 'login']);
+    Route::middleware('throttle:10,1')->post('register', [AdminAuthController::class, 'register']);
+
+    // BỨC TƯỜNG LỬA CHỐNG SPAM MAIL ADMIN (Chỉ cho phép 3 lần / 1 phút)
+    Route::middleware('throttle:3,1')->post('forgot-password', [AdminAuthController::class, 'forgotPassword']);
     Route::post('reset-password', [AdminAuthController::class, 'resetPassword']);
 
     Route::middleware('auth:sanctum')->group(function () {
 
-       Route::prefix('notifications')->group(function () {
+        Route::prefix('notifications')->group(function () {
             Route::get('/', [NotificationController::class, 'index']);
             Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead']);
             Route::patch('/{id}/read', [NotificationController::class, 'markAsRead']);
@@ -161,6 +168,8 @@ Route::prefix('v1/admin')->group(function () {
         });
 
         Route::middleware(['check.module:admin_flash_sales'])->group(function () {
+            // ĐÃ THÊM: Route Khôi phục cho Flash Sale
+            Route::post('flash_sales/{id}/restore', [FlashSaleController::class, 'restore']);
             Route::patch('flash_sales/{id}/status', [FlashSaleController::class, 'updateStatus']);
             Route::apiResource('flash_sales', FlashSaleController::class);
         });
@@ -175,13 +184,16 @@ Route::prefix('v1/admin')->group(function () {
     });
 });
 
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback']);
 Route::prefix('v1/client')->group(function () {
 
-    Route::post('register', [AuthController::class, 'register']);
-    Route::post('login', [AuthController::class, 'login']);
+    Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect']);
+    
+    Route::middleware('throttle:10,1')->post('register', [AuthController::class, 'register']);
+    Route::middleware('throttle:10,1')->post('login', [AuthController::class, 'login']);
 
     Route::prefix('forgot-password')->group(function () {
-        Route::post('send-otp', [ForgotPasswordController::class, 'sendOtp']);
+        Route::middleware('throttle:3,1')->post('send-otp', [ForgotPasswordController::class, 'sendOtp']);
         Route::post('verify-otp', [ForgotPasswordController::class, 'verifyOtp']);
         Route::post('reset', [ForgotPasswordController::class, 'resetPassword']);
     });
