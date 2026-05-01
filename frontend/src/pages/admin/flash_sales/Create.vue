@@ -33,7 +33,6 @@
                 <input type="text" class="form-control bg-light-subtle dark:bg-[#2b3035] text-muted dark:text-gray-400 font-monospace border-0" v-model="form.slug" readonly>
               </div>
 
-              <!-- Tách thành 2 hàng riêng biệt cho rộng rãi thoải mái -->
               <div class="mb-4">
                 <label class="form-label fw-bold text-dark dark:text-gray-200 small text-uppercase"><i class="bi bi-play-circle-fill text-success me-1"></i> Bắt đầu lúc <span class="text-danger">*</span></label>
                 <input type="datetime-local" class="form-control form-control-lg bg-light dark:bg-[#212529] dark:text-white border-0 shadow-sm-hover fs-6" v-model="form.start_time" required>
@@ -41,8 +40,17 @@
               </div>
               
               <div class="mb-4">
-                <label class="form-label fw-bold text-dark dark:text-gray-200 small text-uppercase"><i class="bi bi-stop-circle-fill text-danger me-1"></i> Kết thúc lúc <span class="text-danger">*</span></label>
-                <input type="datetime-local" class="form-control form-control-lg bg-light dark:bg-[#212529] dark:text-white border-0 shadow-sm-hover fs-6" v-model="form.end_time" required>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                   <label class="form-label fw-bold text-dark dark:text-gray-200 small text-uppercase mb-0"><i class="bi bi-stop-circle-fill text-danger me-1"></i> Kết thúc lúc</label>
+                   <div class="form-check form-switch m-0">
+                      <input class="form-check-input cursor-pointer" type="checkbox" role="switch" id="switchEndTime" v-model="hasEndTime">
+                      <label class="form-check-label small cursor-pointer" for="switchEndTime">Có giới hạn</label>
+                   </div>
+                </div>
+                <input v-if="hasEndTime" type="datetime-local" class="form-control form-control-lg bg-light dark:bg-[#212529] dark:text-white border-0 shadow-sm-hover fs-6" v-model="form.end_time" required>
+                <div v-else class="form-control bg-light dark:bg-[#212529] border-0 text-muted fst-italic py-2 d-flex align-items-center opacity-75">
+                   Chiến dịch chạy vô thời hạn
+                </div>
                 <div class="text-danger small mt-1 fw-bold" v-if="errors.end_time">{{ errors.end_time[0] }}</div>
               </div>
 
@@ -111,7 +119,8 @@
                   </div>
                   <button type="button" class="btn btn-sm btn-urban fw-bold px-4 shadow-sm" style="height: 36px;" @click="applyBatchDiscount">ÁP DỤNG</button>
                   <div class="vr mx-2 text-urban opacity-50"></div>
-                  <button type="button" class="btn btn-sm btn-outline-danger fw-bold px-3 shadow-sm bg-white" style="height: 36px;" @click="deleteBatchSelected"><i class="bi bi-trash3 me-1"></i> XÓA NHANH</button>
+                  <!-- ĐÃ FIX: Bỏ bg-white để khi hover nút xóa nó đỏ lên đẹp mắt, hết mù màu -->
+                  <button type="button" class="btn btn-sm btn-outline-danger fw-bold px-3 shadow-sm" style="height: 36px;" @click="deleteBatchSelected"><i class="bi bi-trash3 me-1"></i> XÓA NHANH</button>
                 </div>
               </transition>
 
@@ -184,7 +193,7 @@
     </div>
 
     <!-- ======================================================== -->
-    <!-- MODAL CHỌN SẢN PHẨM KHỔNG LỒ (ĐÃ NÂNG CẤP CHECKBOX)      -->
+    <!-- MODAL CHỌN SẢN PHẨM KHỔNG LỒ                             -->
     <!-- ======================================================== -->
     <div class="modal fade" id="productSearchModalCreate" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
       <div class="modal-dialog modal-dialog-centered modal-xl">
@@ -220,7 +229,6 @@
                </div>
             </div>
 
-            <!-- ĐÃ BỔ SUNG: KHU VỰC THÊM HÀNG LOẠT VÀ THÊM NHANH THEO BỘ LỌC -->
             <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
               <div class="form-check m-0">
                  <input class="form-check-input border-secondary cursor-pointer" type="checkbox" id="selectAllModal" v-model="selectAllModalProducts">
@@ -228,7 +236,6 @@
               </div>
 
               <div class="d-flex gap-2">
-                <!-- NÚT CHỌN NHANH THEO NHÓM (Chỉ hiện khi đang dùng bộ lọc) -->
                 <transition name="fade">
                   <button v-if="(modalFilterCategory || modalFilterBrand) && filteredProductsFull.length > 0" 
                           type="button" class="btn btn-outline-success fw-bold shadow-sm rounded-pill px-3 bg-white dark:bg-[#212529]" 
@@ -290,9 +297,9 @@
 <script setup>
 import { ref, onMounted, computed, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
-import axios from 'axios';
 import Swal from 'sweetalert2';
 import defaultImage from '@/assets/images/defaults/placeholder.png';
+import api from '@/utils/axios';
 
 const router = useRouter();
 
@@ -301,6 +308,7 @@ const previewBanner = ref(null);
 const bannerInput = ref(null);
 
 const form = ref({ name: '', slug: '', start_time: '', end_time: '', status: 'active', banner_image: null });
+const hasEndTime = ref(true);
 const items = ref([]); 
 const errors = ref({});
 
@@ -314,9 +322,6 @@ const modalFilterBrand = ref('');
 const isModalLoading = ref(false);
 let productModalInstance = null;
 
-// ==========================================
-// STATE & LOGIC CHO CHỌN NHIỀU SP TRONG MODAL
-// ==========================================
 const modalSelectedProductIds = ref([]);
 
 const selectAllModalProducts = computed({
@@ -329,7 +334,6 @@ const selectAllModalProducts = computed({
   }
 });
 
-// ĐÃ BỔ SUNG: Logic bấm 1 phát thêm toàn bộ SP đang lọc
 const addAllFilteredProducts = async () => {
   if (filteredProductsFull.value.length === 0) return;
   modalSelectedProductIds.value = filteredProductsFull.value.map(p => p.id);
@@ -342,7 +346,7 @@ const addSelectedProducts = async () => {
   let addedCount = 0;
   
   try {
-    const requests = modalSelectedProductIds.value.map(id => axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/products/${id}`, { headers: getHeaders() }));
+    const requests = modalSelectedProductIds.value.map(id => api.get(`/admin/products/${id}`));
     const responses = await Promise.all(requests);
     
     responses.forEach(res => {
@@ -380,10 +384,6 @@ const addSelectedProducts = async () => {
   }
 };
 
-
-// ==========================================
-// STATE & LOGIC CHO THAO TÁC HÀNG LOẠT (MAIN TABLE)
-// ==========================================
 const selectedItemIndexes = ref([]);
 const batchAction = ref({ type: 'percent', value: 0 });
 
@@ -416,7 +416,6 @@ const applyBatchDiscount = () => {
           newPrice = val;
       }
       
-      // Chống số âm
       if (newPrice < 0) newPrice = 0;
       item.flash_sale_price = Math.round(newPrice);
   });
@@ -437,8 +436,7 @@ const deleteBatchSelected = () => {
   });
 };
 
-const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
-const getImageUrl = (path) => path ? `http://127.0.0.1:8000/storage/${path}` : defaultImage;
+const getImageUrl = (path) => path ? `${import.meta.env.VITE_API_BASE_URL.replace('/api/v1', '/storage/')}${path}` : defaultImage;
 const handleImageError = (e) => { e.target.src = defaultImage; };
 
 const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(val || 0);
@@ -469,9 +467,9 @@ const parseVariantAttributes = (attrValues) => {
 const fetchDataForModal = async () => {
   try {
     const [resProds, resCats, resBrands] = await Promise.all([
-      axios.get('http://127.0.0.1:8000/api/v1/admin/products?status=published', { headers: getHeaders() }),
-      axios.get('http://127.0.0.1:8000/api/v1/admin/categories', { headers: getHeaders() }),
-      axios.get('http://127.0.0.1:8000/api/v1/admin/brands', { headers: getHeaders() })
+      api.get('/admin/products?status=published'),
+      api.get('/admin/categories'),
+      api.get('/admin/brands')
     ]);
     const prods = Array.isArray(resProds.data?.data?.data) ? resProds.data.data.data : (Array.isArray(resProds.data?.data) ? resProds.data.data : []);
     allPublishedProducts.value = prods.filter(p => p.status === 'published' && !p.deleted_at);
@@ -518,7 +516,6 @@ const getAllCategoryIds = (id) => {
   return ids;
 };
 
-// ĐÃ BỔ SUNG: Tách biến full data và biến display (chống lag)
 const filteredProductsFull = computed(() => {
   let res = allPublishedProducts.value;
   if (modalSearchQuery.value) {
@@ -536,7 +533,7 @@ const filteredProductsFull = computed(() => {
 });
 
 const displayFilteredProducts = computed(() => {
-  return filteredProductsFull.value.slice(0, 30); // Giữ tối đa 30 SP để Modal render mượt
+  return filteredProductsFull.value.slice(0, 30); 
 });
 
 const openProductModal = () => {
@@ -553,7 +550,13 @@ const submitForm = async () => {
   formData.append('name', form.value.name);
   formData.append('slug', form.value.slug);
   formData.append('start_time', form.value.start_time);
-  formData.append('end_time', form.value.end_time);
+  
+  if (hasEndTime.value && form.value.end_time) {
+      formData.append('end_time', form.value.end_time);
+  } else {
+      formData.append('end_time', '');
+  }
+
   formData.append('status', form.value.status);
   
   if (form.value.banner_image) formData.append('banner_image', form.value.banner_image);
@@ -566,19 +569,38 @@ const submitForm = async () => {
   formData.append('items_data', JSON.stringify(payloadItems));
 
   try {
-    await axios.post('/api/v1/admin/flash_sales', formData, {
-      headers: { ...getHeaders(), 'Content-Type': 'multipart/form-data' }
+    await api.post(`/admin/flash_sales`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
     });
+
     Swal.fire('Thành công', 'Tạo chiến dịch Flash Sale thành công!', 'success');
-    router.push('/admin/flash-sales');
+    router.push({ name: 'admin-flash-sales' });
   } catch (error) {
-    Swal.fire('Lỗi', error.response?.data?.message || 'Có lỗi xảy ra', 'error');
+    if (error.response?.data?.errors) {
+       let errorHtml = '<ul class="text-start text-danger small mt-2" style="max-height: 200px; overflow-y: auto;">';
+       Object.values(error.response.data.errors).flat().forEach(msg => { errorHtml += `<li>${msg}</li>`; });
+       errorHtml += '</ul>';
+       Swal.fire({ title: 'Dữ liệu không hợp lệ', html: errorHtml, icon: 'error' });
+    } else {
+       Swal.fire('Lỗi', error.response?.data?.message || 'Có lỗi xảy ra', 'error');
+    }
   } finally {
     isSubmitting.value = false;
   }
 };
 
-onMounted(fetchDataForModal);
+onMounted(() => {
+  fetchDataForModal();
+  
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  form.value.start_time = now.toISOString().slice(0, 16);
+  
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  form.value.end_time = tomorrow.toISOString().slice(0, 16);
+});
+
 onBeforeUnmount(() => {
   if (productModalInstance) productModalInstance.hide();
   document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
@@ -591,10 +613,8 @@ onBeforeUnmount(() => {
 .text-urban { color: var(--color-c-hover, #547792) !important; }
 .bg-urban { background-color: var(--color-c-hover, #547792) !important; }
 .border-urban { border-color: var(--color-c-hover, #547792) !important; }
-.btn-urban { background-color: var(--color-c-hover, #547792); color: white; border: none; transition: 0.2s; }
-.btn-urban:hover { background-color: var(--color-c-dark, #213448); color: white; transform: translateY(-2px); }
-.btn-outline-urban { color: var(--color-c-hover, #547792); border-color: var(--color-c-hover, #547792); background: transparent; transition: 0.2s; }
-.btn-outline-urban:hover { background-color: var(--color-c-hover, #547792); color: white; }
+.btn-urban { background-color: var(--color-c-dark, #213448); color: white; border: none; transition: 0.2s ease; }
+.btn-urban:hover { background-color: var(--color-c-hover, #547792); color: white; border-color: var(--color-c-hover, #547792); }
 
 .shadow-sm-hover { transition: box-shadow 0.2s ease, border-color 0.2s ease; }
 .shadow-sm-hover:focus-within { box-shadow: 0 4px 15px rgba(84, 119, 146, 0.1) !important; border-color: var(--color-c-hover, #547792) !important; }
@@ -626,6 +646,7 @@ html.dark .custom-check-circle.checked { background-color: var(--color-c-hover, 
 .custom-scrollbar-y::-webkit-scrollbar { width: 5px; }
 .custom-scrollbar-y::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar-y::-webkit-scrollbar-thumb { background: var(--color-c-light, #94B4C1); border-radius: 10px; }
+html.dark .custom-scrollbar-y::-webkit-scrollbar-thumb { background: #495057; }
 .custom-scrollbar-x::-webkit-scrollbar { height: 6px; }
 .custom-scrollbar-x::-webkit-scrollbar-thumb { background: var(--color-c-light, #94B4C1); border-radius: 10px; }
 </style>

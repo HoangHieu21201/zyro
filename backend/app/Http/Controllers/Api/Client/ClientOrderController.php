@@ -8,307 +8,339 @@ use App\Models\OrderStatusHistory;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\ProductVariant;
-use App\Models\Review; 
-use App\Models\Admin; // Thêm Model Admin
+use App\Models\Admin; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-
-// ĐÃ THÊM: Import Notification Class
 use App\Notifications\AdminAlertNotification;
 
 class ClientOrderController extends Controller
 {
+    /**
+     * Lấy danh sách đơn hàng của User
+     */
     public function index(Request $request)
     {
-        $userId = Auth::id();
-        $status = $request->query('status', 'all');
-        $search = $request->query('search', '');
-        $dateFrom = $request->query('date_from', '');
-        $dateTo = $request->query('date_to', '');
-        $sort = $request->query('sort', 'desc');
+        try {
+            $userId = Auth::id();
+            $status = $request->query('status', 'all');
 
-        $stats = [
-            'total_orders' => Order::where('user_id', $userId)->count(),
-            'total_spent'  => Order::where('user_id', $userId)->where('status', 'completed')->sum('total_amount')
-        ];
+            $stats = [
+                'total_orders' => Order::where('user_id', $userId)->count(),
+                'total_spent'  => Order::where('user_id', $userId)->where('status', 'completed')->sum('total_amount')
+            ];
 
-        $query = Order::where('user_id', $userId)->with(['items.variant', 'items.lookbook']);
+            $query = Order::where('user_id', $userId)
+                          ->with(['items.variant.product', 'items.lookbook'])
+                          ->orderBy('created_at', 'desc');
 
-        if ($status && $status !== 'all') {
-            if ($status === 'returned') {
-                $query->where(function ($q) {
-                    $q->whereNotNull('return_status')
-                      ->orWhere('status', 'returned');
-                });
-            } elseif ($status === 'cancelled') {
-                $query->where('status', 'cancelled')->whereNull('return_status');
-            } else {
+            if ($status !== 'all') {
                 $query->where('status', $status);
             }
+
+            $orders = $query->paginate(10);
+
+            return response()->json([
+                'success' => true,
+                'data'    => $orders,
+                'stats'   => $stats
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Lỗi tải danh sách đơn hàng.'], 500);
         }
-
-        if (!empty($search)) {
-            $query->where(function ($q) use ($search) {
-                $q->where('order_code', 'ilike', "%{$search}%")
-                    ->orWhereHas('items', function ($qItem) use ($search) {
-                        $qItem->where('product_name', 'ilike', "%{$search}%");
-                    });
-            });
-        }
-
-        if (!empty($dateFrom)) {
-            $query->whereDate('created_at', '>=', $dateFrom);
-        }
-        if (!empty($dateTo)) {
-            $query->whereDate('created_at', '<=', $dateTo);
-        }
-
-        if ($sort === 'asc') {
-            $query->orderBy('created_at', 'asc');
-        } else {
-            $query->orderBy('created_at', 'desc');
-        }
-
-        $orders = $query->paginate(10);
-
-        $orders->getCollection()->transform(function ($order) {
-            $order->is_reviewed = Review::where('order_id', $order->id)->exists();
-            return $order;
-        });
-
-        return response()->json([
-            'success' => true,
-            'data' => $orders,
-            'stats' => $stats
-        ]);
     }
 
+    /**
+     * Xem chi tiết đơn hàng (BẢO VỆ BỞI IDOR)
+     */
     public function show($id)
     {
-        $order = Order::where('user_id', Auth::id())
-            ->with(['items.variant', 'items.lookbook', 'histories'])
-            ->findOrFail($id);
+        try {
+            // CHỐT CHẶN IDOR: Bắt buộc order_id phải thuộc về user_id hiện tại
+            $order = Order::where('user_id', Auth::id())
+                ->with(['items.variant.product', 'items.lookbook', 'histories' => function($q) {
+                    $q->orderBy('created_at', 'desc');
+                }])
+                ->findOrFail($id);
 
-        $order->simulated_tracking = $this->simulateTracking($order);
-        $order->is_reviewed = Review::where('order_id', $order->id)->exists();
-
-        return response()->json(['success' => true, 'data' => $order]);
+            return response()->json(['success' => true, 'data' => $order]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Không tìm thấy đơn hàng hoặc bạn không có quyền xem.'], 404);
+        }
     }
 
+    /**
+     * Khách hàng tự hủy đơn (BẢO VỆ IDOR + LOGIC STATUS)
+     */
     public function cancel(Request $request, $id)
     {
-        $order = Order::with('items')->where('user_id', Auth::id())->findOrFail($id);
+        try {
+            $order = Order::with('items')->where('user_id', Auth::id())->findOrFail($id);
 
-        if ($order->status !== 'pending') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Bạn không thể hủy vì đơn hàng này đã được xác nhận hoặc đang giao.'
-            ], 400);
+            // BỨC TƯỜNG LỬA CHỐNG HỦY MUỘN (GÓC KHUẤT 4)
+            if ($order->status !== 'pending') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bạn không thể hủy vì đơn hàng này đã được xác nhận hoặc đang được giao.'
+                ], 400);
+            }
+
+            $reason = $request->input('reason', 'Khách hàng tự hủy đơn');
+
+            DB::transaction(function () use ($order, $reason) {
+                $order->update([
+                    'status' => 'cancelled',
+                    // Nếu là MoMo đã paid thì cần chờ kế toán refund, ở đây chỉ đổi trạng thái
+                ]);
+
+                // Hoàn lại Tồn kho hoặc Tồn kho tạm giữ
+                foreach ($order->items as $item) {
+                    if ($item->variant_id) {
+                        if ($order->payment_status === 'paid') {
+                            // Đã trả tiền -> Kho thực tế đã bị trừ -> Trả lại kho thực tế
+                            ProductVariant::where('id', $item->variant_id)->update([
+                                'stock_quantity' => DB::raw("stock_quantity + {$item->quantity}")
+                            ]);
+                        } else {
+                            // Chưa trả tiền (COD) -> Chỉ mới giam hàng -> Trả lại kho giam
+                            ProductVariant::where('id', $item->variant_id)->update([
+                                'reserved_stock' => DB::raw("GREATEST(0, COALESCE(reserved_stock, 0) - {$item->quantity})")
+                            ]);
+                        }
+                    }
+                }
+
+                // Hoàn lại lượt dùng Voucher nếu có
+                if ($order->voucher_id) {
+                    DB::table('vouchers')->where('id', $order->voucher_id)->decrement('usage_count');
+                }
+
+                // Ghi lịch sử
+                OrderStatusHistory::create([
+                    'order_id'        => $order->id,
+                    'old_status'      => 'pending',
+                    'new_status'      => 'cancelled',
+                    'note'            => 'Lý do hủy: ' . $reason,
+                    'changed_by'      => Auth::id(),
+                    'changed_by_type' => get_class(Auth::user()),
+                ]);
+            });
+
+            // Gửi thông báo cho Admin
+            $admins = Admin::where('role_id', 1)->where('status', 'active')->get();
+            foreach ($admins as $admin) {
+                $admin->notify(new AdminAlertNotification([
+                    'type'    => 'danger',
+                    'title'   => 'Đơn hàng bị hủy: #' . $order->order_code,
+                    'message' => 'Khách hàng vừa hủy đơn hàng. Lý do: ' . $reason,
+                    'url'     => '/admin/orders/' . $order->id,
+                ]));
+            }
+
+            return response()->json(['success' => true, 'message' => 'Đã hủy đơn hàng thành công.']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Lỗi hệ thống khi hủy đơn: ' . $e->getMessage()], 500);
         }
+    }
 
-        $request->validate(['reason' => 'required|string|max:1000']);
+    /**
+     * Yêu cầu Trả hàng / Hoàn tiền
+     */
+    public function requestReturn(Request $request, $id)
+    {
+        try {
+            $order = Order::where('user_id', Auth::id())->findOrFail($id);
 
-        DB::transaction(function () use ($order, $request) {
-            $returnStatus = in_array($order->payment_status, ['paid']) ? 'pending' : null;
+            // Bức tường lửa: Chỉ cho phép yêu cầu hoàn trả nếu đơn đã hoàn thành
+            if ($order->status !== 'completed') {
+                return response()->json(['success' => false, 'message' => 'Chỉ có thể yêu cầu đổi trả đối với đơn hàng đã hoàn thành.'], 400);
+            }
 
-            $order->update([
-                'status' => 'cancelled',
-                'return_status' => $returnStatus,
-                'payment_status' => $order->payment_status === 'unpaid' ? 'failed' : $order->payment_status
-            ]);
+            // Chặn trả hàng quá 7 ngày
+            if ($order->updated_at->addDays(7)->isPast()) {
+                return response()->json(['success' => false, 'message' => 'Đã quá thời hạn 7 ngày kể từ lúc nhận hàng, không thể yêu cầu trả hàng.'], 400);
+            }
 
-            foreach ($order->items as $item) {
-                if ($item->variant_id) {
-                    ProductVariant::where('id', $item->variant_id)->increment('stock_quantity', $item->quantity);
+            $reason = $request->input('reason', 'Khách hàng yêu cầu trả hàng');
+
+            DB::transaction(function () use ($order, $reason) {
+                $order->update(['status' => 'returned']);
+
+                OrderStatusHistory::create([
+                    'order_id'        => $order->id,
+                    'old_status'      => 'completed',
+                    'new_status'      => 'returned',
+                    'note'            => 'Yêu cầu trả hàng: ' . $reason,
+                    'changed_by'      => Auth::id(),
+                    'changed_by_type' => get_class(Auth::user()),
+                ]);
+            });
+
+            $admins = Admin::where('role_id', 1)->where('status', 'active')->get();
+            foreach ($admins as $admin) {
+                $admin->notify(new AdminAlertNotification([
+                    'type'    => 'warning',
+                    'title'   => 'Yêu cầu trả hàng: #' . $order->order_code,
+                    'message' => 'Khách hàng yêu cầu trả hàng. Lý do: ' . $reason,
+                    'url'     => '/admin/orders/' . $order->id,
+                ]));
+            }
+
+            return response()->json(['success' => true, 'message' => 'Đã gửi yêu cầu đổi/trả hàng đến hệ thống.']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Lỗi xử lý yêu cầu: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Mua lại đơn hàng cũ (Nạp item vào giỏ hàng)
+     */
+    public function buyAgain($id)
+    {
+        try {
+            $order = Order::with('items.variant')->where('user_id', Auth::id())->findOrFail($id);
+            $userId = Auth::id();
+
+            $cart = Cart::firstOrCreate(
+                ['user_id' => $userId],
+                ['expired_at' => Carbon::now()->addDays(30)]
+            );
+
+            DB::transaction(function () use ($order, $cart) {
+                foreach ($order->items as $item) {
+                    if (!$item->variant_id) continue;
+                    
+                    $variant = ProductVariant::with('product')->find($item->variant_id);
+                    // Bỏ qua nếu sản phẩm đã xóa hoặc ngừng bán
+                    if (!$variant || !$variant->product || $variant->product->status !== 'published') continue;
+
+                    $currentStock = $variant->stock_quantity - ($variant->reserved_stock ?? 0);
+                    if ($currentStock <= 0) continue; // Hết hàng thì bỏ qua
+
+                    $qtyToAdd = min($item->quantity, $currentStock, 50); // Không quá 50 chiếc
+
+                    $existingItem = CartItem::where('cart_id', $cart->id)
+                                            ->where('variant_id', $variant->id)
+                                            ->where('lookbook_id', $item->lookbook_id)
+                                            ->first();
+
+                    if ($existingItem) {
+                        $newQty = min($existingItem->quantity + $qtyToAdd, 50, $currentStock);
+                        $existingItem->update(['quantity' => $newQty]);
+                    } else {
+                        CartItem::create([
+                            'cart_id'             => $cart->id,
+                            'product_id'          => $variant->product_id,
+                            'variant_id'          => $variant->id,
+                            'quantity'            => $qtyToAdd,
+                            'lookbook_id'         => $item->lookbook_id,
+                            'lookbook_selections' => $item->lookbook_selections
+                        ]);
+                    }
+                }
+            });
+
+            return response()->json(['success' => true, 'message' => 'Đã thêm các sản phẩm khả dụng vào giỏ hàng.']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Lỗi thao tác: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Lấy dữ liệu mô phỏng vận chuyển (Dành cho Frontend Tracking)
+     */
+    public function getSimulationData($id)
+    {
+        try {
+            $order = Order::where('user_id', Auth::id())->findOrFail($id);
+            $events = [];
+
+            $createdAt = Carbon::parse($order->created_at);
+            $updatedAt = Carbon::parse($order->updated_at);
+            $now = Carbon::now();
+
+            $shippingInfo = is_string($order->shipping_info) ? json_decode($order->shipping_info, true) : $order->shipping_info;
+            $city = $shippingInfo['city'] ?? 'Hà Nội';
+            $baseCity = $shippingInfo['origin_city'] ?? 'Hà Nội';
+
+            // Sự kiện 1: Đặt hàng
+            $events[] = [
+                'time' => $createdAt->format('d/m/Y H:i'),
+                'location' => 'Hệ thống ZYRO',
+                'status' => 'pending',
+                'description' => 'Khách hàng tạo đơn hàng thành công.'
+            ];
+
+            // Nếu đã duyệt
+            if (in_array($order->status, ['processing', 'shipping', 'completed', 'returned'])) {
+                $processTime = $createdAt->copy()->addHours(2);
+                if ($processTime->greaterThan($updatedAt)) $processTime = $updatedAt;
+                
+                $events[] = [
+                    'time' => $processTime->format('d/m/Y H:i'),
+                    'location' => 'Kho ' . $baseCity,
+                    'status' => 'processing',
+                    'description' => 'Đơn hàng đã được xác nhận và đóng gói.'
+                ];
+            }
+
+            // Nếu đang giao / đã hoàn thành
+            if (in_array($order->status, ['shipping', 'completed', 'returned'])) {
+                $shipTime = $createdAt->copy()->addHours(6);
+                if ($shipTime->greaterThan($updatedAt)) $shipTime = $updatedAt;
+
+                $events[] = [
+                    'time' => $shipTime->format('d/m/Y H:i'),
+                    'location' => 'Bưu cục ' . $baseCity,
+                    'status' => 'shipping',
+                    'description' => 'Bàn giao cho đơn vị vận chuyển.'
+                ];
+
+                $arriveLocalTime = $shipTime->copy()->addDays(1);
+                $deliveryTime = $arriveLocalTime->copy()->addHours(8);
+                $completeTime = $order->status === 'completed' ? clone $updatedAt : $deliveryTime->copy()->addHours(4);
+
+                if ($now->greaterThan($arriveLocalTime) || $order->status === 'completed') {
+                    $events[] = ['time' => $arriveLocalTime->format('d/m/Y H:i'), 'location' => $city, 'status' => 'shipping', 'description' => "Đến trạm {$city}."];
+                }
+                if ($now->greaterThan($deliveryTime) || $order->status === 'completed') {
+                    $events[] = ['time' => $deliveryTime->format('d/m/Y H:i'), 'location' => $city, 'status' => 'shipping', 'description' => 'Nhân viên đang đi giao hàng.'];
                 }
             }
 
-            OrderStatusHistory::create([
-                'order_id' => $order->id,
-                'old_status' => 'pending',
-                'new_status' => 'cancelled',
-                'note' => 'Khách hàng hủy đơn: ' . $request->reason,
-                'changed_by_type' => get_class(Auth::user()),
-                'changed_by' => Auth::id()
-            ]);
-        });
-
-        return response()->json(['success' => true, 'message' => 'Đã hủy đơn hàng thành công.']);
-    }
-
-    public function requestReturn(Request $request, $id)
-    {
-        $order = Order::where('user_id', Auth::id())->findOrFail($id);
-
-        if ($order->status !== 'completed') {
-            return response()->json(['success' => false, 'message' => 'Chỉ có thể yêu cầu hoàn trả đối với đơn hàng đã hoàn thành.'], 400);
-        }
-
-        if ($order->return_status !== null) {
-            return response()->json(['success' => false, 'message' => 'Đơn hàng này đã được gửi yêu cầu hoàn trả/hỗ trợ trước đó.'], 400);
-        }
-
-        $request->validate(['reason' => 'required|string|max:1000']);
-
-        $order->update(['return_status' => 'pending']);
-
-        OrderStatusHistory::create([
-            'order_id' => $order->id,
-            'old_status' => $order->status,
-            'new_status' => $order->status,
-            'note' => 'KHÁCH HÀNG YÊU CẦU HOÀN TRẢ: ' . $request->reason,
-            'changed_by_type' => get_class(Auth::user()),
-            'changed_by' => Auth::id()
-        ]);
-
-        // =========================================================
-        // ĐÃ THÊM: BẮN REAL-TIME NOTIFICATION CHO ADMIN QUA REVERB
-        // =========================================================
-        try {
-            $adminsToNotify = Admin::where('role_id', 1)->where('status', 'active')->get();
-            foreach ($adminsToNotify as $admin) {
-                $admin->notify(new AdminAlertNotification([
-                    'type'    => 'warning',
-                    'title'   => 'Yêu cầu hoàn trả: #' . $order->order_code,
-                    'message' => 'Khách hàng vừa yêu cầu hoàn trả/đổi hàng. Vui lòng kiểm tra.',
-                    'url'     => '/admin/returns/' . $order->id,
-                ]));
+            // Kết quả cuối cùng
+            if ($order->status === 'completed') {
+                $events[] = [
+                    'time' => $updatedAt->format('d/m/Y H:i'),
+                    'location' => $city,
+                    'status' => 'completed',
+                    'description' => 'Giao hàng thành công. Cảm ơn bạn đã đồng hành cùng ZYRO!'
+                ];
+            } elseif ($order->status === 'returned') {
+                $events[] = [
+                    'time' => $updatedAt->format('d/m/Y H:i'),
+                    'location' => 'Kho ' . $baseCity,
+                    'status' => 'returned',
+                    'description' => 'Giao hàng thất bại hoặc có yêu cầu hoàn trả.'
+                ];
+            } elseif ($order->status === 'cancelled') {
+                $events[] = [
+                    'time' => $updatedAt->format('d/m/Y H:i'),
+                    'location' => 'Hệ thống ZYRO',
+                    'status' => 'cancelled',
+                    'description' => 'Đơn hàng đã bị hủy.'
+                ];
             }
+
+            // Sắp xếp lại lịch sử theo thời gian mới nhất lên đầu để giống Shopee
+            usort($events, function($a, $b) {
+                return Carbon::createFromFormat('d/m/Y H:i', $b['time'])->timestamp - Carbon::createFromFormat('d/m/Y H:i', $a['time'])->timestamp;
+            });
+
+            return response()->json(['success' => true, 'data' => $events]);
         } catch (\Exception $e) {
-            // Log lỗi nếu notification thất bại nhưng không ảnh hưởng UX người dùng
-            \Illuminate\Support\Facades\Log::error('Lỗi bắn thông báo Return: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Không thể tải hành trình đơn hàng.'], 500);
         }
-
-        return response()->json(['success' => true, 'message' => 'Yêu cầu của bạn đã được gửi. Bộ phận CSKH sẽ sớm liên hệ hỗ trợ.']);
-    }
-
-    public function buyAgain($id)
-    {
-        $order = Order::with('items.variant.product')->where('user_id', Auth::id())->findOrFail($id);
-
-        $cart = Cart::firstOrCreate(
-            ['user_id' => Auth::id()],
-            ['expired_at' => now()->addDays(30)]
-        );
-
-        $addedCount = 0;
-        $outOfStockCount = 0;
-
-        foreach ($order->items as $item) {
-            $variant = $item->variant;
-            if (!$variant || !$variant->product || $variant->product->status !== 'published') {
-                $outOfStockCount++;
-                continue;
-            }
-
-            $currentStock = $variant->stock_quantity - ($variant->reserved_stock ?? 0);
-            if ($currentStock < 1) {
-                $outOfStockCount++;
-                continue;
-            }
-
-            $addQty = min($item->quantity, $currentStock, 50);
-            
-            $existingCartItem = CartItem::where('cart_id', $cart->id)
-                                        ->where('variant_id', $variant->id)
-                                        ->where('lookbook_id', $item->lookbook_id)
-                                        ->first();
-
-            if ($existingCartItem) {
-                $newQty = min($existingCartItem->quantity + $addQty, $currentStock, 50);
-                $existingCartItem->update([
-                    'quantity' => $newQty,
-                    'lookbook_selections' => $item->lookbook_selections
-                ]);
-            } else {
-                CartItem::create([
-                    'cart_id' => $cart->id,
-                    'product_id' => $variant->product_id,
-                    'variant_id' => $variant->id,
-                    'quantity' => $addQty,
-                    'lookbook_id' => $item->lookbook_id,
-                    'lookbook_selections' => $item->lookbook_selections
-                ]);
-            }
-            $addedCount++;
-        }
-
-        if ($addedCount === 0) {
-            return response()->json(['success' => false, 'message' => 'Các sản phẩm này hiện đã hết hàng hoặc ngừng kinh doanh.'], 400);
-        }
-
-        $msg = "Đã thêm thành công $addedCount sản phẩm vào giỏ hàng.";
-        if ($outOfStockCount > 0) $msg .= " (Bỏ qua $outOfStockCount SP hết hàng).";
-
-        return response()->json(['success' => true, 'message' => $msg]);
-    }
-
-    private function simulateTracking(Order $order): array
-    {
-        $events = [];
-        $createdAt = \Illuminate\Support\Carbon::parse($order->created_at);
-        $updatedAt = \Illuminate\Support\Carbon::parse($order->updated_at ?? now());
-        $now = now();
-
-        $shippingInfo = is_string($order->shipping_info) ? json_decode($order->shipping_info, true) : $order->shipping_info;
-        $city = $shippingInfo['city'] ?? 'Hà Nội';
-
-        $baseCity = $shippingInfo['origin_city'] ?? 'Hà Nội';
-        $isSameCity = str_contains($city, $baseCity) || str_contains($city, 'Ha Noi');
-
-        $confirmTime = $createdAt->copy()->addHours(2);
-        $pickupTime = $confirmTime->copy()->addHours(8);
-        $transitTime = $pickupTime->copy()->addHours(12);
-        $arriveLocalTime = $transitTime->copy()->addHours($isSameCity ? 10 : 36);
-        $deliveryTime = $arriveLocalTime->copy()->addHours(6);
-        $completeTime = $updatedAt->copy();
-
-        $events[] = [
-            'time' => $createdAt->format('d/m/Y H:i'),
-            'location' => 'Hệ thống ZYRO',
-            'status' => 'pending',
-            'description' => 'Đơn hàng được tạo thành công. Đang chờ hệ thống xác nhận.'
-        ];
-
-        if (!in_array($order->status, ['pending', 'cancelled'])) {
-            $events[] = ['time' => $confirmTime->format('d/m/Y H:i'), 'location' => 'Kho ' . $baseCity, 'status' => 'confirmed', 'description' => 'Đang chuẩn bị hàng.'];
-        }
-
-        if (in_array($order->status, ['shipping', 'completed', 'returned'])) {
-            $events[] = ['time' => $pickupTime->format('d/m/Y H:i'), 'location' => 'Kho ' . $baseCity, 'status' => 'shipping', 'description' => 'Đã giao cho ĐVVC.'];
-            if ($now->greaterThan($arriveLocalTime) || $order->status === 'completed') {
-                $events[] = ['time' => $arriveLocalTime->format('d/m/Y H:i'), 'location' => $city, 'status' => 'shipping', 'description' => "Đến trạm {$city}."];
-            }
-            if ($now->greaterThan($deliveryTime) || $order->status === 'completed') {
-                $events[] = ['time' => $deliveryTime->format('d/m/Y H:i'), 'location' => $city, 'status' => 'shipping', 'description' => 'Đang đi giao.'];
-            }
-        }
-
-        if ($order->status === 'completed') {
-            $events[] = [
-                'time' => $completeTime->format('d/m/Y H:i'),
-                'location' => $city,
-                'status' => 'completed',
-                'description' => 'Giao hàng thành công. Chúc bạn có trải nghiệm thời trang tuyệt vời với ZYRO!'
-            ];
-        } elseif ($order->status === 'returned') {
-            $events[] = [
-                'time' => $completeTime->format('d/m/Y H:i'),
-                'location' => 'Kho ' . $baseCity,
-                'status' => 'returned',
-                'description' => 'Giao hàng thất bại. Đơn hàng đã được hoàn trả về kho ZYRO.'
-            ];
-        } elseif ($order->status === 'cancelled') {
-            $events[] = [
-                'time' => $updatedAt->format('d/m/Y H:i'),
-                'location' => 'Hệ thống ZYRO',
-                'status' => 'cancelled',
-                'description' => 'Đơn hàng đã bị hủy bỏ.'
-            ];
-        }
-
-        return array_reverse($events);
     }
 }

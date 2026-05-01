@@ -29,8 +29,8 @@ const user = [
         name: 'client-category',
         component: () => import('@/pages/client/category/Index.vue')
       },
-      {
-        path: '/product/:id',
+       {
+        path: '/product/:slug',
         name: 'client-product-detail',
         component: () => import('@/pages/client/product/Detail.vue')
       },

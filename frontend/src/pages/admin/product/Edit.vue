@@ -106,9 +106,14 @@
                     <div class="col-md-4">
                       <label class="form-label fw-bold text-dark dark:text-gray-200">Giá cơ sở hiển thị <span class="text-danger">*</span></label>
                       <div class="input-group shadow-sm-hover">
-                        <input type="text" class="form-control bg-white dark:bg-[#1a2533] dark:text-white fw-bold border-secondary-subtle dark:border-gray-600 border-end-0" :value="formatThousand(form.base_price)" @input="e => updateNumber(e, form, 'base_price')" required>
+                        <!-- Cập nhật class is-invalid nếu giá < 1000 -->
+                        <input type="text" class="form-control bg-white dark:bg-[#1a2533] dark:text-white fw-bold border-secondary-subtle dark:border-gray-600 border-end-0" 
+                               :class="{ 'is-invalid border-danger': form.base_price !== '' && form.base_price < 1000 }"
+                               :value="formatThousand(form.base_price)" 
+                               @input="e => updateNumber(e, form, 'base_price')" required placeholder="VD: 100.000">
                         <span class="input-group-text bg-white dark:bg-[#1a2533] text-muted border-secondary-subtle dark:border-gray-600 border-start-0 fw-bold">₫</span>
                       </div>
+                      <small class="text-danger fw-medium d-block mt-1" v-if="form.base_price !== '' && form.base_price < 1000">Giá tối thiểu là 1.000đ</small>
                     </div>
 
                     <div class="col-12 mt-3">
@@ -283,12 +288,13 @@
 
                           <td class="align-middle">
                             <input type="text" class="form-control form-control-sm text-end fw-bold dark:bg-[#212529] dark:border-gray-600 dark:text-white shadow-inner"
-                              :value="formatThousand(v.cost_price)" @input="e => updateNumber(e, v, 'cost_price')" required>
+                              :value="formatThousand(v.cost_price)" @input="e => updateNumber(e, v, 'cost_price', true)">
                           </td>
                           <td class="align-middle">
+                            <!-- Hiệu ứng viền đỏ nếu giá < 1000đ -->
                             <input type="text" class="form-control form-control-sm text-end fw-bold text-urban dark:bg-[#212529] dark:border-gray-600 shadow-inner"
                               :class="{ 'is-invalid border-danger': v.priceError }" :value="formatThousand(v.price)"
-                              @input="e => { updateNumber(e, v, 'price'); validateRow(index); }" required>
+                              @input="e => { updateNumber(e, v, 'price'); validateRow(index); }" required placeholder="Tối thiểu 1000">
                           </td>
                           <td class="align-middle">
                             <input type="text" class="form-control form-control-sm text-end text-danger fw-semibold dark:bg-[#212529] dark:border-gray-600 shadow-inner"
@@ -478,7 +484,7 @@
                     </div>
                   </div>
                   <div class="col-md-6 border-start dark:border-gray-600 ps-md-4">
-                    <h6 class="small text-muted fw-bold text-center border-bottom dark:border-gray-600 pb-2 mb-3"><i class="bi bi-sort-numeric-down me-1"></i>Chữ Số</h6>
+                    <h6 class="small text-muted fw-bold text-center border-bottom dark:border-gray-600 pb-2 mb-3"><i class="bi bi-sort-numeric-down me-1"></i>Chữ Số (Tăng dần)</h6>
                     <div class="d-flex flex-column gap-2 pe-1 custom-scrollbar-y" style="max-height: 250px; overflow-y: auto;">
                       <div v-for="val in sortedAttrValues.numeric" :key="val.id" class="d-flex justify-content-between align-items-center bg-white dark:bg-[#1a2533] border dark:border-gray-600 rounded-3 px-3 py-2 shadow-sm transition-all hover-border-urban">
                         <span class="fw-bold text-dark dark:text-gray-200 text-truncate" :title="val.value">{{ val.value }}</span>
@@ -524,7 +530,7 @@ const systemAttributes = ref([]);
 const brands = ref([]);
 
 const form = ref({
-  category_id: '', brand_id: '', name: '', slug: '', base_price: 0, description: '', care_instructions: '', gender: 'Unisex', fit_type: '', is_featured: false, isPublished: false
+  category_id: '', brand_id: '', name: '', slug: '', base_price: '', description: '', care_instructions: '', gender: 'Unisex', fit_type: '', is_featured: false, isPublished: false
 });
 
 const thumbnailFile = ref(null);
@@ -590,11 +596,11 @@ const formatThousand = (val) => {
   return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 };
 
-// Cập nhật biến số thô khi người dùng gõ
+// ĐÃ FIX: Không tự động đưa về 0 khi xóa trắng, cho phép để rỗng (chuỗi rỗng) để Validation báo lỗi đỏ
 const updateNumber = (e, targetObj, key, allowEmpty = false) => {
   let rawValue = e.target.value.replace(/\D/g, ''); 
   if (rawValue === '') {
-    targetObj[key] = allowEmpty ? null : 0;
+    targetObj[key] = allowEmpty ? null : ''; // Sửa ở đây: Gán chuỗi rỗng thay vì 0đ
     e.target.value = '';
   } else {
     let numValue = parseInt(rawValue, 10);
@@ -608,8 +614,9 @@ const formatCurrency = (val) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(val);
 };
 
+// ĐÃ FIX: Chỉ cho phép qua Bước 2 nếu Giá bán ra >= 1000đ
 const canProceedToStep2 = computed(() => {
-  return form.value.name && form.value.category_id && form.value.base_price >= 0;
+  return form.value.name && form.value.category_id && form.value.base_price !== '' && form.value.base_price >= 1000;
 });
 
 const proceedIfValid = (step) => {
@@ -760,7 +767,11 @@ const addVariantRow = () => {
   const prefix = form.value.slug ? form.value.slug.substring(0, 4).toUpperCase().replace(/-/g, '') : 'SKU';
   const newSku = `${prefix}${randomCode}-V${variants.value.length + 1}`;
   let rowAttrs = {}; activeAttributes.value.forEach(id => rowAttrs[id] = "");
-  variants.value.push({ sku: newSku, cost_price: 0, price: form.value.base_price, promotional_price: null, stock_quantity: 10, imageFile: null, preview: null, attributes: rowAttrs, hasDuplicateError: false, attrError: false, priceError: false, saleError: false });
+  
+  // Lấy giá cơ sở truyền xuống (Nếu giá trống thì để rỗng)
+  const initialPrice = form.value.base_price !== '' ? form.value.base_price : '';
+  
+  variants.value.push({ sku: newSku, cost_price: null, price: initialPrice, promotional_price: null, stock_quantity: 10, imageFile: null, preview: null, attributes: rowAttrs, hasDuplicateError: false, attrError: false, priceError: false, saleError: false });
 };
 
 const removeVariantRow = (index) => {
@@ -794,10 +805,11 @@ const duplicateVariantRow = (index) => {
   validateDuplicates();
 };
 
+// ĐÃ FIX: Chặn lỗi v.price < 1000đ (Báo khung đỏ)
 const validateRow = (index) => {
   const v = variants.value[index];
-  v.priceError = v.price <= 0 || v.price === '';
-  v.saleError = parseFloat(v.promotional_price) > parseFloat(v.price);
+  v.priceError = v.price === '' || v.price === null || parseFloat(v.price) < 1000;
+  v.saleError = v.promotional_price !== null && parseFloat(v.promotional_price) > parseFloat(v.price);
 };
 
 const validateDuplicates = () => {

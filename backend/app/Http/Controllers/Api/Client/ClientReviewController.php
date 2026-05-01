@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Client;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Review;
+use App\Http\Requests\Client\Review\StoreReviewRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -40,41 +41,27 @@ class ClientReviewController extends Controller
         }
     }
 
-    // tạo mới hoặc cập nhật review
-    public function store(Request $request)
+    // tạo mới hoặc cập nhật review (ĐÃ ĐƯỢC BẢO VỆ BỞI StoreReviewRequest)
+    public function store(StoreReviewRequest $request)
     {
         try {
-            $request->validate([
-                'order_id' => 'required|integer|exists:orders,id',
-                'reviews' => 'required|array',
-                'reviews.*.product_id' => 'required|integer|exists:products,id',
-                'reviews.*.rating' => 'required|integer|min:1|max:5',
-                // bổ sung: chặn ảnh quá nặng hoặc file không phải là ảnh
-                'reviews.*.images.*' => 'nullable|image|max:5120', 
-            ]);
-
+            // Toàn bộ validate, check mua hàng thật, check quyền đều đã được StoreReviewRequest xử lý tự động
             $user = Auth::user();
-            $order = Order::where('user_id', $user->id)->findOrFail($request->order_id);
-
-            if ($order->status !== 'completed') {
-                return response()->json(['success' => false, 'message' => 'Đơn hàng chưa hoàn thành.'], 400);
-            }
-
+            $orderId = $request->input('order_id');
             $inputs = $request->input('reviews', []);
 
             foreach ($inputs as $index => $itemReview) {
-                $oldReview = Review::where('order_id', $order->id)->where('product_id', $itemReview['product_id'])->first();
+                $oldReview = Review::where('order_id', $orderId)->where('product_id', $itemReview['product_id'])->first();
 
                 // mặc định giữ lại ảnh cũ
                 $imagePaths = $oldReview ? $oldReview->images : []; 
 
-                // sửa lỗi intelephense: lấy file an toàn qua helper của laravel
+                // lấy file an toàn
                 $uploadedImages = $request->file("reviews.{$index}.images");
 
                 // nếu có upload ảnh mới thì ghi đè
                 if ($uploadedImages) {
                     $imagePaths = [];
-                    // ép kiểu mảng để intelephense không báo lỗi
                     $imagesArray = is_array($uploadedImages) ? $uploadedImages : [$uploadedImages];
                     
                     foreach ($imagesArray as $image) {
@@ -83,10 +70,10 @@ class ClientReviewController extends Controller
                     }
                 }
 
-                // nếu có rồi thì cập nhật, chưa có thì tạo mới
+                // Lưu xuống DB (Dữ liệu đã sạch 100%)
                 Review::updateOrCreate(
                     [
-                        'order_id' => $order->id,
+                        'order_id' => $orderId,
                         'product_id' => $itemReview['product_id'],
                         'user_id' => $user->id,
                     ],

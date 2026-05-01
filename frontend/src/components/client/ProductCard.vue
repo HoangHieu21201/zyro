@@ -1,5 +1,6 @@
 <template>
-  <div class="product-card cursor-pointer w-100">
+  <!-- ĐÃ FIX: Thêm sự kiện @click="goToDetail" để khi bấm vào bất kỳ đâu trên Card đều chuyển trang -->
+  <div class="product-card cursor-pointer w-100" @click="goToDetail">
     
     <!-- KHUNG HÌNH ẢNH SẢN PHẨM -->
     <div class="product-img-wrapper position-relative overflow-hidden rounded-3 mb-3 bg-light dark:bg-[#1a2533]">
@@ -23,7 +24,6 @@
       <!-- BỘ NÚT BÊN PHẢI -->
       <div class="action-right-panel position-absolute d-flex flex-column gap-2" style="top: 15px; right: 15px;">
         
-        <!-- ĐÃ FIX TOOLTIP: Đổi thành "Bỏ yêu thích" hoặc "Thêm vào yêu thích" dựa trên trạng thái -->
         <button class="btn bg-white rounded-circle shadow action-icon-btn d-flex align-items-center justify-content-center" 
                 :title="isWishlisted ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'" 
                 @click.stop="onWishlist">
@@ -41,7 +41,8 @@
 
       <!-- NÚT TÙY CHỌN DƯỚI ĐÁY -->
       <div class="action-bottom-panel position-absolute bottom-0 start-0 w-100 px-3 pb-3">
-        <button class="btn bg-white w-100 fw-semibold shadow-lg rounded-2 py-2 text-dark action-btn-main d-flex align-items-center justify-content-center gap-2" @click.stop="onOptions">
+        <!-- ĐÃ FIX: Cho nút Tùy chọn kích hoạt hàm chuyển trang goToDetail -->
+        <button class="btn bg-white w-100 fw-semibold shadow-lg rounded-2 py-2 text-dark action-btn-main d-flex align-items-center justify-content-center gap-2" @click.stop="goToDetail">
           <i class="bi bi-grid text-secondary"></i> Tùy chọn
         </button>
       </div>
@@ -67,8 +68,11 @@
       </div>
 
       <!-- TÊN SẢN PHẨM -->
-      <h6 class="product-title text-dark dark:text-gray-200 mb-2 fw-normal line-clamp-1 w-100" :title="product.name" style="font-size: 0.95rem;">
-        {{ product.name }}
+      <!-- ĐÃ FIX: Bọc Router-link cho chuẩn SEO (Google thích thẻ a) và ưu tiên Slug -->
+      <h6 class="product-title mb-2 fw-normal line-clamp-1 w-100" :title="product.name" style="font-size: 0.95rem;">
+        <router-link :to="`/product/${product.slug || product.id}`" class="text-decoration-none text-dark dark:text-gray-200 product-link transition-all" @click.stop>
+          {{ product.name }}
+        </router-link>
       </h6>
 
       <!-- MÀU SẮC -->
@@ -98,6 +102,7 @@
 
 <script setup>
 import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router'; // ĐÃ THÊM YÊU CẦU ROUTER
 import { useWishlistStore } from '@/stores/wishlistStore';
 
 const props = defineProps({
@@ -125,6 +130,7 @@ const emit = defineEmits(['quick-view', 'compare', 'options']);
 const activeColorIndex = ref(0);
 
 const wishlistStore = useWishlistStore();
+const router = useRouter(); // Khởi tạo router
 
 // Logic kiểm tra ID sản phẩm có nằm trong danh sách đã thích chưa
 const isWishlisted = computed(() => {
@@ -153,6 +159,16 @@ const onWishlist = async () => {
 
 const onQuickView = () => emit('quick-view', props.product);
 const onCompare = () => emit('compare', props.product);
+
+// ĐÃ THÊM: Xử lý chuyển hướng đến trang Detail bằng Slug
+const goToDetail = () => {
+  const targetPath = props.product.slug || props.product.id;
+  router.push(`/product/${targetPath}`).then(() => {
+     window.scrollTo(0, 0);
+  });
+};
+
+// Vẫn giữ sự kiện cũ nếu như Parent Component có dùng
 const onOptions = () => emit('options', props.product);
 </script>
 
@@ -216,6 +232,9 @@ const onOptions = () => emit('options', props.product);
 .product-card:hover .hover-overlay { opacity: 1; }
 .product-card:hover .action-right-panel { opacity: 1; visibility: visible; transform: translateX(0); }
 .product-card:hover .action-bottom-panel { opacity: 1; visibility: visible; transform: translateY(0); }
+
+/* ĐÃ FIX: Cho chữ Tên Sản phẩm có thẻ a đổi màu khi hover khung Card */
+.product-card:hover .product-title .product-link { color: var(--color-c-hover, #547792) !important; }
 .product-card:hover .product-title { color: var(--color-c-hover, #547792) !important; }
 
 /* NÚT BẤM BÊN PHẢI */

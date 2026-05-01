@@ -9,7 +9,7 @@ class UpdateProductRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // Middleware đã lo phần quyền
+        return true; 
     }
 
     public function rules(): array
@@ -21,7 +21,8 @@ class UpdateProductRequest extends FormRequest
             'slug'              => ['required', 'string', 'min:3', 'max:255', Rule::unique('products', 'slug')->ignore($productId)->whereNull('deleted_at')],
             'category_id'       => ['required', 'integer', 'exists:categories,id'],
             'brand_id'          => ['nullable', 'integer', 'exists:brands,id'],
-            'base_price'        => ['required', 'numeric', 'min:0', 'max:9999999999'], 
+            // ĐÃ FIX: Giá cơ sở tối thiểu phải là 1.000đ
+            'base_price'        => ['required', 'numeric', 'min:1000', 'max:9999999999'], 
             'description'       => ['nullable', 'string', 'max:5000'],
             'care_instructions' => ['nullable', 'string', 'max:2000'],
             'gender'            => ['nullable', 'string', 'max:50', Rule::in(['Unisex', 'Men', 'Women', 'Kids'])],
@@ -55,7 +56,7 @@ class UpdateProductRequest extends FormRequest
             
             'base_price.required'      => 'Vui lòng nhập giá cơ sở tham khảo.',
             'base_price.numeric'       => 'Giá cơ sở phải là một số hợp lệ.',
-            'base_price.min'           => 'Giá cơ sở không được là số âm.',
+            'base_price.min'           => 'Giá cơ sở tối thiểu phải là 1.000đ.',
             'base_price.max'           => 'Giá cơ sở vượt quá giới hạn hệ thống.',
             
             'description.max'          => 'Mô tả sản phẩm không được vượt quá 5000 ký tự.',
@@ -73,5 +74,30 @@ class UpdateProductRequest extends FormRequest
             'status.required'          => 'Vui lòng chọn trạng thái hiển thị.',
             'status.in'                => 'Trạng thái sản phẩm không hợp lệ.',
         ];
+    }
+
+    /**
+     * ĐÃ FIX: QUÉT X-QUANG VÀO TẬN BÊN TRONG CHUỖI JSON ĐỂ KIỂM TRA GIÁ TỪNG BIẾN THỂ
+     */
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            if ($this->has('variants_data')) {
+                $variants = json_decode($this->input('variants_data'), true);
+                if (is_array($variants)) {
+                    foreach ($variants as $index => $v) {
+                        if (!isset($v['price']) || $v['price'] < 1000) {
+                            $validator->errors()->add('variants_data', "Biến thể [{$v['sku']}] có giá bán ra không hợp lệ (Tối thiểu phải 1.000đ).");
+                        }
+                        if (isset($v['cost_price']) && $v['cost_price'] < 0) {
+                            $validator->errors()->add('variants_data', "Biến thể [{$v['sku']}] có giá nhập vốn không được là số âm.");
+                        }
+                        if (isset($v['promotional_price']) && $v['promotional_price'] > $v['price']) {
+                            $validator->errors()->add('variants_data', "Biến thể [{$v['sku']}] có Giá khuyến mãi cao hơn cả Giá bán ra.");
+                        }
+                    }
+                }
+            }
+        });
     }
 }

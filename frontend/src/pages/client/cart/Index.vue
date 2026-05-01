@@ -74,7 +74,6 @@
                    class="cart-item position-relative p-3 p-md-4 transition-all bg-urban-effect dark:bg-[#1a2533] rounded-4 mb-4 mt-2 shadow-sm border border-secondary border-opacity-25"
                    :class="{'pe-none opacity-75': updatingItemId === 'combo_' + group.lookbook_id}">
                   
-                  <!-- ĐÃ FIX: NÚT XÓA COMBO CHUẨN XÁC, CHỐNG MÙ MÀU HOVER -->
                   <button class="btn-delete-circle transition-all shadow-sm" @click="removeCombo(group)" title="Xóa toàn bộ Combo">
                     <i class="bi bi-x-lg"></i>
                   </button>
@@ -135,7 +134,10 @@
                            <img :src="item.image || '/client_placeholder.png'" style="width: 55px; height: 75px;" class="rounded-2 border object-fit-cover shadow-sm bg-white">
                            <div class="flex-grow-1">
                               <h6 class="fw-semibold text-dark dark:text-gray-200 mb-1 line-clamp-1 font-sans-vn" style="font-size: 0.9rem;">
-                                 {{ item.product_name }}
+                                <!-- ĐÃ FIX: CHỈ LẤY PRODUCT_ID ĐỂ TẠO LINK CHUẨN XÁC -->
+                                <router-link :to="`/product/${item.product_id}`" class="text-decoration-none text-dark dark:text-gray-200 hover-text-urban transition-color">
+                                  {{ item.product_name }}
+                                </router-link>
                               </h6>
                               <div class="text-secondary dark:text-gray-400 font-sans-vn" style="font-size: 0.85rem;">
                                  {{ item.attributes || 'Mặc định' }} <span class="mx-1">|</span> <span class="fw-bold text-dark dark:text-gray-300">{{ formatCurrency(item.current_price) }}</span>
@@ -152,7 +154,6 @@
               <!-- LOẠI 2: SẢN PHẨM LẺ BÌNH THƯỜNG       -->
               <!-- ===================================== -->
               <template v-else>
-                <!-- ĐÃ FIX: Đưa px-3 p-md-4 vào để khung bao trọn, Xóa margin lộn xộn -->
                 <div v-for="item in group.items" :key="'cartItem'+item.variant_id" 
                      class="cart-item position-relative p-3 p-md-4 border-bottom dark:border-gray-700 transition-all"
                      :class="{'pe-none opacity-50': updatingItemId === item.variant_id}">
@@ -161,7 +162,6 @@
                      <span></span><span></span><span></span>
                   </div>
 
-                  <!-- ĐÃ FIX: NÚT XÓA SP LẺ CHUẨN XÁC, CHỐNG MÙ MÀU HOVER -->
                   <button class="btn-delete-circle transition-all shadow-sm" @click="removeItem(item)" title="Xóa khỏi giỏ">
                     <i class="bi bi-x-lg"></i>
                   </button>
@@ -173,7 +173,8 @@
                              class="rounded-3 border dark:border-gray-600 object-fit-cover shadow-sm bg-light flex-shrink-0" style="width: 90px; height: 120px;">
                         <div class="flex-grow-1 pt-1">
                           <h6 class="fw-bold text-dark dark:text-gray-200 mb-2 line-clamp-2 pe-3 font-sans-vn">
-                            <router-link :to="`/product/${item.product_slug || item.product_id}`" class="text-decoration-none text-dark dark:text-gray-200 hover-text-urban transition-color">
+                            <!-- ĐÃ FIX: CHỈ LẤY PRODUCT_ID ĐỂ TẠO LINK CHUẨN XÁC -->
+                            <router-link :to="`/product/${item.product_id}`" class="text-decoration-none text-dark dark:text-gray-200 hover-text-urban transition-color">
                                {{ item.product_name }}
                             </router-link>
                           </h6>
@@ -529,9 +530,6 @@ onMounted(() => {
 .animation-fade-in { animation: fadeIn 0.4s ease-in-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
-/* =====================================
-   ĐÃ FIX: NÚT XÓA (X) LUÔN NẰM CHUẨN GÓC PHẢI
-====================================== */
 .btn-delete-circle {
   position: absolute;
   top: 16px; 

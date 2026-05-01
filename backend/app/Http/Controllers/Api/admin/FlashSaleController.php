@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 use Illuminate\Http\JsonResponse;
 
 class FlashSaleController extends Controller
@@ -44,7 +45,6 @@ class FlashSaleController extends Controller
                 return $query->paginate(12);
             });
 
-            // Lấy thêm đếm số lượng cho Tabs
             $counts = Cache::remember("flash_sales_counts_v{$version}", 86400, function() {
                 return [
                     'all' => FlashSale::count(),
@@ -65,6 +65,9 @@ class FlashSaleController extends Controller
         try {
             $flashSale = DB::transaction(function () use ($request) {
                 $data = $request->validated();
+                
+                // ĐÃ FIX: Tự động tạo slug từ tên chiến dịch để không bị lỗi 500
+                $data['slug'] = Str::slug($data['name']) . '-' . time();
 
                 if ($request->hasFile('banner_image')) {
                     $data['banner_image'] = $request->file('banner_image')->store('flash_sales/banners', 'public');
@@ -91,7 +94,11 @@ class FlashSaleController extends Controller
             $this->clearCache();
             
             $flashSale->load('items.variant.product');
-            broadcast(new FlashSaleEvent('created', $flashSale))->toOthers();
+            
+            // ĐÃ FIX: Bọc try-catch chống sập API khi Websocket lỗi mạng
+            try {
+                broadcast(new FlashSaleEvent('created', $flashSale))->toOthers();
+            } catch (\Exception $e) {}
 
             return response()->json(['success' => true, 'message' => 'Tạo Flash Sale thành công!', 'data' => $flashSale], 201);
         } catch (\Exception $e) {
@@ -115,6 +122,11 @@ class FlashSaleController extends Controller
             $flashSale = DB::transaction(function () use ($request, $id) {
                 $flashSale = FlashSale::findOrFail($id);
                 $data = $request->validated();
+                
+                // Cập nhật slug nếu tên thay đổi
+                if (isset($data['name']) && $data['name'] !== $flashSale->name) {
+                    $data['slug'] = Str::slug($data['name']) . '-' . time();
+                }
 
                 if ($request->hasFile('banner_image')) {
                     if ($flashSale->banner_image) Storage::disk('public')->delete($flashSale->banner_image);
@@ -147,7 +159,10 @@ class FlashSaleController extends Controller
             $this->clearCache();
 
             $flashSale->load('items.variant.product');
-            broadcast(new FlashSaleEvent('updated', $flashSale))->toOthers();
+            
+            try {
+                broadcast(new FlashSaleEvent('updated', $flashSale))->toOthers();
+            } catch (\Exception $e) {}
 
             return response()->json(['success' => true, 'message' => 'Cập nhật Flash Sale thành công!', 'data' => $flashSale]);
         } catch (\Exception $e) {
@@ -163,7 +178,10 @@ class FlashSaleController extends Controller
             $flashSale->update(['status' => $request->status]);
 
             $this->clearCache();
-            broadcast(new FlashSaleEvent('updated', $flashSale))->toOthers();
+            
+            try {
+                broadcast(new FlashSaleEvent('updated', $flashSale))->toOthers();
+            } catch (\Exception $e) {}
 
             return response()->json(['success' => true, 'message' => 'Cập nhật trạng thái thành công!']);
         } catch (\Exception $e) {
@@ -181,7 +199,10 @@ class FlashSaleController extends Controller
             $flashSale->delete();
 
             $this->clearCache();
-            broadcast(new FlashSaleEvent('deleted', $flashSale))->toOthers();
+            
+            try {
+                broadcast(new FlashSaleEvent('deleted', $flashSale))->toOthers();
+            } catch (\Exception $e) {}
 
             return response()->json(['success' => true, 'message' => 'Đã xóa chiến dịch Flash Sale.']);
         } catch (\Exception $e) {

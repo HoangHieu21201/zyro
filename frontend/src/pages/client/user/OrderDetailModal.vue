@@ -93,7 +93,6 @@
                       </span>
                     </div>
                     
-                    <!-- ĐÃ CẬP NHẬT: LẤY TRỰC TIẾP TỪ CỘT DATABASE MỚI CỦA BẠN -->
                     <div class="d-flex justify-content-between mb-2 small text-muted dark:text-gray-400 mt-4">
                       <span>Tạm tính ({{ selectedOrder.items?.length || 0 }} SP):</span>
                       <span class="fw-bold text-dark dark:text-gray-200">{{ formatCurrency(selectedOrder.sub_total || (Number(selectedOrder.total_amount) - Number(selectedOrder.shipping_fee || 0) + Number(selectedOrder.discount_amount || 0))) }}</span>
@@ -150,17 +149,17 @@
                     <!-- ===================================== -->
                     <div v-if="group.isLookbook" class="p-3 p-md-4" :class="{'border-top dark:border-gray-700': gIdx > 0}">
                         <div class="d-flex align-items-start gap-3">
-                           <div class="position-relative flex-shrink-0" style="width: 80px; height: 100px;">
+                           <div class="position-relative flex-shrink-0 cursor-pointer hover-opacity" style="width: 80px; height: 100px;" @click="goToLookbook(group)">
                              <img :src="group.lookbook_image" class="w-100 h-100 object-fit-cover rounded-3 border dark:border-gray-600 bg-white" @error="e => e.target.src='/client_placeholder.png'">
                            </div>
                            
                            <div class="flex-grow-1 d-flex flex-column justify-content-between h-100 py-1">
                               <div class="row w-100 m-0">
                                  <div class="col-8 col-sm-9 p-0 pe-2">
-                                    <h6 class="fw-bold text-dark dark:text-gray-200 mb-2 line-clamp-2" style="font-size: 1rem; line-height: 1.3;">
+                                    <h6 class="fw-bold text-dark dark:text-gray-200 mb-2 line-clamp-2 cursor-pointer hover-text-urban transition-color" style="font-size: 1rem; line-height: 1.3;" @click="goToLookbook(group)">
                                        {{ group.lookbook_name }}
                                     </h6>
-                                    <span class="d-inline-block bg-light dark:bg-[#2b3035] text-muted dark:text-gray-400 border dark:border-gray-600 px-2 py-1 rounded-2 fw-medium mb-2 font-sans-vn" style="font-size: 0.75rem;">
+                                    <span class="d-inline-block bg-light dark:bg-[#2b3035] text-muted dark:text-gray-400 border dark:border-gray-600 px-2 py-1 rounded-2 fw-medium mb-2 font-sans-vn cursor-pointer hover-bg-dark transition-all" style="font-size: 0.75rem;" @click="goToLookbook(group)">
                                        <i class="bi bi-magic me-1"></i> Combo Set {{ group.items.length }} món
                                     </span>
                                     <div class="mt-1">
@@ -186,10 +185,12 @@
                         <div v-show="isGroupExpanded(group.lookbook_id)" class="mt-4 pt-3 border-top border-dashed ps-2" @click.stop>
                            <div class="d-flex flex-column">
                               <div v-for="(item, idx) in group.items" :key="'cb_item_'+item.id" class="d-flex align-items-center gap-3 mb-3 last-no-border">
-                                 <img :src="getImageUrl(item.variant_image)" style="width: 45px; height: 60px;" class="rounded-2 border dark:border-gray-600 object-fit-cover bg-light" @error="e => e.target.src='/client_placeholder.png'">
+                                 <img :src="getImageUrl(item.variant_image)" style="width: 45px; height: 60px;" class="rounded-2 border dark:border-gray-600 object-fit-cover shadow-sm bg-light cursor-pointer hover-opacity" @error="e => e.target.src='/client_placeholder.png'" @click.stop="goToProduct(item)">
                                  <div class="flex-grow-1">
-                                    <div class="fw-bold text-dark dark:text-gray-200 line-clamp-1 font-sans-vn" style="font-size: 0.85rem;">{{ item.product_name }}</div>
-                                    <div class="text-muted font-sans-vn d-flex justify-content-between pe-1 mt-1" style="font-size: 0.8rem;">
+                                    <div class="fw-semibold text-dark dark:text-gray-200 line-clamp-1 font-sans-vn" style="font-size: 0.85rem;">
+                                       <a href="#" @click.prevent.stop="goToProduct(item)" class="text-decoration-none text-dark dark:text-gray-200 hover-text-urban transition-color">{{ item.product_name }}</a>
+                                    </div>
+                                    <div class="text-secondary dark:text-gray-400 font-sans-vn d-flex justify-content-between pe-1 mt-1" style="font-size: 0.8rem;">
                                        <span>{{ parseAttributes(item.variant_attributes) }} <span class="mx-1">|</span> <span class="fw-bold text-dark dark:text-gray-300">{{ formatCurrency(item.purchased_price) }}</span></span>
                                        <span class="text-muted fw-bold">x{{ item.quantity }}</span>
                                     </div>
@@ -209,14 +210,16 @@
                           
                           <div class="position-absolute top-0 start-0 w-100 h-100 bg-c-effect opacity-25 dark:bg-[#121416] pe-none z-0"></div>
 
-                          <div class="position-relative z-1" style="width: 80px; height: 100px; flex-shrink: 0;">
+                          <div class="position-relative z-1 cursor-pointer hover-opacity" style="width: 80px; height: 100px; flex-shrink: 0;" @click.stop="goToProduct(item)">
                             <img :src="getImageUrl(item.variant_image)" class="w-100 h-100 object-fit-cover rounded-3 border dark:border-gray-600 bg-white" @error="e => e.target.src='/client_placeholder.png'">
                           </div>
                           
                           <div class="flex-grow-1 position-relative z-1 d-flex flex-column justify-content-between py-1">
                             <div class="row w-100 m-0">
                                <div class="col-8 col-sm-9 p-0 pe-2">
-                                  <h6 class="fw-bold text-dark dark:text-gray-200 mb-2 line-clamp-2 font-sans-vn" style="font-size: 0.95rem; line-height: 1.3;">{{ item.product_name }}</h6>
+                                  <h6 class="fw-bold text-dark dark:text-gray-200 mb-2 line-clamp-2 font-sans-vn" style="font-size: 0.95rem; line-height: 1.3;">
+                                     <a href="#" @click.prevent.stop="goToProduct(item)" class="text-decoration-none text-dark dark:text-gray-200 hover-text-urban transition-color">{{ item.product_name }}</a>
+                                  </h6>
                                   <span class="d-inline-block bg-light dark:bg-[#2b3035] text-muted dark:text-gray-400 border dark:border-gray-600 px-2 py-1 rounded-2 fw-medium font-sans-vn" style="font-size: 0.75rem;">
                                      Phân loại: {{ parseAttributes(item.variant_attributes) }}
                                   </span>
@@ -368,10 +371,12 @@ const groupOrderItems = (items) => {
       if (!group) {
         let lbName = 'Combo / Set Đồ';
         let lbImage = null;
+        let lbSlug = null;
         
         if (item.lookbook) {
            lbName = item.lookbook.name;
            lbImage = item.lookbook.main_image ? getImageUrl(item.lookbook.main_image) : '/client_placeholder.png';
+           lbSlug = item.lookbook.slug;
         } else if (item.variant_image) {
            lbImage = getImageUrl(item.variant_image);
         }
@@ -381,6 +386,7 @@ const groupOrderItems = (items) => {
           lookbook_id: item.lookbook_id, 
           lookbook_name: lbName,
           lookbook_image: lbImage,
+          lookbook_slug: lbSlug,
           items: [],
           comboQuantity: item.quantity, 
           totalPrice: 0 
@@ -402,6 +408,27 @@ const groupOrderItems = (items) => {
 };
 
 const cartGroups = (items) => groupOrderItems(items);
+
+// ========================================================
+// HÀM ĐIỀU HƯỚNG BẤM TỪ ĐƠN HÀNG VỀ LINK GỐC
+// ========================================================
+const goToProduct = (item) => {
+  closeModal(); // Đóng Popup Modal trước khi bay
+  const targetPath = item.variant?.product?.slug || item.product_id;
+  router.push(`/product/${targetPath}`).then(() => {
+     window.scrollTo(0, 0);
+  });
+};
+
+const goToLookbook = (group) => {
+  if (group.lookbook_slug) {
+     closeModal(); // Đóng Popup Modal trước khi bay
+     router.push(`/lookbook/${group.lookbook_slug}`).then(() => {
+        window.scrollTo(0, 0);
+     });
+  }
+};
+
 
 const toggleGroup = (lookbookId) => {
   if (expandedGroups.value.includes(lookbookId)) {
@@ -740,6 +767,10 @@ html.dark .step-counter { background-color: #373b3e; border-color: #1a2533; }
 .line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; }
 .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; }
 .cursor-pointer { cursor: pointer; }
+.hover-opacity { transition: opacity 0.2s ease; }
+.hover-opacity:hover { opacity: 0.7; }
+.hover-text-urban:hover { color: var(--color-c-hover, #547792) !important; text-decoration: underline !important; }
+.hover-bg-dark:hover { background-color: #343a40 !important; color: #fff !important; }
 .border-dashed { border-style: dashed !important; border-color: #dee2e6 !important; }
 html.dark .border-dashed { border-color: #373b3e !important; }
 .last-no-border:last-child { margin-bottom: 0 !important; padding-bottom: 0 !important; border: none !important; }

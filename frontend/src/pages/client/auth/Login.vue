@@ -66,6 +66,21 @@
                <span v-if="isLoading" class="spinner-border spinner-border-sm me-2"></span> ĐĂNG NHẬP
              </button>
 
+             <!-- BẮT ĐẦU: KHỐI NÚT ĐĂNG NHẬP BẰNG GOOGLE -->
+             <div class="position-relative my-4 text-center">
+               <hr class="text-muted opacity-25">
+               <span class="position-absolute top-50 start-50 translate-middle bg-white dark:bg-[#121416] px-3 text-muted small fw-semibold tracking-wide" style="font-size: 0.75rem;">HOẶC TIẾP TỤC VỚI</span>
+             </div>
+
+             <button type="button" class="btn w-100 rounded-pill py-3 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2 transition-all hover-transform mb-4 btn-google" @click="loginWithGoogle" :disabled="isGoogleLoading">
+               <span v-if="isGoogleLoading" class="spinner-border spinner-border-sm"></span>
+               <template v-else>
+                 <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" style="width: 20px;"> 
+                 ĐĂNG NHẬP BẰNG GOOGLE
+               </template>
+             </button>
+             <!-- KẾT THÚC: KHỐI NÚT ĐĂNG NHẬP BẰNG GOOGLE -->
+
              <div class="text-center">
                <p class="text-muted small mb-0">Bạn chưa có tài khoản? 
                  <router-link to="/register" class="text-dark dark:text-white fw-bold text-decoration-none border-bottom border-dark dark:border-gray-300 pb-1 hover-text-urban ms-1 transition-all">ĐĂNG KÝ NGAY</router-link>
@@ -80,15 +95,18 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router'; 
 import api from '@/utils/axios';
+import axios from 'axios'; 
 import { useCartStore } from '@/stores/cartStore';
 import { ZyroSwal } from '@/components/client/ZyroSwal';
 
 const router = useRouter();
+const route = useRoute();
 const cartStore = useCartStore();
 const showPass = ref(false);
 const isLoading = ref(false);
+const isGoogleLoading = ref(false);
 
 const form = ref({
   email: '',
@@ -128,7 +146,53 @@ const handleLogin = async () => {
   }
 };
 
-onMounted(() => { window.scrollTo(0, 0); });
+// ==========================================
+// HÀM XỬ LÝ ĐĂNG NHẬP BẰNG GOOGLE API
+// ==========================================
+const loginWithGoogle = async () => {
+  isGoogleLoading.value = true;
+  try {
+    let baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1';
+    baseUrl = baseUrl.replace('/v1', ''); 
+    
+    // Gọi bằng Axios thuần để gọi thẳng vào /api/auth/google/redirect (Khớp với file api.php mới sửa)
+    const res = await axios.get(`${baseUrl}/auth/google/redirect`);
+    if (res.data && res.data.url) {
+       window.location.href = res.data.url; 
+    }
+  } catch (error) {
+    ZyroSwal.toastError('Lỗi kết nối máy chủ Google.');
+  } finally {
+    isGoogleLoading.value = false;
+  }
+};
+
+onMounted(async () => { 
+  window.scrollTo(0, 0); 
+  
+  // BẮT TOKEN KHI GOOGLE TRẢ VỀ URL SAU KHI ĐĂNG NHẬP
+  if (route.query.token) {
+     localStorage.setItem('access_token', route.query.token);
+     
+     try {
+       const userRes = await api.get('/client/user/profile');
+       if (userRes.data.success) {
+         localStorage.setItem('user_info', JSON.stringify(userRes.data.data));
+         await cartStore.mergeCartAfterLogin();
+       }
+     } catch(e) {
+       console.error("Lỗi tải thông tin tài khoản:", e);
+     }
+
+     ZyroSwal.toastSuccess('Đăng nhập Google thành công');
+     router.push('/');
+  }
+
+  if (route.query.error === 'google_auth_failed') {
+     ZyroSwal.toastError('Xác thực bằng Google thất bại. Vui lòng thử lại!');
+     router.replace({ path: '/login' });
+  }
+});
 </script>
 
 <style scoped>
@@ -258,5 +322,27 @@ html.dark .custom-checkbox-wrapper input:checked ~ .custom-checkbox {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* CSS MỚI CHO NÚT GOOGLE CHỐNG MÙ MÀU */
+.btn-google {
+  background-color: #ffffff;
+  color: #212529;
+  border: 1px solid #dee2e6;
+}
+.btn-google:hover {
+  background-color: #f8f9fa !important;
+  color: #000000 !important;
+  border-color: #c6c7c8 !important;
+}
+html.dark .btn-google {
+  background-color: #212529 !important;
+  color: #ffffff !important;
+  border-color: #495057 !important;
+}
+html.dark .btn-google:hover {
+  background-color: #2b3035 !important;
+  color: #ffffff !important;
+  border-color: #6c757d !important;
 }
 </style>

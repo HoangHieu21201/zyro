@@ -1,21 +1,21 @@
 <template>
   <div class="flash-sale-edit-wrapper pb-5 mb-5">
     
-    <div v-if="isLoading" class="d-flex flex-column justify-content-center align-items-center w-100" style="min-height: 70vh;">
+    <div v-if="isPageLoading" class="d-flex flex-column justify-content-center align-items-center w-100" style="min-height: 70vh;">
       <h1 class="logo-shimmer mb-3">ZYRO</h1>
-      <p class="text-muted dark:text-gray-400 fw-semibold small text-uppercase tracking-widest" style="letter-spacing: 2px;">Đang tải chiến dịch...</p>
+      <p class="text-muted dark:text-gray-400 fw-semibold small text-uppercase tracking-widest" style="letter-spacing: 2px;">Đang tải hồ sơ chiến dịch...</p>
     </div>
 
     <div class="container-fluid py-4" v-else>
       <div class="d-flex align-items-center justify-content-between mb-4">
         <h3 class="fw-bold text-dark dark:text-white mb-0 d-flex align-items-center">
-          <router-link :to="{ name: 'admin-flash-sales' }" class="text-decoration-none text-muted me-3 hover:text-urban transition-all">
+          <router-link :to="{ name: 'admin-flash-sales' }" class="text-decoration-none text-muted me-3 hover-urban transition-all">
             <i class="bi bi-arrow-left-circle fs-3"></i>
           </router-link>
-          Cập Nhật Flash Sale
+          Cập Nhật Khuyến Mãi (Flash Sale)
         </h3>
         <button type="submit" form="flashSaleForm" class="btn btn-urban text-white px-5 fw-bold shadow-sm rounded-pill" :disabled="isSubmitting">
-          <span v-if="isSubmitting" class="spinner-border spinner-border-sm me-2"></span> <i class="bi bi-floppy2-fill me-1" v-else></i> LƯU CẬP NHẬT
+          <span v-if="isSubmitting" class="spinner-border spinner-border-sm me-2"></span> <i class="bi bi-floppy2-fill me-1" v-else></i> LƯU THAY ĐỔI
         </button>
       </div>
 
@@ -31,6 +31,7 @@
               <div class="mb-3">
                 <label class="form-label fw-bold text-dark dark:text-gray-200 small text-uppercase">Tên chiến dịch <span class="text-danger">*</span></label>
                 <input type="text" class="form-control bg-light dark:bg-[#212529] dark:text-white border-0 shadow-sm-hover" v-model="form.name" @input="generateSlug" required>
+                <div class="text-danger small mt-1 fw-bold" v-if="errors.name">{{ errors.name[0] }}</div>
               </div>
 
               <div class="mb-4">
@@ -41,26 +42,38 @@
               <div class="mb-4">
                 <label class="form-label fw-bold text-dark dark:text-gray-200 small text-uppercase"><i class="bi bi-play-circle-fill text-success me-1"></i> Bắt đầu lúc <span class="text-danger">*</span></label>
                 <input type="datetime-local" class="form-control form-control-lg bg-light dark:bg-[#212529] dark:text-white border-0 shadow-sm-hover fs-6" v-model="form.start_time" required>
+                <div class="text-danger small mt-1 fw-bold" v-if="errors.start_time">{{ errors.start_time[0] }}</div>
               </div>
+              
               <div class="mb-4">
-                <label class="form-label fw-bold text-dark dark:text-gray-200 small text-uppercase"><i class="bi bi-stop-circle-fill text-danger me-1"></i> Kết thúc lúc <span class="text-danger">*</span></label>
-                <input type="datetime-local" class="form-control form-control-lg bg-light dark:bg-[#212529] dark:text-white border-0 shadow-sm-hover fs-6" v-model="form.end_time" required>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                   <label class="form-label fw-bold text-dark dark:text-gray-200 small text-uppercase mb-0"><i class="bi bi-stop-circle-fill text-danger me-1"></i> Kết thúc lúc</label>
+                   <div class="form-check form-switch m-0">
+                      <input class="form-check-input cursor-pointer" type="checkbox" role="switch" id="switchEndTimeEdit" v-model="hasEndTime">
+                      <label class="form-check-label small cursor-pointer" for="switchEndTimeEdit">Có giới hạn</label>
+                   </div>
+                </div>
+                <input v-if="hasEndTime" type="datetime-local" class="form-control form-control-lg bg-light dark:bg-[#212529] dark:text-white border-0 shadow-sm-hover fs-6" v-model="form.end_time" required>
+                <div v-else class="form-control bg-light dark:bg-[#212529] border-0 text-muted fst-italic py-2 d-flex align-items-center opacity-75">
+                   Chiến dịch chạy vô thời hạn
+                </div>
+                <div class="text-danger small mt-1 fw-bold" v-if="errors.end_time">{{ errors.end_time[0] }}</div>
               </div>
 
               <div class="mb-4">
                 <label class="form-label fw-bold text-dark dark:text-gray-200 small text-uppercase">Trạng thái phát hành</label>
-                <select class="form-select bg-light dark:bg-[#212529] dark:text-white border-0 shadow-sm-hover fw-bold" v-model="form.status" :class="form.status === 'active' ? 'text-success' : (form.status === 'ended' ? 'text-danger' : 'text-warning')">
+                <select class="form-select bg-light dark:bg-[#212529] dark:text-white border-0 shadow-sm-hover fw-bold" v-model="form.status" :class="form.status === 'active' ? 'text-success' : 'text-warning'">
                   <option value="active">Đang chạy (Active)</option>
                   <option value="hidden">Tạm ẩn (Hidden)</option>
-                  <option value="ended">Đã kết thúc (Ended)</option>
+                  <option value="ended">Đã kết thúc</option>
                 </select>
               </div>
 
               <div class="mt-auto pt-3 border-top dark:border-gray-700">
                 <label class="form-label fw-bold text-dark dark:text-gray-200 small text-uppercase">Banner Quảng Cáo</label>
                 <div class="p-3 border border-dashed border-2 dark:border-gray-600 rounded-4 text-center bg-light dark:bg-[#212529]">
-                  <div v-if="currentBanner || previewBanner" class="position-relative d-inline-block w-100">
-                    <img :src="previewBanner || getImageUrl(currentBanner)" class="rounded object-fit-cover border shadow-sm w-100" style="height: 120px;" @error="handleImageError">
+                  <div v-if="previewBanner" class="position-relative d-inline-block w-100">
+                    <img :src="previewBanner" class="rounded object-fit-cover border shadow-sm w-100" style="height: 120px;" @error="handleImageError">
                     <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2 rounded-circle px-2 shadow" @click="removeBanner"><i class="bi bi-x-lg"></i></button>
                   </div>
                   <div v-else class="text-muted py-3">
@@ -68,9 +81,10 @@
                     <span class="small">Chưa có banner</span>
                   </div>
                   <button type="button" class="btn btn-outline-urban rounded-pill btn-sm fw-bold w-100 mt-2" @click="$refs.bannerInput.click()">
-                    <i class="bi bi-upload me-1"></i> Tải ảnh lên
+                    <i class="bi bi-upload me-1"></i> Thay đổi ảnh
                   </button>
                   <input type="file" ref="bannerInput" @change="onBannerChange" class="d-none" accept="image/*">
+                  <div class="text-danger small mt-2 fw-bold" v-if="errors.banner_image">{{ errors.banner_image[0] }}</div>
                 </div>
               </div>
             </div>
@@ -85,14 +99,14 @@
               <div class="d-flex justify-content-between align-items-center mb-3 border-bottom dark:border-gray-700 pb-3">
                 <div>
                   <h6 class="fw-bold mb-0 text-urban text-uppercase"><i class="bi bi-box-seam me-2"></i>Danh sách áp dụng ({{ items.length }})</h6>
-                  <p class="text-muted small mb-0 mt-1">Cấu hình giá sốc và giới hạn số lượng cho từng biến thể kho.</p>
+                  <p class="text-muted small mb-0 mt-1">Cấu hình giá sốc và giới hạn số lượng cho từng biến thể.</p>
                 </div>
-                <button type="button" class="btn btn-outline-urban rounded-pill fw-bold shadow-sm px-4" @click="openProductModal">
+                <button type="button" class="btn btn-urban rounded-pill fw-bold shadow-sm px-4" @click="openProductModal">
                   <i class="bi bi-plus-lg me-1"></i> Thêm Hàng
                 </button>
               </div>
 
-              <!-- THANH CÔNG CỤ XỬ LÝ HÀNG LOẠT (BATCH ACTIONS) -->
+              <!-- THANH CÔNG CỤ XỬ LÝ HÀNG LOẠT -->
               <transition name="fade">
                 <div v-if="selectedItemIndexes.length > 0" class="p-3 bg-urban bg-opacity-10 border border-urban border-opacity-50 rounded-4 mb-3 d-flex flex-wrap align-items-end gap-3 shadow-sm">
                   <div>
@@ -112,7 +126,8 @@
                   </div>
                   <button type="button" class="btn btn-sm btn-urban fw-bold px-4 shadow-sm" style="height: 36px;" @click="applyBatchDiscount">ÁP DỤNG</button>
                   <div class="vr mx-2 text-urban opacity-50"></div>
-                  <button type="button" class="btn btn-sm btn-outline-danger fw-bold px-3 shadow-sm bg-white" style="height: 36px;" @click="deleteBatchSelected"><i class="bi bi-trash3 me-1"></i> XÓA NHANH</button>
+                  <!-- Bỏ bg-white trên nút xóa để hiện rõ màu đỏ khi hover -->
+                  <button type="button" class="btn btn-sm btn-outline-danger fw-bold px-3 shadow-sm" style="height: 36px;" @click="deleteBatchSelected"><i class="bi bi-trash3 me-1"></i> XÓA NHANH</button>
                 </div>
               </transition>
 
@@ -124,24 +139,25 @@
                       <th class="border-0 text-center" style="width: 5%;">
                         <input class="form-check-input cursor-pointer border-secondary" type="checkbox" v-model="selectAllItems">
                       </th>
-                      <th class="dark:text-gray-300 border-0" style="width: 35%;">Sản phẩm & Phân loại</th>
-                      <th class="dark:text-gray-300 border-0" style="width: 25%;">Giá Flash Sale</th>
-                      <th class="dark:text-gray-300 border-0" style="width: 15%;">SL Mở Bán</th>
-                      <th class="dark:text-gray-300 border-0" style="width: 10%;">Đã bán</th>
+                      <th class="dark:text-gray-300 border-0" style="width: 40%;">Sản phẩm & Phân loại</th>
+                      <th class="dark:text-gray-300 border-0" style="width: 30%;">Giá Flash Sale</th>
+                      <th class="dark:text-gray-300 border-0" style="width: 20%;">SL Mở Bán</th>
                       <th class="dark:text-gray-300 border-0" style="width: 5%;"></th>
                     </tr>
                   </thead>
                   <tbody class="dark:border-gray-700 dark:bg-[#1a2533]">
                     <tr v-if="items.length === 0">
-                      <td colspan="6" class="text-center text-muted py-5 fst-italic">
-                        <i class="bi bi-inbox fs-2 d-block opacity-25 mb-2"></i> Bấm "Thêm hàng" để đưa sản phẩm vào chiến dịch.
+                      <td colspan="5" class="text-center text-muted py-5 fst-italic">
+                        <i class="bi bi-inbox fs-2 d-block opacity-25 mb-2"></i>
+                        Bấm "Thêm hàng" để đưa sản phẩm vào chiến dịch.
                       </td>
                     </tr>
-                    <tr v-for="(item, index) in items" :key="index" :class="{'bg-urban bg-opacity-10': selectedItemIndexes.includes(index)}">
+                    <tr v-for="(item, index) in items" :key="item.variant_id" :class="{'bg-urban bg-opacity-10': selectedItemIndexes.includes(index)}">
                       <td class="text-center">
                         <input class="form-check-input cursor-pointer border-secondary" type="checkbox" :value="index" v-model="selectedItemIndexes">
                       </td>
                       
+                      <!-- SP Info -->
                       <td class="text-start py-3">
                         <div class="d-flex align-items-center">
                           <img :src="item.image" @error="handleImageError" class="rounded object-fit-cover me-2 border dark:border-gray-600 bg-white shadow-sm flex-shrink-0" style="width: 45px; height: 45px;">
@@ -155,6 +171,7 @@
                         </div>
                       </td>
                       
+                      <!-- Giá Sale -->
                       <td>
                         <div class="input-group input-group-sm shadow-sm-hover mx-auto" style="max-width: 140px;">
                           <input type="text" class="form-control text-danger fw-bold text-end border-end-0 dark:bg-[#212529] dark:text-white dark:border-gray-600" 
@@ -163,14 +180,12 @@
                         </div>
                       </td>
 
+                      <!-- Giới hạn -->
                       <td>
                          <input type="number" class="form-control form-control-sm text-center fw-bold dark:bg-[#212529] dark:text-white dark:border-gray-600 mx-auto shadow-sm-hover" style="max-width: 80px;" v-model.number="item.quantity_limit" min="1" required>
                       </td>
 
-                      <td>
-                        <span class="badge bg-success text-white px-2 py-1 shadow-sm">{{ item.sold_quantity || 0 }}</span>
-                      </td>
-
+                      <!-- Xóa -->
                       <td>
                         <button type="button" class="btn btn-link text-danger p-0 hover-opacity" @click="removeItemRow(index)" title="Gỡ khỏi Flash Sale"><i class="bi bi-x-circle-fill fs-5"></i></button>
                       </td>
@@ -185,7 +200,7 @@
     </div>
 
     <!-- ======================================================== -->
-    <!-- MODAL CHỌN SẢN PHẨM KHỔNG LỒ (ĐÃ NÂNG CẤP CHECKBOX)      -->
+    <!-- MODAL CHỌN SẢN PHẨM KHỔNG LỒ                             -->
     <!-- ======================================================== -->
     <div class="modal fade" id="productSearchModalEdit" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
       <div class="modal-dialog modal-dialog-centered modal-xl">
@@ -221,15 +236,13 @@
                </div>
             </div>
 
-            <!-- Nút Thêm Hàng Loạt (Hiện khi có SP được tích chọn) -->
             <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
               <div class="form-check m-0">
-                 <input class="form-check-input border-secondary cursor-pointer" type="checkbox" id="selectAllModal" v-model="selectAllModalProducts">
-                 <label class="form-check-label fw-bold text-dark dark:text-white cursor-pointer" for="selectAllModal">Chọn tất cả trang này</label>
+                 <input class="form-check-input border-secondary cursor-pointer" type="checkbox" id="selectAllModalEdit" v-model="selectAllModalProducts">
+                 <label class="form-check-label fw-bold text-dark dark:text-white cursor-pointer" for="selectAllModalEdit">Chọn tất cả SP đang hiển thị</label>
               </div>
 
               <div class="d-flex gap-2">
-                <!-- NÚT CHỌN NHANH THEO NHÓM -->
                 <transition name="fade">
                   <button v-if="(modalFilterCategory || modalFilterBrand) && filteredProductsFull.length > 0" 
                           type="button" class="btn btn-outline-success fw-bold shadow-sm rounded-pill px-3 bg-white dark:bg-[#212529]" 
@@ -258,13 +271,9 @@
                </div>
                <div class="row g-3">
                  <div class="col-lg-3 col-md-4 col-sm-6" v-for="prod in displayFilteredProducts" :key="prod.id">
-                   <!-- Đổi Click Cả Card thành Select Checkbox -->
                    <label class="card border border-secondary-subtle dark:border-gray-700 rounded-4 h-100 cursor-pointer shadow-sm-hover product-select-card position-relative" 
                           :class="{'border-urban bg-urban bg-opacity-10': modalSelectedProductIds.includes(prod.id)}">
-                     <!-- Checkbox Ẩn -->
                      <input type="checkbox" class="d-none" :value="prod.id" v-model="modalSelectedProductIds">
-                     
-                     <!-- Custom Checkbox hiển thị -->
                      <div class="position-absolute top-0 end-0 m-2 custom-check-circle" :class="{'checked': modalSelectedProductIds.includes(prod.id)}">
                         <i class="bi bi-check-lg text-white"></i>
                      </div>
@@ -295,22 +304,24 @@
 <script setup>
 import { ref, onMounted, computed, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import axios from 'axios';
 import Swal from 'sweetalert2';
 import defaultImage from '@/assets/images/defaults/placeholder.png';
+import api from '@/utils/axios';
 
 const route = useRoute();
 const router = useRouter();
 const flashSaleId = route.params.id;
 
-const isLoading = ref(true);
+const isPageLoading = ref(true);
 const isSubmitting = ref(false);
-const currentBanner = ref('');
 const previewBanner = ref(null);
 const bannerInput = ref(null);
 
 const form = ref({ name: '', slug: '', start_time: '', end_time: '', status: 'active', banner_image: null, remove_banner: false });
+const hasEndTime = ref(true);
+const hasOldImage = ref(false);
 const items = ref([]); 
+const errors = ref({});
 
 // Modal Data
 const categories = ref([]);
@@ -322,44 +333,6 @@ const modalFilterBrand = ref('');
 const isModalLoading = ref(false);
 let productModalInstance = null;
 
-const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
-const getImageUrl = (path) => path ? `http://127.0.0.1:8000/storage/${path}` : defaultImage;
-const handleImageError = (e) => { e.target.src = defaultImage; };
-
-// Formaters
-const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(val || 0);
-const formatThousand = (val) => {
-  if (val === null || val === undefined || val === '') return '';
-  return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-};
-const updateNumber = (e, targetObj, key) => {
-  let rawValue = e.target.value.replace(/\D/g, ''); 
-  if (rawValue === '') { targetObj[key] = 0; e.target.value = '0'; } 
-  else {
-    let numValue = parseInt(rawValue, 10);
-    targetObj[key] = numValue;
-    e.target.value = formatThousand(numValue);
-  }
-};
-const formatToDatetimeLocal = (isoString) => {
-  if (!isoString) return '';
-  const date = new Date(isoString);
-  date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-  return date.toISOString().slice(0, 16);
-};
-const generateSlug = () => {
-  let s = form.value.name.toLowerCase();
-  s = s.replace(/á|à|ả|ạ|ã|ă|ắ|ằ|ẳ|ẵ|ặ|â|ấ|ầ|ẩ|ẫ|ậ/gi, 'a').replace(/é|è|ẻ|ẽ|ẹ|ê|ế|ề|ể|ễ|ệ/gi, 'e').replace(/i|í|ì|ỉ|ĩ|ị/gi, 'i').replace(/ó|ò|ỏ|õ|ọ|ô|ố|ồ|ổ|ỗ|ộ|ơ|ớ|ờ|ở|ỡ|ợ/gi, 'o').replace(/ú|ù|ủ|ũ|ụ|ư|ứ|ừ|ử|ữ|ự/gi, 'u').replace(/ý|ỳ|ỷ|ỹ|ỵ/gi, 'y').replace(/đ/gi, 'd');
-  form.value.slug = s.replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '').replace(/\-\-+/g, '-');
-};
-const parseVariantAttributes = (attrValues) => {
-    if (!attrValues || attrValues.length === 0) return 'Mặc định';
-    return attrValues.map(a => a.value).join(' - ');
-};
-
-// ==========================================
-// STATE & LOGIC CHO CHỌN NHIỀU SP TRONG MODAL
-// ==========================================
 const modalSelectedProductIds = ref([]);
 
 const selectAllModalProducts = computed({
@@ -372,7 +345,6 @@ const selectAllModalProducts = computed({
   }
 });
 
-// ĐÃ BỔ SUNG: Logic bấm 1 phát thêm toàn bộ SP đang lọc
 const addAllFilteredProducts = async () => {
   if (filteredProductsFull.value.length === 0) return;
   modalSelectedProductIds.value = filteredProductsFull.value.map(p => p.id);
@@ -385,7 +357,7 @@ const addSelectedProducts = async () => {
   let addedCount = 0;
   
   try {
-    const requests = modalSelectedProductIds.value.map(id => axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/products/${id}`, { headers: getHeaders() }));
+    const requests = modalSelectedProductIds.value.map(id => api.get(`/admin/products/${id}`));
     const responses = await Promise.all(requests);
     
     responses.forEach(res => {
@@ -394,9 +366,14 @@ const addSelectedProducts = async () => {
             prodDetail.variants.forEach(v => {
                 if (!items.value.some(i => i.variant_id === v.id)) {
                     items.value.push({
-                        variant_id: v.id, flash_sale_price: v.price, quantity_limit: 100, sold_quantity: 0,
-                        product_name: prodDetail.name, variant_name: parseVariantAttributes(v.attribute_values),
-                        original_price: v.price, image: getImageUrl(v.image_url || prodDetail.thumbnail_image)
+                        variant_id: v.id, 
+                        flash_sale_price: v.price, 
+                        quantity_limit: 100, 
+                        sold_quantity: 0,
+                        product_name: prodDetail.name, 
+                        variant_name: parseVariantAttributes(v.attribute_values),
+                        original_price: v.price, 
+                        image: getImageUrl(v.image_url || prodDetail.thumbnail_image)
                     });
                     addedCount++;
                 }
@@ -411,13 +388,13 @@ const addSelectedProducts = async () => {
     } else {
         Swal.fire({ toast: true, position: 'top-end', icon: 'info', title: 'Tất cả phân loại của các SP này đã nằm trong bảng', showConfirmButton: false, timer: 2000 });
     }
-  } catch (error) { Swal.fire('Lỗi', 'Không tải được chi tiết biến thể', 'error');
-  } finally { isModalLoading.value = false; }
+  } catch (error) {
+    Swal.fire('Lỗi', 'Không tải được chi tiết biến thể', 'error');
+  } finally {
+    isModalLoading.value = false;
+  }
 };
 
-// ==========================================
-// STATE & LOGIC CHO THAO TÁC HÀNG LOẠT (MAIN TABLE)
-// ==========================================
 const selectedItemIndexes = ref([]);
 const batchAction = ref({ type: 'percent', value: 0 });
 
@@ -454,63 +431,119 @@ const applyBatchDiscount = () => {
       item.flash_sale_price = Math.round(newPrice);
   });
   
-  Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: `Đã áp dụng giá mới cho ${selectedItemIndexes.value.length} dòng`, showConfirmButton: false, timer: 1500 });
+  Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: `Đã áp dụng giá mới cho ${selectedItemIndexes.value.length} dòng`, showConfirmButton: false, timer: 2000 });
 };
 
 const deleteBatchSelected = () => {
   Swal.fire({ title: 'Xóa hàng loạt?', text: `Sẽ xóa ${selectedItemIndexes.value.length} dòng đã chọn khỏi chiến dịch.`, icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc3545', confirmButtonText: 'Đồng ý' }).then((result) => {
     if (result.isConfirmed) {
       const sortedIndexes = [...selectedItemIndexes.value].sort((a,b) => b - a);
-      sortedIndexes.forEach(idx => { items.value.splice(idx, 1); });
+      sortedIndexes.forEach(idx => {
+          items.value.splice(idx, 1);
+      });
       selectedItemIndexes.value = [];
       Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Đã xóa', showConfirmButton: false, timer: 1500 });
     }
   });
 };
 
-// FETCH DETAIL API
-const fetchDetail = async () => {
+const getImageUrl = (path) => path ? `${import.meta.env.VITE_API_BASE_URL.replace('/api/v1', '/storage/')}${path}` : defaultImage;
+const handleImageError = (e) => { e.target.src = defaultImage; };
+
+const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(val || 0);
+const formatThousand = (val) => {
+  if (val === null || val === undefined || val === '') return '';
+  return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+};
+const updateNumber = (e, targetObj, key) => {
+  let rawValue = e.target.value.replace(/\D/g, ''); 
+  if (rawValue === '') { targetObj[key] = 0; e.target.value = '0'; } 
+  else {
+    let numValue = parseInt(rawValue, 10);
+    targetObj[key] = numValue;
+    e.target.value = formatThousand(numValue);
+  }
+};
+const generateSlug = () => {
+  let s = form.value.name.toLowerCase();
+  s = s.replace(/á|à|ả|ạ|ã|ă|ắ|ằ|ẳ|ẵ|ặ|â|ấ|ầ|ẩ|ẫ|ậ/gi, 'a').replace(/é|è|ẻ|ẽ|ẹ|ê|ế|ề|ể|ễ|ệ/gi, 'e').replace(/i|í|ì|ỉ|ĩ|ị/gi, 'i').replace(/ó|ò|ỏ|õ|ọ|ô|ố|ồ|ổ|ỗ|ộ|ơ|ớ|ờ|ở|ỡ|ợ/gi, 'o').replace(/ú|ù|ủ|ũ|ụ|ư|ứ|ừ|ử|ữ|ự/gi, 'u').replace(/ý|ỳ|ỷ|ỹ|ỵ/gi, 'y').replace(/đ/gi, 'd');
+  form.value.slug = s.replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '').replace(/\-\-+/g, '-');
+};
+
+const parseVariantAttributes = (attrValues) => {
+    if (!attrValues || attrValues.length === 0) return 'Mặc định';
+    return attrValues.map(a => a.value).join(' - ');
+};
+
+const fetchDataForModal = async () => {
   try {
-    const [resDetail, resProds, resCats, resBrands] = await Promise.all([
-      axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/flash_sales/${flashSaleId}`, { headers: getHeaders() }),
-      axios.get('http://127.0.0.1:8000/api/v1/admin/products?status=published', { headers: getHeaders() }),
-      axios.get('http://127.0.0.1:8000/api/v1/admin/categories', { headers: getHeaders() }),
-      axios.get('http://127.0.0.1:8000/api/v1/admin/brands', { headers: getHeaders() })
+    const [resProds, resCats, resBrands] = await Promise.all([
+      api.get('/admin/products?status=published'),
+      api.get('/admin/categories'),
+      api.get('/admin/brands')
     ]);
-    
-    const data = resDetail.data.data;
-    form.value.name = data.name;
-    form.value.slug = data.slug;
-    form.value.start_time = formatToDatetimeLocal(data.start_time);
-    form.value.end_time = formatToDatetimeLocal(data.end_time);
-    form.value.status = data.status;
-    currentBanner.value = data.banner_image;
-
-    items.value = data.items.map(i => {
-      const v = i.variant;
-      const p = v?.product;
-      return {
-        variant_id: i.variant_id,
-        flash_sale_price: i.flash_sale_price,
-        quantity_limit: i.quantity_limit,
-        sold_quantity: i.sold_quantity,
-        product_name: p ? p.name : 'Sản phẩm đã xóa',
-        variant_name: parseVariantAttributes(v?.attribute_values),
-        original_price: v ? v.price : 0,
-        image: getImageUrl(v?.image_url || p?.thumbnail_image)
-      };
-    });
-
     const prods = Array.isArray(resProds.data?.data?.data) ? resProds.data.data.data : (Array.isArray(resProds.data?.data) ? resProds.data.data : []);
     allPublishedProducts.value = prods.filter(p => p.status === 'published' && !p.deleted_at);
     categories.value = Array.isArray(resCats.data?.data) ? resCats.data.data.filter(c => !c.deleted_at && c.status === 'active') : [];
     brands.value = Array.isArray(resBrands.data?.data) ? resBrands.data.data.filter(b => !b.deleted_at && b.status === 'active') : [];
+  } catch (error) { console.error("Lỗi lấy dữ liệu Modal:", error); }
+};
 
-  } catch (error) {
-    Swal.fire('Lỗi', 'Không tìm thấy chiến dịch', 'error');
-    router.push('/admin/flash-sales');
+const fetchFlashSaleData = async () => {
+  try {
+     const res = await api.get(`/admin/flash_sales/${flashSaleId}`);
+     const fs = res.data.data;
+     
+     form.value.name = fs.name;
+     form.value.slug = fs.slug;
+     form.value.status = fs.status;
+     
+     if (fs.start_time) {
+         const d = new Date(fs.start_time);
+         d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+         form.value.start_time = d.toISOString().slice(0, 16);
+     }
+     
+     if (fs.end_time) {
+         hasEndTime.value = true;
+         const d = new Date(fs.end_time);
+         d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+         form.value.end_time = d.toISOString().slice(0, 16);
+     } else {
+         hasEndTime.value = false;
+         form.value.end_time = '';
+     }
+
+     if (fs.banner_image) {
+         previewBanner.value = getImageUrl(fs.banner_image);
+         hasOldImage.value = true;
+     }
+
+     if (fs.items && fs.items.length > 0) {
+         items.value = fs.items.map(item => {
+             let attrs = 'Mặc định';
+             if (item.variant && item.variant.attribute_values && item.variant.attribute_values.length > 0) {
+                 attrs = item.variant.attribute_values.map(av => av.value).join(' - ');
+             }
+
+             return {
+                 variant_id: item.variant_id,
+                 product_name: item.variant?.product?.name || 'Sản phẩm đã bị xóa',
+                 sku: item.variant?.sku || 'N/A',
+                 variant_name: attrs,
+                 image: getImageUrl(item.variant?.image_url || item.variant?.product?.thumbnail_image),
+                 original_price: item.variant?.price || 0,
+                 flash_sale_price: item.flash_sale_price,
+                 quantity_limit: item.quantity_limit > 0 ? item.quantity_limit : null
+             };
+         });
+     }
+
+  } catch(e) {
+     Swal.fire('Lỗi', 'Không tìm thấy dữ liệu', 'error');
+     router.push({ name: 'admin-flash-sales' });
   } finally {
-    isLoading.value = false;
+     isPageLoading.value = false;
   }
 };
 
@@ -524,7 +557,12 @@ const onBannerChange = (e) => {
   reader.onload = (e) => { previewBanner.value = e.target.result; };
   reader.readAsDataURL(file);
 };
-const removeBanner = () => { previewBanner.value = null; form.value.banner_image = null; form.value.remove_banner = true; currentBanner.value = ''; };
+const removeBanner = () => { 
+  previewBanner.value = null; 
+  form.value.banner_image = null; 
+  form.value.remove_banner = true; 
+  hasOldImage.value = false; 
+};
 
 const removeItemRow = (index) => {
    items.value.splice(index, 1);
@@ -533,7 +571,6 @@ const removeItemRow = (index) => {
    selectedItemIndexes.value = selectedItemIndexes.value.map(val => val > index ? val - 1 : val);
 };
 
-// Modal Cây Danh Mục
 const hierarchicalCategories = computed(() => {
   const buildTree = (parentId = null, level = 0) => {
     let res = [];
@@ -546,12 +583,14 @@ const hierarchicalCategories = computed(() => {
   };
   return buildTree(null);
 });
+
 const getAllCategoryIds = (id) => {
   let ids = [id];
   const children = categories.value.filter(c => c.parent_id === id);
   children.forEach(child => { ids = ids.concat(getAllCategoryIds(child.id)); });
   return ids;
 };
+
 const filteredProductsFull = computed(() => {
   let res = allPublishedProducts.value;
   if (modalSearchQuery.value) {
@@ -569,7 +608,7 @@ const filteredProductsFull = computed(() => {
 });
 
 const displayFilteredProducts = computed(() => {
-  return filteredProductsFull.value.slice(0, 30);
+  return filteredProductsFull.value.slice(0, 30); 
 });
 
 const openProductModal = () => {
@@ -579,42 +618,58 @@ const openProductModal = () => {
 };
 
 const submitForm = async () => {
-  if (items.value.length === 0) return Swal.fire('Lỗi', 'Flash Sale phải có sản phẩm!', 'warning');
+  if (items.value.length === 0) return Swal.fire('Lỗi', 'Vui lòng thêm ít nhất 1 sản phẩm vào Flash Sale!', 'warning');
 
   isSubmitting.value = true;
   const formData = new FormData();
-  formData.append('_method', 'PUT'); 
+  formData.append('_method', 'PUT');
   formData.append('name', form.value.name);
-  formData.append('slug', form.value.slug);
   formData.append('start_time', form.value.start_time);
-  formData.append('end_time', form.value.end_time);
+  
+  if (hasEndTime.value && form.value.end_time) {
+      formData.append('end_time', form.value.end_time);
+  } else {
+      formData.append('end_time', '');
+  }
+
   formData.append('status', form.value.status);
   
   if (form.value.banner_image) formData.append('banner_image', form.value.banner_image);
-  if (form.value.remove_banner) formData.append('remove_banner', true);
+  if (form.value.remove_banner) formData.append('remove_banner', 'true');
   
   const payloadItems = items.value.map(i => ({
       variant_id: i.variant_id,
       flash_sale_price: i.flash_sale_price,
-      quantity_limit: i.quantity_limit,
-      sold_quantity: i.sold_quantity
+      quantity_limit: i.quantity_limit
   }));
   formData.append('items_data', JSON.stringify(payloadItems));
 
   try {
-    await axios.post(`${import.meta.env.VITE_API_BASE_URL}/admin/flash_sales/${flashSaleId}`, formData, {
-      headers: { ...getHeaders(), 'Content-Type': 'multipart/form-data' }
+    await api.post(`/admin/flash_sales/${flashSaleId}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
     });
-    Swal.fire('Thành công', 'Cập nhật Flash Sale thành công!', 'success');
-    router.push('/admin/flash-sales');
+
+    Swal.fire('Thành công', 'Cập nhật chiến dịch Flash Sale thành công!', 'success');
+    router.push({ name: 'admin-flash-sales' });
   } catch (error) {
-    Swal.fire('Lỗi', error.response?.data?.message || 'Có lỗi xảy ra', 'error');
+    if (error.response?.data?.errors) {
+       let errorHtml = '<ul class="text-start text-danger small mt-2" style="max-height: 200px; overflow-y: auto;">';
+       Object.values(error.response.data.errors).flat().forEach(msg => { errorHtml += `<li>${msg}</li>`; });
+       errorHtml += '</ul>';
+       Swal.fire({ title: 'Dữ liệu không hợp lệ', html: errorHtml, icon: 'error' });
+    } else {
+       Swal.fire('Lỗi', error.response?.data?.message || 'Có lỗi xảy ra', 'error');
+    }
   } finally {
     isSubmitting.value = false;
   }
 };
 
-onMounted(fetchDetail);
+onMounted(() => {
+  fetchDataForModal();
+  fetchFlashSaleData();
+});
+
 onBeforeUnmount(() => {
   if (productModalInstance) productModalInstance.hide();
   document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
@@ -627,10 +682,8 @@ onBeforeUnmount(() => {
 .text-urban { color: var(--color-c-hover, #547792) !important; }
 .bg-urban { background-color: var(--color-c-hover, #547792) !important; }
 .border-urban { border-color: var(--color-c-hover, #547792) !important; }
-.btn-urban { background-color: var(--color-c-hover, #547792); color: white; border: none; transition: 0.2s; }
-.btn-urban:hover { background-color: var(--color-c-dark, #213448); color: white; transform: translateY(-2px); }
-.btn-outline-urban { color: var(--color-c-hover, #547792); border-color: var(--color-c-hover, #547792); background: transparent; transition: 0.2s; }
-.btn-outline-urban:hover { background-color: var(--color-c-hover, #547792); color: white; }
+.btn-urban { background-color: var(--color-c-dark, #213448); color: white; border: none; transition: 0.2s ease; }
+.btn-urban:hover { background-color: var(--color-c-hover, #547792); color: white; border-color: var(--color-c-hover, #547792); }
 
 .shadow-sm-hover { transition: box-shadow 0.2s ease, border-color 0.2s ease; }
 .shadow-sm-hover:focus-within { box-shadow: 0 4px 15px rgba(84, 119, 146, 0.1) !important; border-color: var(--color-c-hover, #547792) !important; }
@@ -640,7 +693,6 @@ onBeforeUnmount(() => {
 .product-select-card { transition: all 0.2s ease; }
 .product-select-card:hover { transform: translateY(-2px); border-color: var(--color-c-hover, #547792) !important; }
 
-/* CSS cho Dấu Check tròn đẹp mắt */
 .custom-check-circle {
    width: 24px; height: 24px;
    border: 2px solid #dee2e6;
@@ -663,6 +715,7 @@ html.dark .custom-check-circle.checked { background-color: var(--color-c-hover, 
 .custom-scrollbar-y::-webkit-scrollbar { width: 5px; }
 .custom-scrollbar-y::-webkit-scrollbar-track { background: transparent; }
 .custom-scrollbar-y::-webkit-scrollbar-thumb { background: var(--color-c-light, #94B4C1); border-radius: 10px; }
+html.dark .custom-scrollbar-y::-webkit-scrollbar-thumb { background: #495057; }
 .custom-scrollbar-x::-webkit-scrollbar { height: 6px; }
 .custom-scrollbar-x::-webkit-scrollbar-thumb { background: var(--color-c-light, #94B4C1); border-radius: 10px; }
 </style>

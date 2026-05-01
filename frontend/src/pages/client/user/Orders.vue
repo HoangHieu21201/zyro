@@ -184,17 +184,17 @@
                       <!-- GÓI COMBO LOOKBOOK -->
                       <div v-if="group.isLookbook" class="p-3 p-md-4 border-bottom dark:border-gray-700">
                           <div class="d-flex align-items-start gap-3">
-                             <div class="position-relative flex-shrink-0" style="width: 80px; height: 100px;">
+                             <div class="position-relative flex-shrink-0 cursor-pointer hover-opacity" style="width: 80px; height: 100px;" @click.stop="goToLookbook(group)">
                                <img :src="group.lookbook_image" class="w-100 h-100 object-fit-cover rounded-3 border dark:border-gray-600 bg-white" @error="e => e.target.src='/client_placeholder.png'">
                              </div>
                              
                              <div class="flex-grow-1 d-flex flex-column justify-content-between">
                                 <div class="d-flex justify-content-between align-items-start gap-3">
                                    <div>
-                                      <span class="badge bg-secondary text-white rounded-pill px-2 py-1 shadow-sm font-sans-vn mb-1" style="font-size: 0.65rem;">
+                                      <span class="badge bg-secondary text-white rounded-pill px-2 py-1 shadow-sm font-sans-vn mb-1 cursor-pointer hover-bg-dark transition-all" style="font-size: 0.65rem;" @click.stop="goToLookbook(group)">
                                          <i class="bi bi-magic me-1"></i> {{ group.lookbook_name }}
                                       </span>
-                                      <h6 class="fw-bold text-dark dark:text-gray-200 mb-0 font-sans-vn" style="font-size: 0.95rem;">Combo {{ group.items.length }} món đồ</h6>
+                                      <h6 class="fw-bold text-dark dark:text-gray-200 mb-0 font-sans-vn cursor-pointer hover-text-urban transition-color" style="font-size: 0.95rem;" @click.stop="goToLookbook(group)">Combo {{ group.items.length }} món đồ</h6>
                                    </div>
                                    <div class="text-end flex-shrink-0">
                                       <div class="fw-bold text-danger font-sans-vn">{{ formatCurrency(group.totalPrice) }}</div>
@@ -214,9 +214,12 @@
                           <div v-show="isGroupExpanded(order.id, group.lookbook_id)" class="combo-details mt-3 pt-3 border-top border-light-subtle dark:border-gray-700 ps-2" @click.stop>
                              <div class="d-flex flex-column gap-2">
                                 <div v-for="item in group.items" :key="'cb_item_'+item.id" class="d-flex align-items-center gap-3 bg-white dark:bg-[#1a2533] p-2 rounded-3 border border-light-subtle dark:border-gray-700">
-                                   <img :src="getImageUrl(item.variant_image)" style="width: 40px; height: 50px;" class="rounded-2 border dark:border-gray-600 object-fit-cover shadow-sm bg-light" @error="e => e.target.src='/client_placeholder.png'">
+                                   <img :src="getImageUrl(item.variant_image)" style="width: 40px; height: 50px;" class="rounded-2 border dark:border-gray-600 object-fit-cover shadow-sm bg-light cursor-pointer hover-opacity" @error="e => e.target.src='/client_placeholder.png'" @click.stop="goToProduct(item)">
                                    <div class="flex-grow-1">
-                                      <div class="fw-semibold text-dark dark:text-gray-200 line-clamp-1 font-sans-vn" style="font-size: 0.85rem;">{{ item.product_name }}</div>
+                                      <div class="fw-semibold text-dark dark:text-gray-200 line-clamp-1 font-sans-vn" style="font-size: 0.85rem;">
+                                          <!-- ĐÃ FIX: Chuyển sang Router Link theo Slug mượt mà -->
+                                          <a href="#" @click.prevent.stop="goToProduct(item)" class="text-decoration-none text-dark dark:text-gray-200 hover-text-urban transition-color">{{ item.product_name }}</a>
+                                      </div>
                                       <div class="text-secondary dark:text-gray-400 font-sans-vn d-flex justify-content-between pe-2 mt-1" style="font-size: 0.75rem;">
                                          <span>{{ parseAttributes(item.variant_attributes) }} <span class="mx-1">|</span> <span class="fw-bold text-dark dark:text-gray-300">{{ formatCurrency(item.purchased_price) }}</span></span>
                                          <span class="fw-bold">x{{ item.quantity }}</span>
@@ -234,13 +237,16 @@
                             
                             <div class="position-absolute top-0 start-0 w-100 h-100 bg-c-effect opacity-25 dark:bg-[#121416] pe-none z-0"></div>
 
-                            <div class="position-relative z-1" style="width: 80px; height: 100px; flex-shrink: 0;">
+                            <div class="position-relative z-1 cursor-pointer hover-opacity" style="width: 80px; height: 100px; flex-shrink: 0;" @click.stop="goToProduct(item)">
                               <img :src="getImageUrl(item.variant_image)" class="w-100 h-100 object-fit-cover rounded-3 border dark:border-gray-600 bg-white" @error="e => e.target.src='/client_placeholder.png'">
                             </div>
                             
                             <div class="flex-grow-1 position-relative z-1 d-flex flex-column justify-content-between">
                               <div class="d-flex justify-content-between align-items-start gap-3">
-                                <h6 class="fw-bold text-dark dark:text-gray-200 mb-1 line-clamp-2 font-sans-vn" style="font-size: 0.95rem;">{{ item.product_name }}</h6>
+                                <h6 class="fw-bold text-dark dark:text-gray-200 mb-1 line-clamp-2 font-sans-vn" style="font-size: 0.95rem;">
+                                    <!-- ĐÃ FIX: Chuyển sang Router Link theo Slug mượt mà -->
+                                    <a href="#" @click.prevent.stop="goToProduct(item)" class="text-decoration-none text-dark dark:text-gray-200 hover-text-urban transition-color">{{ item.product_name }}</a>
+                                </h6>
                                 <div class="text-end flex-shrink-0">
                                    <div class="fw-bold text-dark dark:text-white font-sans-vn">{{ formatCurrency(item.purchased_price) }}</div>
                                 </div>
@@ -421,10 +427,12 @@ const groupOrderItems = (items) => {
       if (!group) {
         let lbName = 'Combo Phong Cách';
         let lbImage = '/client_placeholder.png';
+        let lbSlug = null;
         
         if (item.lookbook) {
            lbName = item.lookbook.name;
            lbImage = item.lookbook.main_image ? getImageUrl(item.lookbook.main_image) : '/client_placeholder.png';
+           lbSlug = item.lookbook.slug;
         } else if (item.variant_image) {
            lbImage = getImageUrl(item.variant_image);
         }
@@ -434,6 +442,7 @@ const groupOrderItems = (items) => {
           lookbook_id: item.lookbook_id, 
           lookbook_name: lbName,
           lookbook_image: lbImage,
+          lookbook_slug: lbSlug,
           items: [],
           comboQuantity: item.quantity, 
           totalPrice: 0 
@@ -455,6 +464,25 @@ const groupOrderItems = (items) => {
 };
 
 const cartGroups = (items) => groupOrderItems(items);
+
+// ========================================================
+// HÀM ĐIỀU HƯỚNG BẤM TỪ ĐƠN HÀNG VỀ LINK GỐC
+// ========================================================
+const goToProduct = (item) => {
+  const targetPath = item.variant?.product?.slug || item.product_id;
+  router.push(`/product/${targetPath}`).then(() => {
+     window.scrollTo(0, 0);
+  });
+};
+
+const goToLookbook = (group) => {
+  if (group.lookbook_slug) {
+     router.push(`/lookbook/${group.lookbook_slug}`).then(() => {
+        window.scrollTo(0, 0);
+     });
+  }
+};
+
 
 const toggleGroup = (orderId, lookbookId) => {
   const key = `${orderId}_${lookbookId}`;
@@ -752,6 +780,10 @@ html.dark .text-c-dark { color: #f8f9fa !important; }
 /* UTILS */
 .hover-text-dark:hover { color: #000 !important; }
 html.dark .hover-text-dark:hover { color: #fff !important; }
+.hover-text-urban:hover { color: var(--color-c-hover, #547792) !important; text-decoration: underline !important; }
+.hover-opacity { transition: opacity 0.2s ease; }
+.hover-opacity:hover { opacity: 0.7; }
+.hover-bg-dark:hover { background-color: #343a40 !important; color: #fff !important; }
 
 .hover-transform { transition: transform 0.2s ease, box-shadow 0.2s ease; }
 .hover-transform:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important; }
