@@ -91,4 +91,10 @@ return [
         'module_code' => 'admin_contacts',
         'default_level' => 2
     ],
+    // ĐÃ THÊM: Module Chat Real-time
+    [
+        'module_name' => 'Hỗ trợ trực tuyến',
+        'module_code' => 'admin_chats',
+        'default_level' => 2
+    ],
 ];

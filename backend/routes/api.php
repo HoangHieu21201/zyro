@@ -29,6 +29,7 @@ use App\Http\Controllers\Api\Admin\DashboardController;
 use App\Http\Controllers\Api\Admin\InventoryController;
 use App\Http\Controllers\Api\Admin\NotificationController;
 use App\Http\Controllers\Api\Admin\AdminContactController;
+use App\Http\Controllers\Api\Admin\AdminChatController;
 
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Client\HomeController;
@@ -42,19 +43,16 @@ use App\Http\Controllers\Api\Client\ClientReviewController;
 use App\Http\Controllers\Api\Client\ForgotPasswordController;
 use App\Http\Controllers\Api\Client\ContactController;
 use App\Http\Controllers\Api\Auth\GoogleAuthController;
+use App\Http\Controllers\Api\Client\ChatbotController;
+use App\Http\Controllers\Api\Client\ChatController;
 
 Broadcast::routes(['middleware' => ['auth:sanctum']]);
 
 Route::prefix('v1/admin')->group(function () {
 
-    // ========================================================
-    // ĐÃ FIX BẢO MẬT: BỌC RATE LIMITING CHO TOÀN BỘ AUTH ADMIN
-    // ========================================================
-    // Chống Brute-force dò mật khẩu Admin (Giới hạn 10 lần / 1 phút)
     Route::middleware('throttle:10,1')->post('login', [AdminAuthController::class, 'login']);
     Route::middleware('throttle:10,1')->post('register', [AdminAuthController::class, 'register']);
 
-    // BỨC TƯỜNG LỬA CHỐNG SPAM MAIL ADMIN (Chỉ cho phép 3 lần / 1 phút)
     Route::middleware('throttle:3,1')->post('forgot-password', [AdminAuthController::class, 'forgotPassword']);
     Route::post('reset-password', [AdminAuthController::class, 'resetPassword']);
 
@@ -74,7 +72,6 @@ Route::prefix('v1/admin')->group(function () {
         Route::post('profile/info', [AdminProfileController::class, 'updateInfo']);
         Route::put('profile/password', [AdminProfileController::class, 'updatePassword']);
 
-        // quản lý liên hệ hộp thư
         Route::post('contacts/{id}/reply', [AdminContactController::class, 'reply']);
         Route::apiResource('contacts', AdminContactController::class);
 
@@ -168,7 +165,6 @@ Route::prefix('v1/admin')->group(function () {
         });
 
         Route::middleware(['check.module:admin_flash_sales'])->group(function () {
-            // ĐÃ THÊM: Route Khôi phục cho Flash Sale
             Route::post('flash_sales/{id}/restore', [FlashSaleController::class, 'restore']);
             Route::patch('flash_sales/{id}/status', [FlashSaleController::class, 'updateStatus']);
             Route::apiResource('flash_sales', FlashSaleController::class);
@@ -181,14 +177,35 @@ Route::prefix('v1/admin')->group(function () {
             Route::get('lookbooks', [InventoryController::class, 'getLookbooks']);
             Route::put('lookbooks/{id}/limit', [InventoryController::class, 'updateLookbookLimit']);
         });
+
+        Route::middleware(['check.module:admin_chats'])->group(function () {
+            Route::get('chats', [AdminChatController::class, 'index']);
+            Route::get('chats/{id}/messages', [AdminChatController::class, 'messages']);
+            Route::post('chats/{id}/takeover', [AdminChatController::class, 'takeover']);
+            Route::post('chats/{id}/resolve', [AdminChatController::class, 'resolve']);
+            Route::post('chats/{id}/messages', [AdminChatController::class, 'sendMessage']);
+            Route::delete('chats/{id}', [AdminChatController::class, 'destroy']);
+        });
     });
 });
 
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback']);
+Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect']);
+
 Route::prefix('v1/client')->group(function () {
 
-    Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect']);
-    
+    // LUỒNG 1: BOT AI
+    Route::get('/chatbot/history', [ChatbotController::class, 'fetchHistory']);
+    Route::post('/chatbot/chat', [ChatbotController::class, 'chat'])->middleware('throttle:20,1');
+
+    // LUỒNG 2: REALTIME
+    Route::get('/chat/history', [ChatController::class, 'fetchHistory']);
+    Route::post('/chat/send', [ChatController::class, 'sendMessage'])->middleware('throttle:30,1');
+    Route::post('/chat/request-human', [ChatController::class, 'requestHuman']);
+    Route::post('/chat/end-human', [ChatController::class, 'endHuman']); // ROUTE MỚI: NGẮT KẾT NỐI NHÂN VIÊN
+    Route::delete('/chat/clear', [ChatController::class, 'clearHistory']);
+
+
     Route::middleware('throttle:10,1')->post('register', [AuthController::class, 'register']);
     Route::middleware('throttle:10,1')->post('login', [AuthController::class, 'login']);
 
@@ -252,8 +269,6 @@ Route::prefix('v1/client')->group(function () {
         Route::post('/process', [ClientCheckoutController::class, 'processCheckout']);
     });
 
-    // luồng return cho trình duyệt khách (chỉ redirect)
     Route::get('/checkout/momo-return', [ClientCheckoutController::class, 'momoReturn']);
-    // luồng ipn ngầm cho server momo (nơi kiểm tra số tiền và chốt đơn)
     Route::post('/checkout/momo-ipn', [ClientCheckoutController::class, 'momoIpn']);
 });

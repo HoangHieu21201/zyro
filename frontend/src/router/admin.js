@@ -284,6 +284,13 @@ const admin = [
         component: () => import('../pages/admin/contact/Index.vue'),
         meta: { title: 'Hộp thư khách hàng' }
       },
+      // ĐÃ THÊM: TRANG CHAT REAL-TIME
+      {
+        path: 'chats',
+        name: 'admin-chats',
+        component: () => import('../pages/admin/chats/Index.vue'),
+        meta: { moduleCode: 'admin_orders', title: 'Hỗ trợ trực tuyến' }
+      },
     ],
   },
 ]
