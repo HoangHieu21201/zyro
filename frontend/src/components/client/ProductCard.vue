@@ -1,6 +1,6 @@
 <template>
-  <!-- ĐÃ FIX: Thêm sự kiện @click="goToDetail" để khi bấm vào bất kỳ đâu trên Card đều chuyển trang -->
-  <div class="product-card cursor-pointer w-100" @click="goToDetail">
+  <!-- ĐÃ FIX: Đổi sự kiện bấm vào Card thành mở hình ảnh thu nhỏ (Zoom) -->
+  <div class="product-card cursor-pointer w-100" @click="openZoom">
     
     <!-- KHUNG HÌNH ẢNH SẢN PHẨM -->
     <div class="product-img-wrapper position-relative overflow-hidden rounded-3 mb-3 bg-light dark:bg-[#1a2533]">
@@ -27,23 +27,24 @@
         <button class="btn bg-white rounded-circle shadow action-icon-btn d-flex align-items-center justify-content-center" 
                 :title="isWishlisted ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'" 
                 @click.stop="onWishlist">
-          <!-- Tự động đổi class thành bi-heart-fill màu đỏ nếu sản phẩm nằm trong danh sách yêu thích -->
           <i class="bi fs-6 transition-all" :class="isWishlisted ? 'bi-heart-fill text-danger' : 'bi-heart text-dark'"></i>
         </button>
         
+        <!-- Nút Xem Nhanh (Bật Modal Quick View thông tin) -->
         <button class="btn bg-white rounded-circle shadow action-icon-btn d-flex align-items-center justify-content-center" title="Xem nhanh" @click.stop="onQuickView">
           <i class="bi bi-eye text-dark fs-6"></i>
         </button>
+
         <button class="btn bg-white rounded-circle shadow action-icon-btn d-flex align-items-center justify-content-center" title="So sánh" @click.stop="onCompare">
           <i class="bi bi-arrow-left-right text-dark fs-6"></i>
         </button>
       </div>
 
-      <!-- NÚT TÙY CHỌN DƯỚI ĐÁY -->
+      <!-- NÚT CHI TIẾT DƯỚI ĐÁY -->
       <div class="action-bottom-panel position-absolute bottom-0 start-0 w-100 px-3 pb-3">
-        <!-- ĐÃ FIX: Cho nút Tùy chọn kích hoạt hàm chuyển trang goToDetail -->
+        <!-- ĐÃ FIX: Giữ nguyên Icon lưới, đổi text thành Chi tiết, click dẫn đến trang chi tiết -->
         <button class="btn bg-white w-100 fw-semibold shadow-lg rounded-2 py-2 text-dark action-btn-main d-flex align-items-center justify-content-center gap-2" @click.stop="goToDetail">
-          <i class="bi bi-grid text-secondary"></i> Tùy chọn
+          <i class="bi bi-grid text-secondary"></i> Chi tiết
         </button>
       </div>
       
@@ -68,7 +69,6 @@
       </div>
 
       <!-- TÊN SẢN PHẨM -->
-      <!-- ĐÃ FIX: Bọc Router-link cho chuẩn SEO (Google thích thẻ a) và ưu tiên Slug -->
       <h6 class="product-title mb-2 fw-normal line-clamp-1 w-100" :title="product.name" style="font-size: 0.95rem;">
         <router-link :to="`/product/${product.slug || product.id}`" class="text-decoration-none text-dark dark:text-gray-200 product-link transition-all" @click.stop>
           {{ product.name }}
@@ -97,12 +97,25 @@
         </template>
       </div>
     </div>
+
+    <!-- ĐÃ THÊM: POPUP MODAL THUMBNAIL ĐỂ XEM ẢNH DÙNG TELEPORT CHO NỔI TOÀN MÀN HÌNH -->
+    <Teleport to="body">
+      <transition name="fade">
+        <div v-if="isZoomOpen" class="custom-zoom-overlay d-flex align-items-center justify-content-center" @click.stop="closeZoom">
+          <button type="button" class="btn-close-zoom position-absolute top-0 end-0 m-4 bg-dark bg-opacity-75 text-white rounded-circle border-0 d-flex align-items-center justify-content-center shadow-lg transition-all" @click.stop="closeZoom">
+            <i class="bi bi-x-lg fs-5"></i>
+          </button>
+          <img :src="currentImage" class="zoomed-img object-fit-contain shadow-lg" @click.stop>
+        </div>
+      </transition>
+    </Teleport>
+
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue';
-import { useRouter } from 'vue-router'; // ĐÃ THÊM YÊU CẦU ROUTER
+import { useRouter } from 'vue-router';
 import { useWishlistStore } from '@/stores/wishlistStore';
 
 const props = defineProps({
@@ -119,7 +132,6 @@ const props = defineProps({
       colors: []
     })
   },
-  // Cờ đánh dấu component này đang nằm ở trang Wishlist
   isWishlistCard: {
     type: Boolean,
     default: false
@@ -130,15 +142,13 @@ const emit = defineEmits(['quick-view', 'compare', 'options']);
 const activeColorIndex = ref(0);
 
 const wishlistStore = useWishlistStore();
-const router = useRouter(); // Khởi tạo router
+const router = useRouter(); 
 
-// Logic kiểm tra ID sản phẩm có nằm trong danh sách đã thích chưa
 const isWishlisted = computed(() => {
-  if (props.isWishlistCard) return true; // Luôn đỏ nếu đang nằm trong trang Wishlist
-  return wishlistStore.items.includes(props.product.id); // Tự động tra cứu trong Store
+  if (props.isWishlistCard) return true; 
+  return wishlistStore.items.includes(props.product.id); 
 });
 
-// Lấy ảnh hiển thị dựa trên thẻ màu đang được click
 const currentImage = computed(() => {
   if (props.product.colors && props.product.colors.length > 0 && props.product.colors[activeColorIndex.value]) {
     const colorImg = props.product.colors[activeColorIndex.value].image;
@@ -152,7 +162,6 @@ const formatCurrency = (val) => {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
 };
 
-// Gọi trực tiếp API yêu thích thông qua action của Store
 const onWishlist = async () => {
   await wishlistStore.toggleWishlist(props.product.id);
 };
@@ -160,7 +169,7 @@ const onWishlist = async () => {
 const onQuickView = () => emit('quick-view', props.product);
 const onCompare = () => emit('compare', props.product);
 
-// ĐÃ THÊM: Xử lý chuyển hướng đến trang Detail bằng Slug
+// HÀM CHUYỂN TRANG CHI TIẾT SẢN PHẨM
 const goToDetail = () => {
   const targetPath = props.product.slug || props.product.id;
   router.push(`/product/${targetPath}`).then(() => {
@@ -168,8 +177,16 @@ const goToDetail = () => {
   });
 };
 
-// Vẫn giữ sự kiện cũ nếu như Parent Component có dùng
-const onOptions = () => emit('options', props.product);
+// ĐÃ THÊM: STATE & LOGIC BẬT TẮT XEM ẢNH POPUP THUMBNAIL
+const isZoomOpen = ref(false);
+const openZoom = () => {
+  isZoomOpen.value = true;
+  document.body.style.overflow = 'hidden'; 
+};
+const closeZoom = () => {
+  isZoomOpen.value = false;
+  document.body.style.overflow = ''; 
+};
 </script>
 
 <style scoped>
@@ -233,7 +250,6 @@ const onOptions = () => emit('options', props.product);
 .product-card:hover .action-right-panel { opacity: 1; visibility: visible; transform: translateX(0); }
 .product-card:hover .action-bottom-panel { opacity: 1; visibility: visible; transform: translateY(0); }
 
-/* ĐÃ FIX: Cho chữ Tên Sản phẩm có thẻ a đổi màu khi hover khung Card */
 .product-card:hover .product-title .product-link { color: var(--color-c-hover, #547792) !important; }
 .product-card:hover .product-title { color: var(--color-c-hover, #547792) !important; }
 
@@ -273,4 +289,36 @@ html.dark .swatch-na { background-color: #2b3035 !important; border-color: #4950
 .swatch-out-of-stock:hover { transform: none !important; }
 
 .transition-all { transition: all 0.3s ease; }
+
+/* =====================================
+   ĐÃ THÊM: CSS CHO MODAL ZOOM ẢNH
+===================================== */
+.custom-zoom-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.9);
+  z-index: 1060;
+  backdrop-filter: blur(5px);
+}
+.zoomed-img {
+  max-width: 95vw;
+  max-height: 95vh;
+  border-radius: 8px;
+  cursor: default;
+}
+.btn-close-zoom {
+  width: 45px;
+  height: 45px;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  cursor: pointer;
+}
+.btn-close-zoom:hover {
+  background-color: rgba(220, 53, 69, 0.9) !important;
+  transform: scale(1.1);
+}
+.fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
 </style>

@@ -180,6 +180,14 @@ const menuItems = ref([
       { name: 'Liên hệ (contact)', path: '/admin/contacts', moduleCode: 'admin_contacts' }
     ]
   },
+  // chat bot và chat reaitilme nằm chung 1 cha
+  {
+    name: 'Chat', icon: 'bi-chat-dots-fill', stateKey: 'chat',
+    children: [
+      { name: 'Hỗ trợ trực tuyến', path: '/admin/chats', moduleCode: 'admin_chats' },
+      { name: 'Chatbot AI', path: '/admin/chatbot', moduleCode: 'admin_chatbot' }
+    ]
+  },
   
 ]);
 
