@@ -1,5 +1,5 @@
 <template>
-  <div class="user-wishlist-wrapper pb-5 mb-5">
+  <div class="user-wishlist-wrapper">
     <div class="pt-5 mt-4">
       <div class="zyro-container">
         <nav aria-label="breadcrumb" class="mb-4">

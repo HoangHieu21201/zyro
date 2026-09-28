@@ -48,9 +48,13 @@ class AdminContactController extends Controller
 
         // Sắp xếp
         $sort = $request->query('sort', 'desc');
-        $query->orderBy('created_at', $sort);
+        if ($request->has('status') && $request->status === 'replied') {
+            $query->orderBy('replied_at', $sort);
+        } else {
+            $query->orderBy('created_at', $sort);
+        }
 
-        $contacts = $query->paginate(15);
+        $contacts = $query->paginate(6);
 
         return response()->json([
             'success' => true,
@@ -86,6 +90,47 @@ class AdminContactController extends Controller
             // Lỗi SMTP sẽ hiển thị thẳng lên màn hình qua Toast
             return response()->json(['success' => false, 'message' => 'Lỗi cấu hình gửi Mail: ' . $e->getMessage()], 500);
         }
+    }
+
+    public function bulkReply(Request $request): JsonResponse
+    {
+        $request->validate([
+            'contact_ids' => 'required|array|min:1',
+            'contact_ids.*' => 'exists:contacts,id',
+            'reply_message' => 'required|string|min:10'
+        ]);
+
+        $contacts = Contact::whereIn('id', $request->contact_ids)->where('status', 'pending')->get();
+        
+        $successCount = 0;
+        $errors = [];
+
+        foreach ($contacts as $contact) {
+            try {
+                Mail::to($contact->email)->send(new ReplyMail($contact, $request->reply_message));
+                
+                $contact->update([
+                    'status'        => 'replied',
+                    'reply_message' => $request->reply_message,
+                    'replied_at'    => now(),
+                    'replied_by'    => $request->user()->id
+                ]);
+                $successCount++;
+            } catch (\Exception $e) {
+                $errors[] = "Lỗi gửi đến {$contact->email}: " . $e->getMessage();
+            }
+        }
+
+        if ($successCount === 0 && count($errors) > 0) {
+            return response()->json(['success' => false, 'message' => 'Lỗi gửi mail: ' . implode(', ', $errors)], 500);
+        }
+
+        $message = "Đã gửi phản hồi thành công {$successCount}/{$contacts->count()} liên hệ.";
+        if (count($errors) > 0) {
+            $message .= " Tuy nhiên có vài lỗi: " . implode(', ', $errors);
+        }
+
+        return response()->json(['success' => true, 'message' => $message]);
     }
 
     public function destroy($id): JsonResponse

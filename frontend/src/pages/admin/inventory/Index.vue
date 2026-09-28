@@ -1,5 +1,5 @@
 <template>
-  <div class="inventory-index-wrapper pb-5 mb-5" style="padding-bottom: 100px !important;">
+  <div class="inventory-index-wrapper" style="padding-bottom: 100px !important;">
     
     <div v-if="isFirstLoad" class="d-flex flex-column justify-content-center align-items-center w-100" style="min-height: 70vh;">
       <h1 class="logo-shimmer mb-3">ZYRO</h1>
@@ -442,7 +442,7 @@ const getThumbnail = (path) => {
   cleanPath = cleanPath.replace(/^\/+/, '');
   if (cleanPath.startsWith('storage/')) cleanPath = cleanPath.replace('storage/', '');
 
-  let baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1';
+  let baseUrl = import.meta.env.VITE_API_BASE_URL;
   baseUrl = baseUrl.replace('/api/v1', '');
   return `${baseUrl}/storage/${cleanPath}`;
 };

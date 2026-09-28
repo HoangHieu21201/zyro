@@ -9,9 +9,7 @@
         
         <div class="mega-menu-content custom-scrollbar-y px-4 px-lg-5 pt-4 pb-2 flex-grow-1">
           
-          <!-- ============================================== -->
           <!-- SKELETON LOADING (HIỂN THỊ KHI ĐANG TẢI DATA)  -->
-          <!-- ============================================== -->
           <div v-if="!categories || categories.length === 0" class="w-100 pe-none animation-fade-in">
              <!-- Skeleton Lookbook -->
              <div class="mb-5 pb-2 border-bottom dark:border-gray-700">
@@ -41,9 +39,7 @@
              </div>
           </div>
 
-          <!-- ============================================== -->
           <!-- NỘI DUNG CHÍNH (KHI CÓ DATA)                   -->
-          <!-- ============================================== -->
           <div v-else class="animation-fade-in">
             <!-- KHU VỰC BỘ SƯU TẬP (LOOKBOOK) -->
             <div v-if="lookbooks && lookbooks.length > 0" class="mb-5 pb-2 border-bottom dark:border-gray-700">

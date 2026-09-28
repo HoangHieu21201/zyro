@@ -23,11 +23,13 @@ class AuthController extends Controller
             'status'    => 'active',
         ]);
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $accessToken = $user->createToken('auth_token', ['access-api'], now()->addHours(24))->plainTextToken;
+        $refreshToken = $user->createToken('refresh_token', ['issue-access-token'], now()->addDays(30))->plainTextToken;
 
         return response()->json([
             'message'      => 'Đăng ký thành công!',
-            'access_token' => $token,
+            'access_token' => $accessToken,
+            'refresh_token' => $refreshToken,
             'user'         => $user
         ], 201);
     }
@@ -48,12 +50,35 @@ class AuthController extends Controller
             ]);
         }
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $accessToken = $user->createToken('auth_token', ['access-api'], now()->addHours(24))->plainTextToken;
+        $refreshToken = $user->createToken('refresh_token', ['issue-access-token'], now()->addDays(30))->plainTextToken;
 
         return response()->json([
             'message'      => 'Đăng nhập thành công!',
-            'access_token' => $token,
+            'access_token' => $accessToken,
+            'refresh_token' => $refreshToken,
             'user'         => $user
+        ]);
+    }
+
+    public function refreshToken(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user->tokenCan('issue-access-token')) {
+            return response()->json(['success' => false, 'message' => 'Token không hợp lệ để làm mới.'], 403);
+        }
+
+        $user->currentAccessToken()->delete();
+
+        $accessToken = $user->createToken('auth_token', ['access-api'], now()->addHours(24))->plainTextToken;
+        $refreshToken = $user->createToken('refresh_token', ['issue-access-token'], now()->addDays(30))->plainTextToken;
+
+        return response()->json([
+            'success'      => true,
+            'message'      => 'Làm mới token thành công!',
+            'access_token' => $accessToken,
+            'refresh_token' => $refreshToken
         ]);
     }
 

@@ -40,7 +40,7 @@ class CategoryController extends Controller
             $cacheKey = 'categories_list_' . ($parentId === 'null' || $parentId === '' ? 'root' : $parentId);
 
             $categories = Cache::remember($cacheKey, 86400, function () use ($request) {
-                $query = Category::with('parent')->withCount('children');
+                $query = Category::with('parent')->withCount(['children', 'products']);
 
                 if ($request->has('parent_id')) {
                     $parentId = $request->parent_id;

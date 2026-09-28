@@ -50,12 +50,12 @@
                         <div
                            class="bg-urban-effect dark:bg-[#1a2533] p-4 rounded-4 shadow-sm border border-light-subtle dark:border-gray-700 font-sans-vn h-100">
                            <h5 class="fw-bold text-urban-dark dark:text-white mb-4"><i
-                                 class="bi bi-headset text-urban me-2"></i>Trụ sở ZYRO</h5>
+                                 class="bi bi-headset text-primary me-2"></i>Trụ sở ZYRO</h5>
 
                            <div class="d-flex align-items-start mb-3">
                               <div
                                  class="icon-box-sm rounded-circle d-flex align-items-center justify-content-center me-3 flex-shrink-0">
-                                 <i class="bi bi-geo-alt-fill text-urban"></i>
+                                 <i class="bi bi-geo-alt-fill text-danger"></i>
                               </div>
                               <div>
                                  <div
@@ -69,7 +69,7 @@
                            <div class="d-flex align-items-start mb-3">
                               <div
                                  class="icon-box-sm rounded-circle d-flex align-items-center justify-content-center me-3 flex-shrink-0">
-                                 <i class="bi bi-telephone-fill text-urban"></i>
+                                 <i class="bi bi-telephone-fill text-success"></i>
                               </div>
                               <div>
                                  <div
@@ -82,7 +82,7 @@
                            <div class="d-flex align-items-start mb-3">
                               <div
                                  class="icon-box-sm rounded-circle d-flex align-items-center justify-content-center me-3 flex-shrink-0">
-                                 <i class="bi bi-envelope-paper-fill text-urban"></i>
+                                 <i class="bi bi-envelope-paper-fill text-info"></i>
                               </div>
                               <div>
                                  <div
@@ -95,7 +95,7 @@
                            <div class="d-flex align-items-start">
                               <div
                                  class="icon-box-sm rounded-circle d-flex align-items-center justify-content-center me-3 flex-shrink-0">
-                                 <i class="bi bi-clock-fill text-urban"></i>
+                                 <i class="bi bi-clock-fill text-warning"></i>
                               </div>
                               <div>
                                  <div
@@ -123,7 +123,7 @@
                         <div
                            class="bg-white dark:bg-[#1a2533] p-4 p-lg-5 rounded-4 shadow-sm border border-light-subtle dark:border-gray-700 font-sans-vn h-100">
                            <h5 class="fw-bold text-urban-dark dark:text-white mb-4"><i
-                                 class="bi bi-send-fill text-urban me-2"></i>Gửi Lời Nhắn</h5>
+                                 class="bi bi-send-fill text-primary me-2"></i>Gửi Lời Nhắn</h5>
 
                            <form @submit.prevent="submitContact" novalidate autocomplete="off">
 

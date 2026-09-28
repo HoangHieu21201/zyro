@@ -1,5 +1,5 @@
 <template>
-  <div class="flash-sale-edit-wrapper pb-5 mb-5">
+  <div class="flash-sale-edit-wrapper">
     
     <div v-if="isPageLoading" class="d-flex flex-column justify-content-center align-items-center w-100" style="min-height: 70vh;">
       <h1 class="logo-shimmer mb-3">ZYRO</h1>
@@ -29,14 +29,18 @@
               <h6 class="fw-bold text-urban text-uppercase mb-4 border-bottom dark:border-gray-700 pb-2"><i class="bi bi-info-circle me-2"></i>Thiết lập cơ bản</h6>
               
               <div class="mb-3">
-                <label class="form-label fw-bold text-dark dark:text-gray-200 small text-uppercase">Tên chiến dịch <span class="text-danger">*</span></label>
-                <input type="text" class="form-control bg-light dark:bg-[#212529] dark:text-white border-0 shadow-sm-hover" v-model="form.name" @input="generateSlug" required>
+                <div class="form-floating shadow-sm-hover">
+                    <input id="floating_t8lyj51xf" type="text" class="form-control bg-light dark:bg-[#212529] dark:text-white border-0 shadow-sm-hover" v-model="form.name" @input="generateSlug" required placeholder="...">
+                    <label for="floating_t8lyj51xf" class="fw-bold text-muted" style="font-size: 0.85rem;">TÊN CHIẾN DỊCH <span class="text-danger">*</span></label>
+                  </div>
                 <div class="text-danger small mt-1 fw-bold" v-if="errors.name">{{ errors.name[0] }}</div>
               </div>
 
               <div class="mb-4">
-                <label class="form-label fw-bold text-dark dark:text-gray-200 small text-uppercase">Đường dẫn (Slug)</label>
-                <input type="text" class="form-control bg-light-subtle dark:bg-[#2b3035] text-muted dark:text-gray-400 font-monospace border-0" v-model="form.slug" readonly>
+                <div class="form-floating shadow-sm-hover">
+                    <input id="floating_9rv1m10vc" type="text" class="form-control bg-light-subtle dark:bg-[#2b3035] text-muted dark:text-gray-400 font-monospace border-0" v-model="form.slug" readonly placeholder="...">
+                    <label for="floating_9rv1m10vc" class="fw-bold text-muted" style="font-size: 0.85rem;">ĐƯỜNG DẪN (SLUG)</label>
+                  </div>
               </div>
 
               <div class="mb-4">
@@ -447,7 +451,7 @@ const deleteBatchSelected = () => {
   });
 };
 
-const getImageUrl = (path) => path ? `${import.meta.env.VITE_API_BASE_URL.replace('/api/v1', '/storage/')}${path}` : defaultImage;
+const getImageUrl = (path) => path ? `${import.meta.env.VITE_STORAGE_URL}${path}` : defaultImage;
 const handleImageError = (e) => { e.target.src = defaultImage; };
 
 const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(val || 0);

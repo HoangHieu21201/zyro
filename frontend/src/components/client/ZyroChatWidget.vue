@@ -4,9 +4,7 @@
     <transition name="chat-slide">
       <div v-if="chatStore.isOpen" class="chat-widget-wrapper">
         
-        <!-- ======================================================== -->
         <!-- ĐÃ FIX: SEGMENTED CONTROL SIDEBAR (LỒI RA BÊN TRÁI ĐẸP MẮT) -->
-        <!-- ======================================================== -->
         <div class="chat-sidebar-segmented">
            <button class="seg-btn bot-btn" 
                    :class="{ active: chatStore.status === 'bot_handling' }" 
@@ -206,9 +204,7 @@ onMounted(() => {
 <style scoped>
 .zyro-chat-container { z-index: 1045; position: relative; }
 
-/* ======================================================== */
 /* ĐÃ FIX: Sửa bottom từ 85px thành 25px để bám đáy màn hình */
-/* ======================================================== */
 .chat-widget-wrapper { 
   width: 360px; height: 550px; max-height: calc(100vh - 100px); 
   position: fixed; bottom: 25px; right: 25px; transform-origin: bottom right; 
@@ -221,9 +217,7 @@ onMounted(() => {
   width: 100%; height: 100%; position: relative; z-index: 2;
 }
 
-/* ======================================================== */
 /* THIẾT KẾ SIDEBAR NAVIGATION LỒI RA BÊN TRÁI              */
-/* ======================================================== */
 .chat-sidebar-segmented {
   position: absolute;
   left: -56px; /* Đẩy hẳn ra ngoài để không lấn vào khung chat */

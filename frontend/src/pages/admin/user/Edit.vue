@@ -1,5 +1,5 @@
 <template>
-  <div class="user-edit-wrapper pb-5 mb-5">
+  <div class="user-edit-wrapper">
     <div class="container-fluid py-4" v-if="!isLoading">
       <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
         <div class="d-flex align-items-center">
@@ -27,28 +27,31 @@
         <!-- CỘT TRÁI: AVATAR & TRẠNG THÁI -->
         <div class="col-lg-4 col-xl-3 mb-4 mb-lg-0">
            <div class="card border-0 shadow-sm rounded-4 dark:bg-[#1a2533] p-4 text-center sticky-top" style="top: 20px;">
-              <div class="position-relative d-inline-block mx-auto mb-3">
-                 <img :src="previewAvatar" class="rounded-circle border border-4 border-white dark:border-gray-700 shadow-sm object-fit-cover" style="width: 140px; height: 140px;">
-                 <button type="button" @click="$refs.avatarInput.click()" class="btn btn-urban btn-sm rounded-circle position-absolute bottom-0 end-0 p-2 shadow border border-2 border-white">
-                    <i class="bi bi-camera-fill text-white"></i>
+              <div class="position-relative mx-auto mb-3 avatar-wrapper group rounded-circle shadow-sm" style="width: 140px; height: 140px;">
+                 <img :src="previewAvatar" class="w-100 h-100 rounded-circle border border-4 border-white dark:border-gray-700 object-fit-cover">
+                 <div class="avatar-overlay position-absolute top-0 start-0 w-100 h-100 rounded-circle d-flex justify-content-center align-items-center bg-dark bg-opacity-50 cursor-pointer" @click="$refs.avatarInput.click()">
+                    <i class="bi bi-camera-fill text-white fs-3"></i>
+                 </div>
+                 <button v-if="hasOldAvatar || form.avatar" type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0 rounded-circle shadow-sm" style="width: 32px; height: 32px; z-index: 10;" @click="removeAvatar">
+                    <i class="bi bi-x"></i>
                  </button>
                  <input type="file" ref="avatarInput" @change="onAvatarChange" class="d-none" accept="image/*">
               </div>
               <div class="text-danger small mb-3 fw-bold" v-if="errors.avatar">{{ errors.avatar[0] }}</div>
               
-              <button v-if="hasOldAvatar || form.avatar" type="button" class="btn btn-sm btn-light text-danger border dark:border-gray-600 rounded-pill px-3 shadow-sm mb-4" @click="removeAvatar">
-                <i class="bi bi-trash3"></i> Gỡ ảnh hiện tại
-              </button>
+              
 
               <h5 class="fw-bold dark:text-white mb-1">{{ form.full_name || 'Khách hàng' }}</h5>
               <p class="text-muted mb-4 small font-monospace">{{ maskEmail(form.email) }}</p>
               
               <div class="text-start">
-                <label class="form-label fw-bold text-muted small text-uppercase mb-2">Trạng thái tài khoản</label>
-                <select class="form-select fw-bold shadow-sm dark:bg-[#212529] dark:border-gray-700" v-model="form.status" :class="form.status === 'active' ? 'text-success border-success bg-success bg-opacity-10' : 'text-warning border-warning bg-warning bg-opacity-10'">
-                  <option value="active" class="text-success fw-bold">Hoạt động (Active)</option>
-                  <option value="locked" class="text-warning fw-bold">Khóa (Locked)</option>
-                </select>
+                <div class="form-floating shadow-sm-hover">
+                  <select id="floating_status" class="form-select fw-bold shadow-sm dark:bg-[#212529] dark:border-gray-700" v-model="form.status" :class="form.status === 'active' ? 'text-success border-success bg-success bg-opacity-10' : 'text-warning border-warning bg-warning bg-opacity-10'">
+                    <option value="active" class="text-success fw-bold">Hoạt động (Active)</option>
+                    <option value="locked" class="text-warning fw-bold">Khóa (Locked)</option>
+                  </select>
+                  <label for="floating_status" class="fw-bold text-muted" style="font-size: 0.85rem;">TRẠNG THÁI TÀI KHOẢN</label>
+                </div>
               </div>
            </div>
         </div>
@@ -68,30 +71,38 @@
             <form @submit.prevent="updateUser" autocomplete="off">
               <div class="row g-4">
                 <div class="col-md-6">
-                  <label class="form-label fw-bold text-dark dark:text-gray-200">Họ và tên <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control py-2 dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" v-model="form.full_name" :class="{'is-invalid': errors.full_name}">
+                  <div class="form-floating shadow-sm-hover">
+                    <input id="floating_0bm67gb2h" type="text" class="form-control dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" v-model="form.full_name" :class="{'is-invalid': errors.full_name}" placeholder="...">
+                    <label for="floating_0bm67gb2h" class="fw-bold text-muted" style="font-size: 0.85rem;">HỌ VÀ TÊN <span class="text-danger">*</span></label>
+                  </div>
                   <div class="invalid-feedback">{{ errors.full_name?.[0] }}</div>
                 </div>
 
                 <div class="col-md-6">
-                  <label class="form-label fw-bold text-dark dark:text-gray-200">Số điện thoại liên hệ</label>
-                  <input type="text" class="form-control py-2 dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" v-model="form.phone" :class="{'is-invalid': errors.phone}" @input="validatePhone">
+                  <div class="form-floating shadow-sm-hover">
+                    <input id="floating_5tzev8wfx" type="text" class="form-control dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" v-model="form.phone" :class="{'is-invalid': errors.phone}" @input="validatePhone" placeholder="...">
+                    <label for="floating_5tzev8wfx" class="fw-bold text-muted" style="font-size: 0.85rem;">SỐ ĐIỆN THOẠI LIÊN HỆ</label>
+                  </div>
                   <div class="invalid-feedback">{{ errors.phone?.[0] }}</div>
                 </div>
 
                 <div class="col-md-6">
-                  <label class="form-label fw-bold text-dark dark:text-gray-200">Giới tính</label>
-                  <select class="form-select py-2 dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" v-model="form.gender">
+                  <div class="form-floating shadow-sm-hover">
+                    <select id="floating_gender" class="form-select dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" v-model="form.gender">
                     <option value="">-- N/A --</option>
                     <option value="Nam">Nam</option>
                     <option value="Nữ">Nữ</option>
                     <option value="Khác">Khác</option>
                   </select>
+                    <label for="floating_gender" class="fw-bold text-muted" style="font-size: 0.85rem;">GIỚI TÍNH</label>
+                  </div>
                 </div>
 
                 <div class="col-md-6">
-                  <label class="form-label fw-bold text-dark dark:text-gray-200">Ngày sinh</label>
-                  <input type="date" class="form-control py-2 dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" v-model="form.birthday">
+                  <div class="form-floating shadow-sm-hover">
+                    <input id="floating_f6p8dn0g2" type="date" class="form-control dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" v-model="form.birthday" placeholder="...">
+                    <label for="floating_f6p8dn0g2" class="fw-bold text-muted" style="font-size: 0.85rem;">NGÀY SINH</label>
+                  </div>
                 </div>
               </div>
 
@@ -117,10 +128,12 @@
               <div class="row g-4">
                 <!-- ĐÃ SỬA: Chuyển Email thành Read-only và thêm Note -->
                 <div class="col-12">
-                  <label class="form-label fw-bold text-dark dark:text-gray-200">Email đăng nhập</label>
                   <div class="input-group shadow-sm">
                     <span class="input-group-text bg-light dark:bg-[#212529] border-end-0 text-muted"><i class="bi bi-envelope"></i></span>
-                    <input type="email" class="form-control border-start-0 border-end-0 py-2 bg-light dark:bg-[#212529] text-muted dark:border-gray-700 cursor-not-allowed" :value="form.email" readonly disabled>
+                    <div class="form-floating flex-grow-1">
+                      <input type="email" class="form-control border-start-0 border-end-0 bg-light dark:bg-[#212529] text-muted dark:border-gray-700 cursor-not-allowed" :value="form.email" readonly disabled id="floating_email_edit">
+                      <label for="floating_email_edit" class="fw-bold text-muted" style="font-size: 0.85rem;">EMAIL ĐĂNG NHẬP</label>
+                    </div>
                     <span class="input-group-text bg-light dark:bg-[#212529] border-start-0 text-muted" title="Không thể thay đổi"><i class="bi bi-lock-fill"></i></span>
                   </div>
                   <small class="text-muted d-block mt-2 fst-italic"><i class="bi bi-info-circle me-1"></i>Email là định danh duy nhất của tài khoản và không thể thay đổi bởi Quản trị viên.</small>
@@ -133,18 +146,22 @@
                 </div>
 
                 <div class="col-md-6">
-                  <label class="form-label fw-bold text-dark dark:text-gray-200">Mật khẩu mới</label>
                   <div class="input-group shadow-sm-hover">
-                    <input :type="showPass1 ? 'text' : 'password'" autocomplete="new-password" class="form-control py-2 dark:bg-[#212529] dark:text-white dark:border-gray-700" v-model="form.password" :class="{'is-invalid': errors.password}" placeholder="Tối thiểu 6 ký tự">
+                    <div class="form-floating flex-grow-1">
+                      <input :type="showPass1 ? 'text' : 'password'" autocomplete="new-password" class="form-control dark:bg-[#212529] dark:text-white dark:border-gray-700" v-model="form.password" :class="{'is-invalid': errors.password}" placeholder="Tối thiểu 6 ký tự" id="floating_pass1_edit">
+                      <label for="floating_pass1_edit" class="fw-bold text-muted" style="font-size: 0.85rem;">MẬT KHẨU MỚI</label>
+                    </div>
                     <button class="btn btn-light dark:bg-[#212529] border dark:border-gray-700 text-muted" type="button" @click="showPass1 = !showPass1"><i class="bi" :class="showPass1 ? 'bi-eye-slash-fill' : 'bi-eye-fill'"></i></button>
                     <div class="invalid-feedback">{{ errors.password?.[0] }}</div>
                   </div>
                 </div>
 
                 <div class="col-md-6">
-                  <label class="form-label fw-bold text-dark dark:text-gray-200">Nhập lại mật khẩu mới <span class="text-danger" v-if="form.password">*</span></label>
                   <div class="input-group shadow-sm-hover">
-                    <input :type="showPass2 ? 'text' : 'password'" autocomplete="new-password" class="form-control py-2 dark:bg-[#212529] dark:text-white dark:border-gray-700" v-model="form.password_confirmation" placeholder="Xác nhận lại">
+                    <div class="form-floating flex-grow-1">
+                      <input :type="showPass2 ? 'text' : 'password'" autocomplete="new-password" class="form-control dark:bg-[#212529] dark:text-white dark:border-gray-700" v-model="form.password_confirmation" placeholder="Xác nhận lại" id="floating_pass2_edit">
+                      <label for="floating_pass2_edit" class="fw-bold text-muted" style="font-size: 0.85rem;">NHẬP LẠI MẬT KHẨU MỚI <span class="text-danger" v-if="form.password">*</span></label>
+                    </div>
                     <button class="btn btn-light dark:bg-[#212529] border dark:border-gray-700 text-muted" type="button" @click="showPass2 = !showPass2"><i class="bi" :class="showPass2 ? 'bi-eye-slash-fill' : 'bi-eye-fill'"></i></button>
                   </div>
                 </div>
@@ -228,40 +245,31 @@
             <form @submit.prevent="saveAddress">
               <div class="row g-3">
                 <div class="col-md-6 mb-2">
-                  <label class="form-label fw-bold text-dark dark:text-gray-200 small">Tên người nhận <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control bg-light dark:bg-[#212529] dark:text-white border-0 shadow-sm-hover" v-model="addrForm.customer_name" required>
+                  <div class="form-floating shadow-sm-hover">
+                    <input id="floating_20lndt0s5" type="text" class="form-control bg-light dark:bg-[#212529] dark:text-white border-0 shadow-sm-hover" v-model="addrForm.customer_name" required placeholder="...">
+                    <label for="floating_20lndt0s5" class="fw-bold text-muted" style="font-size: 0.85rem;">TÊN NGƯỜI NHẬN <span class="text-danger">*</span></label>
+                  </div>
                 </div>
                 <div class="col-md-6 mb-2">
-                  <label class="form-label fw-bold text-dark dark:text-gray-200 small">Số điện thoại <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control bg-light dark:bg-[#212529] dark:text-white border-0 shadow-sm-hover" v-model="addrForm.customer_phone" required>
+                  <div class="form-floating shadow-sm-hover">
+                    <input id="floating_3xobl8lce" type="text" class="form-control bg-light dark:bg-[#212529] dark:text-white border-0 shadow-sm-hover" v-model="addrForm.customer_phone" required placeholder="...">
+                    <label for="floating_3xobl8lce" class="fw-bold text-muted" style="font-size: 0.85rem;">SỐ ĐIỆN THOẠI <span class="text-danger">*</span></label>
+                  </div>
                 </div>
                 
-                <!-- Dropdown API Open-API.vn -->
-                <div class="col-md-4 mb-2">
-                  <label class="form-label fw-bold text-dark dark:text-gray-200 small">Tỉnh/Thành phố <span class="text-danger">*</span></label>
-                  <select class="form-select bg-light dark:bg-[#212529] dark:text-white border-0 shadow-sm-hover fw-semibold" v-model="addrForm.city" @change="onCityChangeModal" required>
-                    <option value="" disabled>-- Chọn --</option>
-                    <option v-for="p in provinces" :key="p.code" :value="p.name">{{ p.name }}</option>
-                  </select>
+                <div class="col-12 mb-2">
+                  <AddressSelector 
+                     show-location-button location-button-class="btn-outline-urban" @location-detail="val => addrForm.shipping_address = val"
+                     v-model:city="addrForm.city"
+                     v-model:district="addrForm.district"
+                     v-model:ward="addrForm.ward"
+                  />
                 </div>
-                <div class="col-md-4 mb-2">
-                  <label class="form-label fw-bold text-dark dark:text-gray-200 small">Quận/Huyện <span class="text-danger">*</span></label>
-                  <select class="form-select bg-light dark:bg-[#212529] dark:text-white border-0 shadow-sm-hover fw-semibold" v-model="addrForm.district" @change="onDistrictChangeModal" required :disabled="!addrForm.city">
-                    <option value="" disabled>-- Chọn --</option>
-                    <option v-for="d in modalDistricts" :key="d.code" :value="d.name">{{ d.name }}</option>
-                  </select>
-                </div>
-                <div class="col-md-4 mb-2">
-                  <label class="form-label fw-bold text-dark dark:text-gray-200 small">Phường/Xã <span class="text-danger">*</span></label>
-                  <select class="form-select bg-light dark:bg-[#212529] dark:text-white border-0 shadow-sm-hover fw-semibold" v-model="addrForm.ward" required :disabled="!addrForm.district">
-                    <option value="" disabled>-- Chọn --</option>
-                    <option v-for="w in modalWards" :key="w.code" :value="w.name">{{ w.name }}</option>
-                  </select>
-                </div>
-
                 <div class="col-md-12 mb-2">
-                  <label class="form-label fw-bold text-dark dark:text-gray-200 small">Địa chỉ cụ thể (Số nhà, đường) <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control bg-light dark:bg-[#212529] dark:text-white border-0 shadow-sm-hover" v-model="addrForm.shipping_address" placeholder="VD: Số 12, Đường ABCD" required>
+                  <div class="form-floating shadow-sm-hover">
+                    <input id="floating_c2pc9p5k7" type="text" class="form-control bg-light dark:bg-[#212529] dark:text-white border-0 shadow-sm-hover" v-model="addrForm.shipping_address" placeholder="VD: Số 12, Đường ABCD" required>
+                    <label for="floating_c2pc9p5k7" class="fw-bold text-muted" style="font-size: 0.85rem;">ĐỊA CHỈ CỤ THỂ (SỐ NHÀ, ĐƯỜNG) <span class="text-danger">*</span></label>
+                  </div>
                 </div>
                 
                 <div class="col-12 mt-3" v-if="!addrForm.is_default">
@@ -291,6 +299,7 @@ import { useRoute, useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
 import axios from 'axios';
 import defaultAvatar from '@/assets/images/defaults/avatar1.png';
+import AddressSelector from '@/components/shared/AddressSelector.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -327,9 +336,6 @@ const addrForm = ref({
 });
 
 // Dropdown API Data
-const provinces = ref([]);
-const modalDistricts = ref([]);
-const modalWards = ref([]);
 
 const getHeaders = () => ({ 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
 
@@ -343,21 +349,8 @@ const maskEmail = (email) => {
 const validatePhone = (e) => { form.value.phone = e.target.value.replace(/\D/g, '').slice(0, 11); };
 
 // ================= API CALLS =================
-const fetchProvinces = async () => {
-  try { const res = await axios.get('https://provinces.open-api.vn/api/p/'); provinces.value = res.data; } catch (err) {}
-};
 
-const onCityChangeModal = async () => {
-  addrForm.value.district = ''; addrForm.value.ward = ''; modalDistricts.value = []; modalWards.value = [];
-  const p = provinces.value.find(i => i.name === addrForm.value.city);
-  if (p) { const res = await axios.get(`https://provinces.open-api.vn/api/p/${p.code}?depth=2`); modalDistricts.value = res.data.districts; }
-};
 
-const onDistrictChangeModal = async () => {
-  addrForm.value.ward = ''; modalWards.value = [];
-  const d = modalDistricts.value.find(i => i.name === addrForm.value.district);
-  if (d) { const res = await axios.get(`https://provinces.open-api.vn/api/d/${d.code}?depth=2`); modalWards.value = res.data.wards; }
-};
 
 const fetchUser = async () => {
   try {
@@ -372,7 +365,7 @@ const fetchUser = async () => {
     form.value.birthday = u.birthday ? u.birthday.split('T')[0] : '';
     
     if (u.avatar_url) {
-      previewAvatar.value = `http://127.0.0.1:8000/storage/${u.avatar_url}`;
+      previewAvatar.value = `${import.meta.env.VITE_STORAGE_URL}${u.avatar_url}`;
       hasOldAvatar.value = true;
     }
     
@@ -424,23 +417,10 @@ const openAddressModal = async (mode, addr = null) => {
   addrModalMode.value = mode;
   if (mode === 'add') {
     addrForm.value = { id: null, customer_name: form.value.full_name, customer_phone: form.value.phone, shipping_address: '', city: '', district: '', ward: '', is_default: 0, set_as_default: false };
-    modalDistricts.value = []; modalWards.value = [];
+     
   } else {
     addrForm.value = { ...addr, set_as_default: false };
-    // Load dropdowns based on existing text
-    if (addr.city && provinces.value.length > 0) {
-      const p = provinces.value.find(i => i.name === addr.city);
-      if (p) {
-        const resD = await axios.get(`https://provinces.open-api.vn/api/p/${p.code}?depth=2`);
-        modalDistricts.value = resD.data.districts;
-        const d = modalDistricts.value.find(i => i.name === addr.district);
-        if (d) {
-           const resW = await axios.get(`https://provinces.open-api.vn/api/d/${d.code}?depth=2`);
-           modalWards.value = resW.data.wards;
-        }
       }
-    }
-  }
   if (!addressModalInstance) addressModalInstance = new window.bootstrap.Modal(document.getElementById('addressModal'));
   addressModalInstance.show();
 };
@@ -481,10 +461,14 @@ const setDefaultAddress = async (id) => {
   } finally { settingDefaultId.value = null; }
 };
 
-onMounted(() => { fetchProvinces(); fetchUser(); });
+onMounted(() => {  fetchUser(); });
 </script>
 
 <style scoped>
+.avatar-overlay { opacity: 0; transition: opacity 0.3s ease; }
+.avatar-wrapper:hover .avatar-overlay { opacity: 1; }
+.cursor-pointer { cursor: pointer; }
+
 .text-urban { color: var(--color-c-hover, #547792) !important; }
 .bg-urban { background-color: var(--color-c-hover, #547792) !important; }
 .border-urban { border-color: var(--color-c-hover, #547792) !important; }
@@ -501,3 +485,4 @@ onMounted(() => { fetchProvinces(); fetchUser(); });
 .animation-fade-in { animation: fadeIn 0.4s ease-in-out; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 </style>
+

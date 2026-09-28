@@ -145,7 +145,7 @@ const handleRegister = async () => {
       password_confirmation: password_confirmation.value
     };
 
-    const response = await axios.post('http://127.0.0.1:8000/api/v1/admin/register', payload);
+    const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/admin/register`, payload);
     
     if (response.data.success) {
       successMessage.value = 'Tạo tài khoản thành công! Tự động chuyển trang...';

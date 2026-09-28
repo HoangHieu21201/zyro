@@ -46,7 +46,7 @@
 
             <div class="btn-wrapper">
                 <!-- Thay đổi đường dẫn Frontend cho đúng -->
-                <a href="http://localhost:5173/shop" class="btn">Mua Sắm Ngay</a>
+                <a href="{{ env('FRONTEND_URL', 'http://localhost:5173') }}/shop" class="btn">Mua Sắm Ngay</a>
             </div>
             
             <p style="margin-top: 30px; font-size: 14px; color: #777;">*Mã ưu đãi này chỉ dành riêng cho tài khoản của bạn và có thể áp dụng 1 lần duy nhất.</p>

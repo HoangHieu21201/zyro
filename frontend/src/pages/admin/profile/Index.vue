@@ -1,5 +1,5 @@
 <template>
-  <div class="admin-profile-wrapper pb-5 mb-5">
+  <div class="admin-profile-wrapper">
     <!-- Hiệu ứng Header nền trang -->
     <div class="page-header-bg d-none d-md-block"></div>
 
@@ -76,28 +76,25 @@
             </div>
 
             <form @submit.prevent="saveProfileInfo" autocomplete="off">
-              <div class="row g-4">
+              <div class="row g-3">
                 <div class="col-md-6">
-                  <label class="form-label fw-bold text-dark dark:text-gray-200 small text-uppercase" style="letter-spacing: 0.5px;">Họ và tên</label>
-                  <div class="input-group input-group-lg shadow-sm-hover">
-                    <span class="input-group-text bg-light dark:bg-[#212529] border-end-0 text-muted"><i class="bi bi-person"></i></span>
-                    <input type="text" class="form-control border-start-0 bg-light dark:bg-[#212529] dark:text-white dark:border-gray-700" v-model="formInfo.fullname" :class="{'is-invalid': errors.fullname}" placeholder="Nhập tên của bạn">
+                  <div class="form-floating shadow-sm-hover">
+                    <input type="text" class="form-control bg-white dark:bg-[#212529] dark:text-white dark:border-gray-700" id="floatingName" v-model="formInfo.fullname" :class="{'is-invalid': errors.fullname}" placeholder="Họ và tên">
+                    <label for="floatingName" class="text-muted"><i class="bi bi-person me-2"></i>Họ và tên</label>
                     <div class="invalid-feedback">{{ errors.fullname?.[0] }}</div>
                   </div>
                 </div>
 
                 <div class="col-md-6">
-                  <label class="form-label fw-bold text-dark dark:text-gray-200 small text-uppercase" style="letter-spacing: 0.5px;">Số điện thoại</label>
-                  <div class="input-group input-group-lg shadow-sm-hover">
-                    <span class="input-group-text bg-light dark:bg-[#212529] border-end-0 text-muted"><i class="bi bi-telephone"></i></span>
-                    <input type="text" class="form-control border-start-0 bg-light dark:bg-[#212529] dark:text-white dark:border-gray-700" v-model="formInfo.phone" :class="{'is-invalid': errors.phone}" placeholder="VD: 0987xxxxxx">
+                  <div class="form-floating shadow-sm-hover">
+                    <input type="text" class="form-control bg-white dark:bg-[#212529] dark:text-white dark:border-gray-700" id="floatingPhone" v-model="formInfo.phone" :class="{'is-invalid': errors.phone}" placeholder="Số điện thoại">
+                    <label for="floatingPhone" class="text-muted"><i class="bi bi-telephone me-2"></i>Số điện thoại</label>
                     <div class="invalid-feedback">{{ errors.phone?.[0] }}</div>
                   </div>
                 </div>
 
                 <div class="col-12">
-                  <label class="form-label fw-bold text-dark dark:text-gray-200 small text-uppercase" style="letter-spacing: 0.5px;">Email liên hệ</label>
-                  <div class="p-3 bg-light dark:bg-[#212529] border dark:border-gray-700 rounded-3 d-flex align-items-center justify-content-between">
+                  <div class="p-3 bg-light dark:bg-[#212529] border dark:border-gray-700 rounded-3 d-flex align-items-center justify-content-between shadow-sm">
                     <div class="d-flex align-items-center">
                       <i class="bi bi-envelope-at-fill text-muted fs-4 me-3"></i>
                       <div>
@@ -110,33 +107,22 @@
                 </div>
 
                 <!-- ĐỊA CHỈ DROPDOWN -->
-                <div class="col-12 mt-5">
-                  <h6 class="fw-bold text-dark dark:text-white mb-3"><i class="bi bi-geo-alt-fill text-urban me-2"></i>Khu vực sinh sống</h6>
-                  <div class="row g-3">
-                    <div class="col-md-4">
-                      <select class="form-select form-select-lg bg-light dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" v-model="addressHelper.province" @change="onProvinceChange" :disabled="loadingProvinces">
-                        <option value="">{{ loadingProvinces ? '⏳ Đang tải...' : '-- Tỉnh/Thành --' }}</option>
-                        <option v-for="p in provinces" :key="p.code" :value="p.name">{{ p.name }}</option>
-                      </select>
-                    </div>
-                    <div class="col-md-4">
-                      <select class="form-select form-select-lg bg-light dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" v-model="addressHelper.district" @change="onDistrictChange" :disabled="!addressHelper.province || loadingDistricts">
-                        <option value="">{{ loadingDistricts ? '⏳ Đang tải...' : '-- Quận/Huyện --' }}</option>
-                        <option v-for="d in districts" :key="d.code" :value="d.name">{{ d.name }}</option>
-                      </select>
-                    </div>
-                    <div class="col-md-4">
-                      <select class="form-select form-select-lg bg-light dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" v-model="addressHelper.ward" :disabled="!addressHelper.district || loadingWards">
-                        <option value="">{{ loadingWards ? '⏳ Đang tải...' : '-- Phường/Xã --' }}</option>
-                        <option v-for="w in wards" :key="w.code" :value="w.name">{{ w.name }}</option>
-                      </select>
-                    </div>
-                    <div class="col-12 mt-3">
-                      <div class="input-group input-group-lg shadow-sm-hover">
-                        <span class="input-group-text bg-light dark:bg-[#212529] border-end-0 text-muted"><i class="bi bi-house"></i></span>
-                        <input type="text" class="form-control border-start-0 bg-light dark:bg-[#212529] dark:text-white dark:border-gray-700" v-model="addressHelper.detail" placeholder="Số nhà, tên đường, khu phố...">
-                      </div>
-                    </div>
+                <div class="col-12 mt-4">
+                  <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold text-dark dark:text-white small text-uppercase m-0"><i class="bi bi-geo-alt-fill text-urban me-2"></i>Khu vực sinh sống</h6>
+                    
+                  </div>
+                  
+                  <AddressSelector 
+                     show-location-button location-button-class="btn-outline-urban" @location-detail="val => addressHelper.detail = val"
+                     v-model:city="addressHelper.province"
+                     v-model:district="addressHelper.district"
+                     v-model:ward="addressHelper.ward"
+                  />
+                  
+                  <div class="form-floating shadow-sm-hover mt-3">
+                    <input type="text" class="form-control bg-white dark:bg-[#212529] dark:text-white dark:border-gray-700" id="floatingAddress" v-model="addressHelper.detail" placeholder="Số nhà, tên đường, khu phố...">
+                    <label for="floatingAddress" class="text-muted"><i class="bi bi-house me-2"></i>Số nhà, tên đường, khu phố...</label>
                   </div>
                 </div>
               </div>
@@ -163,41 +149,44 @@
 
               <div class="row g-4">
                 <div class="col-12">
-                  <label class="form-label fw-bold text-dark dark:text-gray-200 small text-uppercase" style="letter-spacing: 0.5px;">Mật khẩu hiện tại <span class="text-danger">*</span></label>
-                  <div class="input-group input-group-lg shadow-sm-hover">
-                    <span class="input-group-text bg-light dark:bg-[#212529] border-end-0 text-muted"><i class="bi bi-unlock"></i></span>
-                    <input :type="showPass1 ? 'text' : 'password'" autocomplete="new-password" class="form-control border-start-0 border-end-0 bg-light dark:bg-[#212529] dark:text-white dark:border-gray-700" v-model="formPass.current_password" :class="{'is-invalid': errorsPass.current_password}" placeholder="Nhập mật khẩu đang sử dụng">
-                    <button class="btn btn-light dark:bg-[#212529] border border-start-0 dark:border-gray-700 text-muted" type="button" @click="showPass1 = !showPass1">
+                  <div class="input-group shadow-sm-hover position-relative">
+                    <div class="form-floating flex-grow-1">
+                      <input :type="showPass1 ? 'text' : 'password'" autocomplete="new-password" class="form-control bg-white dark:bg-[#212529] dark:text-white dark:border-gray-700 border-end-0" id="floatingOldPass" v-model="formPass.current_password" :class="{'is-invalid': errorsPass.current_password}" placeholder="Mật khẩu hiện tại">
+                      <label for="floatingOldPass" class="text-muted"><i class="bi bi-unlock me-2"></i>Mật khẩu hiện tại <span class="text-danger">*</span></label>
+                    </div>
+                    <button class="btn bg-white dark:bg-[#212529] border dark:border-gray-700 text-muted px-3" type="button" @click="showPass1 = !showPass1">
                       <i class="bi" :class="showPass1 ? 'bi-eye-slash-fill' : 'bi-eye-fill'"></i>
                     </button>
-                    <div class="invalid-feedback">{{ errorsPass.current_password?.[0] }}</div>
+                    <div class="invalid-feedback" v-if="errorsPass.current_password">{{ errorsPass.current_password[0] }}</div>
                   </div>
                 </div>
 
                 <div class="col-12">
-                  <div class="p-4 bg-primary bg-opacity-10 border border-primary border-opacity-25 rounded-4 my-2">
-                    <div class="row g-4">
+                  <div class="p-4 bg-light dark:bg-[#212529] border dark:border-gray-700 rounded-4 my-2">
+                    <div class="row g-3">
                       <div class="col-md-6">
-                        <label class="form-label fw-bold text-primary small text-uppercase" style="letter-spacing: 0.5px;">Mật khẩu mới <span class="text-danger">*</span></label>
-                        <div class="input-group input-group-lg shadow-sm-hover">
-                          <span class="input-group-text bg-white dark:bg-[#1a2533] border-end-0 text-primary"><i class="bi bi-key"></i></span>
-                          <input :type="showPass2 ? 'text' : 'password'" autocomplete="new-password" class="form-control border-start-0 border-end-0 bg-white dark:bg-[#1a2533] dark:text-white dark:border-gray-700" v-model="formPass.password" :class="{'is-invalid': errorsPass.password}" placeholder="Tối thiểu 6 ký tự">
-                          <button class="btn bg-white dark:bg-[#1a2533] border border-start-0 dark:border-gray-700 text-muted" type="button" @click="showPass2 = !showPass2">
+                        <div class="input-group shadow-sm-hover position-relative">
+                          <div class="form-floating flex-grow-1">
+                            <input :type="showPass2 ? 'text' : 'password'" autocomplete="new-password" class="form-control bg-white dark:bg-[#1a2533] dark:text-white dark:border-gray-700 border-end-0" id="floatingNewPass" v-model="formPass.password" :class="{'is-invalid': errorsPass.password}" placeholder="Mật khẩu mới">
+                            <label for="floatingNewPass" class="text-muted"><i class="bi bi-key me-2"></i>Mật khẩu mới <span class="text-danger">*</span></label>
+                          </div>
+                          <button class="btn bg-white dark:bg-[#1a2533] border dark:border-gray-700 text-muted px-3" type="button" @click="showPass2 = !showPass2">
                             <i class="bi" :class="showPass2 ? 'bi-eye-slash-fill' : 'bi-eye-fill'"></i>
                           </button>
-                          <div class="invalid-feedback">{{ errorsPass.password?.[0] }}</div>
+                          <div class="invalid-feedback" v-if="errorsPass.password">{{ errorsPass.password[0] }}</div>
                         </div>
                       </div>
 
                       <div class="col-md-6">
-                        <label class="form-label fw-bold text-primary small text-uppercase" style="letter-spacing: 0.5px;">Xác nhận mật khẩu <span class="text-danger">*</span></label>
-                        <div class="input-group input-group-lg shadow-sm-hover">
-                          <span class="input-group-text bg-white dark:bg-[#1a2533] border-end-0 text-primary"><i class="bi bi-shield-check"></i></span>
-                          <input :type="showPass3 ? 'text' : 'password'" autocomplete="new-password" class="form-control border-start-0 border-end-0 bg-white dark:bg-[#1a2533] dark:text-white dark:border-gray-700" v-model="formPass.password_confirmation" :class="{'is-invalid': errorsPass.password_confirmation}" placeholder="Nhập lại mật khẩu mới">
-                          <button class="btn bg-white dark:bg-[#1a2533] border border-start-0 dark:border-gray-700 text-muted" type="button" @click="showPass3 = !showPass3">
+                        <div class="input-group shadow-sm-hover position-relative">
+                          <div class="form-floating flex-grow-1">
+                            <input :type="showPass3 ? 'text' : 'password'" autocomplete="new-password" class="form-control bg-white dark:bg-[#1a2533] dark:text-white dark:border-gray-700 border-end-0" id="floatingConfirmPass" v-model="formPass.password_confirmation" :class="{'is-invalid': errorsPass.password_confirmation}" placeholder="Xác nhận mật khẩu">
+                            <label for="floatingConfirmPass" class="text-muted"><i class="bi bi-shield-check me-2"></i>Xác nhận mật khẩu <span class="text-danger">*</span></label>
+                          </div>
+                          <button class="btn bg-white dark:bg-[#1a2533] border dark:border-gray-700 text-muted px-3" type="button" @click="showPass3 = !showPass3">
                             <i class="bi" :class="showPass3 ? 'bi-eye-slash-fill' : 'bi-eye-fill'"></i>
                           </button>
-                          <div class="invalid-feedback">{{ errorsPass.password_confirmation?.[0] }}</div>
+                          <div class="invalid-feedback" v-if="errorsPass.password_confirmation">{{ errorsPass.password_confirmation[0] }}</div>
                         </div>
                       </div>
                     </div>
@@ -230,6 +219,7 @@ import { ref, onMounted, reactive } from 'vue';
 import Swal from 'sweetalert2';
 import axios from 'axios';
 import defaultAvatar from '@/assets/images/defaults/avatar1.png';
+import AddressSelector from '@/components/shared/AddressSelector.vue';
 
 const activeTab = ref('profile');
 const isLoading = ref(true);
@@ -252,12 +242,7 @@ const currentAdminData = ref({});
 const currentAdminRole = ref({});
 
 // Data Dropdown địa chỉ
-const provinces = ref([]);
-const districts = ref([]);
-const wards = ref([]);
-const loadingProvinces = ref(false);
-const loadingDistricts = ref(false);
-const loadingWards = ref(false);
+
 const addressHelper = reactive({ province: '', district: '', ward: '', detail: '' });
 
 // 2 form riêng biệt
@@ -266,62 +251,13 @@ const formPass = ref({ current_password: '', password: '', password_confirmation
 
 const getHeaders = () => ({ 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
 
-const fetchProvinces = async () => {
-  loadingProvinces.value = true;
-  try { 
-    const res = await axios.get('https://provinces.open-api.vn/api/p/', { timeout: 5000 }); 
-    if (Array.isArray(res.data) && res.data.length > 0) {
-      provinces.value = res.data;
-    } else {
-      throw new Error('Invalid format');
-    }
-  } catch (err) {
-    console.error('Lỗi API Tỉnh thành:', err);
-  } finally {
-    loadingProvinces.value = false;
-  }
-};
 
-const onProvinceChange = async () => {
-  loadingDistricts.value = true;
-  try {
-    addressHelper.district = ''; addressHelper.ward = ''; wards.value = [];
-    const p = provinces.value.find(i => i.name === addressHelper.province);
-    if (p) { 
-      const res = await axios.get(`https://provinces.open-api.vn/api/p/${p.code}?depth=2`, { timeout: 5000 }); 
-      if (res.data && res.data.districts) {
-        districts.value = res.data.districts;
-      }
-    }
-  } catch (err) {
-    console.error('Lỗi API Quận huyện:', err);
-  } finally {
-    loadingDistricts.value = false;
-  }
-};
 
-const onDistrictChange = async () => {
-  loadingWards.value = true;
-  try {
-    addressHelper.ward = '';
-    const d = districts.value.find(i => i.name === addressHelper.district);
-    if (d) { 
-      const res = await axios.get(`https://provinces.open-api.vn/api/d/${d.code}?depth=2`, { timeout: 5000 }); 
-      if (res.data && res.data.wards) {
-        wards.value = res.data.wards;
-      }
-    }
-  } catch (err) {
-    console.error('Lỗi API Phường xã:', err);
-  } finally {
-    loadingWards.value = false;
-  }
-};
 
 const fetchData = async () => {
   try {
     const resAdmin = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/me`, { headers: getHeaders() });
-    fetchProvinces();
+    
     
     const admin = resAdmin.data.data;
     currentAdminData.value = admin;
@@ -335,14 +271,14 @@ const fetchData = async () => {
     if (admin.address) {
        const parts = admin.address.split(', ').map(p => p.trim());
        if (parts.length >= 4) {
-          addressHelper.province = parts[parts.length - 1]; await onProvinceChange();
-          addressHelper.district = parts[parts.length - 2]; await onDistrictChange();
+          addressHelper.province = parts[parts.length - 1];
+          addressHelper.district = parts[parts.length - 2];
           addressHelper.ward = parts[parts.length - 3];
           addressHelper.detail = parts.slice(0, parts.length - 3).join(', ');
        } else { addressHelper.detail = admin.address; }
     }
 
-    if (admin.avatar_url) { previewAvatar.value = `http://127.0.0.1:8000/storage/${admin.avatar_url}`; hasOldAvatar.value = true; }
+    if (admin.avatar_url) { previewAvatar.value = `${import.meta.env.VITE_STORAGE_URL}${admin.avatar_url}`; hasOldAvatar.value = true; }
   } catch (err) { Swal.fire('Lỗi', 'Không thể tải hồ sơ', 'error'); } finally { isLoading.value = false; }
 };
 
@@ -414,6 +350,8 @@ html.dark .page-header-bg {
 .border-urban { border-color: var(--color-c-hover, #547792) !important; }
 .btn-urban { background-color: var(--color-c-hover, #547792); border: none; transition: 0.2s; }
 .btn-urban:hover { background-color: var(--color-c-dark, #213448); transform: translateY(-2px); }
+.btn-outline-urban { border: 1px solid var(--color-c-hover, #547792); color: var(--color-c-hover, #547792); }
+.btn-outline-urban:hover { background-color: var(--color-c-hover, #547792); color: white; transform: translateY(-2px); }
 
 /* Avatar Overlay CSS */
 .avatar-upload-container {

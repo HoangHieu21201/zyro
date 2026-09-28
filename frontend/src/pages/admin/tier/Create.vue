@@ -1,5 +1,5 @@
 <template>
-  <div class="tier-create-wrapper pb-5 mb-5">
+  <div class="tier-create-wrapper">
     <div class="container-fluid py-4">
       <div class="d-flex align-items-center mb-4">
         <router-link :to="{ name: 'admin-tiers' }" class="text-decoration-none text-muted me-3 hover:text-urban transition-all">
@@ -17,27 +17,32 @@
               
               <div class="row g-4">
                 <div class="col-12">
-                  <label class="form-label fw-bold text-dark dark:text-gray-200">Tên hạng (VD: Đồng, Bạc, Vàng) <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control form-control-lg bg-light dark:bg-[#212529] border-0 shadow-sm-hover dark:text-white" 
+                  <div class="form-floating shadow-sm-hover">
+                    <input id="floating_cwxscyo7b" type="text" class="form-control form-control-lg bg-light dark:bg-[#212529] border-0 shadow-sm-hover dark:text-white" 
                          v-model="form.name" :class="{'is-invalid': errors.name}" placeholder="Nhập tên hạng...">
+                    <label for="floating_cwxscyo7b" class="fw-bold text-muted" style="font-size: 0.85rem;">TÊN HẠNG (VD: ĐỒNG, BẠC, VÀNG) <span class="text-danger">*</span></label>
+                  </div>
                   <div class="invalid-feedback">{{ errors.name?.[0] }}</div>
                 </div>
 
                 <div class="col-md-6">
-                  <label class="form-label fw-bold text-dark dark:text-gray-200">Chi tiêu tối thiểu đạt hạng (VNĐ) <span class="text-danger">*</span></label>
                   <div class="input-group shadow-sm-hover">
                     <span class="input-group-text bg-white dark:bg-[#212529] dark:text-gray-400 dark:border-gray-700">₫</span>
-                    <!-- ĐÃ FIX: Tự động format tiền tệ trong Input -->
-                    <input type="text" class="form-control py-2 dark:bg-[#212529] dark:text-white dark:border-gray-700" 
-                           :value="displayCurrency(form.min_spent)" @input="handleCurrencyInput($event, 'min_spent')" :class="{'is-invalid': errors.min_spent}" placeholder="VD: 5.000.000">
+                    <div class="form-floating flex-grow-1">
+                      <input id="floating_min_spent" type="text" class="form-control dark:bg-[#212529] dark:text-white dark:border-gray-700 border-start-0" style="border-top-left-radius: 0; border-bottom-left-radius: 0;"
+                             :value="displayCurrency(form.min_spent)" @input="handleCurrencyInput($event, 'min_spent')" :class="{'is-invalid': errors.min_spent}" placeholder="VD: 5.000.000">
+                      <label for="floating_min_spent" class="fw-bold text-muted" style="font-size: 0.85rem; padding-left: 0.75rem;">CHI TIÊU TỐI THIỂU (VNĐ) <span class="text-danger">*</span></label>
+                    </div>
                     <div class="invalid-feedback">{{ errors.min_spent?.[0] }}</div>
                   </div>
                 </div>
 
                 <div class="col-md-6">
-                  <label class="form-label fw-bold text-dark dark:text-gray-200">Số đơn hoàn tất tối thiểu <span class="text-danger">*</span></label>
-                  <input type="number" class="form-control py-2 dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" 
+                  <div class="form-floating shadow-sm-hover">
+                    <input id="floating_aotj4igd9" type="number" class="form-control dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" 
                          v-model="form.min_orders" :class="{'is-invalid': errors.min_orders}" min="0" placeholder="VD: 5">
+                    <label for="floating_aotj4igd9" class="fw-bold text-muted" style="font-size: 0.85rem;">SỐ ĐƠN HOÀN TẤT TỐI THIỂU <span class="text-danger">*</span></label>
+                  </div>
                   <div class="invalid-feedback">{{ errors.min_orders?.[0] }}</div>
                 </div>
 
@@ -45,31 +50,36 @@
                   <h6 class="fw-bold text-urban mb-3"><i class="bi bi-gift-fill me-2"></i>Quyền Lợi & Ưu Đãi Áp Dụng</h6>
                   <div class="row g-3">
                     <div class="col-md-4">
-                      <label class="form-label fw-bold text-dark dark:text-gray-200">Giảm giá / Đơn <span class="text-danger">*</span></label>
                       <div class="input-group shadow-sm-hover">
-                        <input type="number" step="0.01" class="form-control py-2 dark:bg-[#212529] dark:text-white dark:border-gray-700" 
-                               v-model="form.discount_percent" :class="{'is-invalid': errors.discount_percent}" min="0" max="100" placeholder="VD: 5">
+                        <div class="form-floating flex-grow-1">
+                          <input id="floating_discount" type="number" step="0.01" class="form-control dark:bg-[#212529] dark:text-white dark:border-gray-700 border-end-0" style="border-top-right-radius: 0; border-bottom-right-radius: 0;"
+                                 v-model="form.discount_percent" :class="{'is-invalid': errors.discount_percent}" min="0" max="100" placeholder="VD: 5">
+                          <label for="floating_discount" class="fw-bold text-muted" style="font-size: 0.85rem;">GIẢM GIÁ / ĐƠN <span class="text-danger">*</span></label>
+                        </div>
                         <span class="input-group-text bg-white dark:bg-[#212529] dark:text-gray-400 dark:border-gray-700">%</span>
                         <div class="invalid-feedback">{{ errors.discount_percent?.[0] }}</div>
                       </div>
                     </div>
 
                     <div class="col-md-4">
-                      <label class="form-label fw-bold text-dark dark:text-gray-200">Giảm tối đa (VNĐ)</label>
                       <div class="input-group shadow-sm-hover">
-                        <!-- ĐÃ FIX: Tự động format tiền tệ trong Input -->
-                        <input type="text" class="form-control py-2 dark:bg-[#212529] dark:text-white dark:border-gray-700 text-end" 
-                               :value="displayCurrency(form.max_discount_amount)" @input="handleCurrencyInput($event, 'max_discount_amount')" :class="{'is-invalid': errors.max_discount_amount}" placeholder="KGH để trống">
+                        <div class="form-floating flex-grow-1">
+                          <input id="floating_max_discount" type="text" class="form-control dark:bg-[#212529] dark:text-white dark:border-gray-700 border-end-0" style="border-top-right-radius: 0; border-bottom-right-radius: 0;"
+                                 :value="displayCurrency(form.max_discount_amount)" @input="handleCurrencyInput($event, 'max_discount_amount')" :class="{'is-invalid': errors.max_discount_amount}" placeholder="KGH để trống">
+                          <label for="floating_max_discount" class="fw-bold text-muted" style="font-size: 0.85rem;">GIẢM TỐI ĐA (VNĐ)</label>
+                        </div>
                         <span class="input-group-text bg-white dark:bg-[#212529] dark:text-gray-400 dark:border-gray-700">₫</span>
                         <div class="invalid-feedback">{{ errors.max_discount_amount?.[0] }}</div>
                       </div>
                     </div>
 
                     <div class="col-md-4">
-                      <label class="form-label fw-bold text-dark dark:text-gray-200">Dịch vụ / Năm <span class="text-danger">*</span></label>
                       <div class="input-group shadow-sm-hover">
-                        <input type="number" class="form-control py-2 dark:bg-[#212529] dark:text-white dark:border-gray-700" 
-                               v-model="form.yearly_service_quota" :class="{'is-invalid': errors.yearly_service_quota}" min="0" placeholder="VD: 10">
+                        <div class="form-floating flex-grow-1">
+                          <input id="floating_quota" type="number" class="form-control dark:bg-[#212529] dark:text-white dark:border-gray-700 border-end-0" style="border-top-right-radius: 0; border-bottom-right-radius: 0;"
+                                 v-model="form.yearly_service_quota" :class="{'is-invalid': errors.yearly_service_quota}" min="0" placeholder="VD: 10">
+                          <label for="floating_quota" class="fw-bold text-muted" style="font-size: 0.85rem;">DỊCH VỤ / NĂM <span class="text-danger">*</span></label>
+                        </div>
                         <span class="input-group-text bg-white dark:bg-[#212529] dark:text-gray-400 dark:border-gray-700">Lượt</span>
                         <div class="invalid-feedback">{{ errors.yearly_service_quota?.[0] }}</div>
                       </div>

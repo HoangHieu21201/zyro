@@ -16,7 +16,17 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'check.module' => \App\Http\Middleware\CheckModulePermission::class,
         ]);
+
+        $middleware->appendToGroup('api', \Illuminate\Http\Middleware\HandleCors::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, \Illuminate\Http\Request $request) {
+            if ($request->is('api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Token hết hạn hoặc chưa đăng nhập.',
+                    'code' => 'UNAUTHENTICATED'
+                ], 401);
+            }
+        });
     })->create();

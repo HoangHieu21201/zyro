@@ -25,7 +25,7 @@
             <p>ZYRO hy vọng bạn sẽ có những outfit thật phong cách và tự tin với các sản phẩm vừa nhận được. Sự hài lòng của bạn là động lực lớn nhất của chúng tôi.</p>
             <p>Nếu sản phẩm có vấn đề về size số hoặc lỗi do nhà sản xuất, đừng ngần ngại liên hệ với ZYRO trong vòng 7 ngày để được hỗ trợ đổi trả nhé.</p>
             
-            <a href="http://localhost:5173/shop" class="btn">Tiếp tục mua sắm</a>
+            <a href="{{ env('FRONTEND_URL', 'http://localhost:5173') }}/shop" class="btn">Tiếp tục mua sắm</a>
         </div>
         <div class="footer">
             <p>Trân trọng,<br>Đội ngũ ZYRO Boutique</p>

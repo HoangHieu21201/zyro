@@ -97,7 +97,7 @@
 
       <div class="text-center mt-5">
         <router-link to="/lookbook" class="btn btn-outline-dark rounded-pill px-5 py-2.5 fw-bold text-uppercase tracking-widest hover-bg-dark transition-all text-decoration-none font-sans-vn">
-          Xem Tất Cả BST
+          Xem thêm
         </router-link>
       </div>
     </div>

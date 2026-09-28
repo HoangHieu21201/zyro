@@ -64,9 +64,7 @@ if (!document.getElementById('zyro-swal-global-styles')) {
     .swal-custom-radio-input:checked { background-color: var(--color-c-hover, #547792) !important; border-color: var(--color-c-hover, #547792) !important; }
     .swal-custom-textarea:focus { border-color: var(--color-c-hover, #547792) !important; box-shadow: 0 0 0 3px rgba(84, 119, 146, 0.2) !important; outline: none; }
 
-    /* ==========================================
        HIỆU ỨNG LOADING MỚI (BOUNCING DOTS) CHO SWEETALERT
-    ========================================== */
     .zyro-swal-bouncing-dots {
       display: inline-flex;
       align-items: center;
@@ -97,6 +95,7 @@ if (!document.getElementById('zyro-swal-global-styles')) {
 }
 
 export const ZyroSwal = {
+  fire: (...args) => Swal.fire(...args),
   
   confirmDelete(itemName) {
     return Swal.fire({
@@ -282,11 +281,38 @@ export const ZyroSwal = {
     return Swal.fire({
       html: `
         <div class="d-flex flex-column align-items-center py-4">
-          <div class="zyro-swal-bouncing-dots">
-            <div class="zyro-swal-dot"></div>
-            <div class="zyro-swal-dot"></div>
-            <div class="zyro-swal-dot"></div>
-          </div>
+          <style>
+            .spinner-group line { animation: spinner-fade 1s linear infinite; }
+            .spinner-group line:nth-child(1) { animation-delay: -0.916s; }
+            .spinner-group line:nth-child(2) { animation-delay: -0.833s; }
+            .spinner-group line:nth-child(3) { animation-delay: -0.75s; }
+            .spinner-group line:nth-child(4) { animation-delay: -0.666s; }
+            .spinner-group line:nth-child(5) { animation-delay: -0.583s; }
+            .spinner-group line:nth-child(6) { animation-delay: -0.5s; }
+            .spinner-group line:nth-child(7) { animation-delay: -0.416s; }
+            .spinner-group line:nth-child(8) { animation-delay: -0.333s; }
+            .spinner-group line:nth-child(9) { animation-delay: -0.25s; }
+            .spinner-group line:nth-child(10) { animation-delay: -0.166s; }
+            .spinner-group line:nth-child(11) { animation-delay: -0.083s; }
+            .spinner-group line:nth-child(12) { animation-delay: 0s; }
+            @keyframes spinner-fade { 0% { opacity: 1; } 100% { opacity: 0.15; } }
+          </style>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" class="text-dark dark:text-gray-300 mb-3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <g class="spinner-group">
+              <line x1="12" y1="2" x2="12" y2="6" transform="rotate(0 12 12)" />
+              <line x1="12" y1="2" x2="12" y2="6" transform="rotate(30 12 12)" />
+              <line x1="12" y1="2" x2="12" y2="6" transform="rotate(60 12 12)" />
+              <line x1="12" y1="2" x2="12" y2="6" transform="rotate(90 12 12)" />
+              <line x1="12" y1="2" x2="12" y2="6" transform="rotate(120 12 12)" />
+              <line x1="12" y1="2" x2="12" y2="6" transform="rotate(150 12 12)" />
+              <line x1="12" y1="2" x2="12" y2="6" transform="rotate(180 12 12)" />
+              <line x1="12" y1="2" x2="12" y2="6" transform="rotate(210 12 12)" />
+              <line x1="12" y1="2" x2="12" y2="6" transform="rotate(240 12 12)" />
+              <line x1="12" y1="2" x2="12" y2="6" transform="rotate(270 12 12)" />
+              <line x1="12" y1="2" x2="12" y2="6" transform="rotate(300 12 12)" />
+              <line x1="12" y1="2" x2="12" y2="6" transform="rotate(330 12 12)" />
+            </g>
+          </svg>
           <h5 class="fw-bold text-dark dark:text-white swal-font-script tracking-widest text-uppercase">${title}</h5>
           <span class="text-muted small">Vui lòng đợi trong giây lát...</span>
         </div>

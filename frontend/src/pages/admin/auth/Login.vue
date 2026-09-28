@@ -105,10 +105,11 @@ const handleLogin = async () => {
   errorMessage.value = '';
 
   try {
-    const response = await axios.post('http://127.0.0.1:8000/api/v1/admin/login', form);
+    const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/admin/login`, form);
     
     if (response.data.success) {
       localStorage.setItem('admin_token', response.data.token);
+      localStorage.setItem('admin_refresh_token', response.data.refresh_token);
       localStorage.setItem('admin_info', JSON.stringify(response.data.admin));
       router.push('/admin/dashboard');
     }

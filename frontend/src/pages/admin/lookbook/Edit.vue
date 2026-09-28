@@ -1,5 +1,5 @@
 <template>
-  <div class="lookbook-edit-wrapper pb-5 mb-5">
+  <div class="lookbook-edit-wrapper">
     
     <div v-if="isPageLoading" class="d-flex flex-column justify-content-center align-items-center w-100" style="min-height: 70vh;">
       <h1 class="logo-shimmer mb-3">ZYRO</h1>
@@ -37,14 +37,18 @@
           
           <div class="row g-3 mb-4">
             <div class="col-xl-3 col-lg-6">
-              <label class="form-label fw-bold text-dark dark:text-gray-200 small text-uppercase">Tên BST <span class="text-danger">*</span></label>
-              <input type="text" class="form-control bg-light dark:bg-[#212529] dark:text-white border-0 shadow-sm-hover" v-model="form.name" @input="generateSlug" required>
+              <div class="form-floating shadow-sm-hover">
+                    <input id="floating_8r6qbyj01" type="text" class="form-control bg-light dark:bg-[#212529] dark:text-white border-0 shadow-sm-hover" v-model="form.name" @input="generateSlug" required placeholder="...">
+                    <label for="floating_8r6qbyj01" class="fw-bold text-muted" style="font-size: 0.85rem;">TÊN BST <span class="text-danger">*</span></label>
+                  </div>
               <div class="text-danger small mt-1 fw-bold" v-if="errors.name">{{ errors.name[0] }}</div>
             </div>
 
             <div class="col-xl-3 col-lg-6">
-              <label class="form-label fw-bold text-dark dark:text-gray-200 small text-uppercase">Đường dẫn (Slug)</label>
-              <input type="text" class="form-control bg-light-subtle dark:bg-[#2b3035] text-muted dark:text-gray-400 font-monospace border-0" v-model="form.slug" readonly>
+              <div class="form-floating shadow-sm-hover">
+                    <input id="floating_px9j28ndh" type="text" class="form-control bg-light-subtle dark:bg-[#2b3035] text-muted dark:text-gray-400 font-monospace border-0" v-model="form.slug" readonly placeholder="...">
+                    <label for="floating_px9j28ndh" class="fw-bold text-muted" style="font-size: 0.85rem;">ĐƯỜNG DẪN (SLUG)</label>
+                  </div>
             </div>
             
             <div class="col-xl-2 col-lg-4">
@@ -59,8 +63,10 @@
 
             <!-- TRƯỜNG USAGE LIMIT ĐƯỢC BỔ SUNG -->
             <div class="col-xl-2 col-lg-4">
-              <label class="form-label fw-bold text-dark dark:text-gray-200 small text-uppercase">Giới hạn bán</label>
-              <input type="number" class="form-control bg-light dark:bg-[#212529] dark:text-white border-0 shadow-sm-hover" v-model.number="form.usage_limit" placeholder="Vô hạn" min="0">
+              <div class="form-floating shadow-sm-hover">
+                    <input id="floating_lne0hajop" type="number" class="form-control bg-light dark:bg-[#212529] dark:text-white border-0 shadow-sm-hover" v-model.number="form.usage_limit" placeholder="Vô hạn" min="0">
+                    <label for="floating_lne0hajop" class="fw-bold text-muted" style="font-size: 0.85rem;">GIỚI HẠN BÁN</label>
+                  </div>
               <div class="text-danger small mt-1 fw-bold" v-if="errors.usage_limit">{{ errors.usage_limit[0] }}</div>
             </div>
 
@@ -96,8 +102,10 @@
               </div>
 
               <div class="col-xl-3 col-md-6">
-                <label class="form-label small text-muted dark:text-gray-400 fw-bold text-uppercase">Mức giảm</label>
-                <input type="number" class="form-control border-0 shadow-sm-hover bg-white dark:bg-[#1a2533] dark:text-white fw-bold" v-model.number="discountValue" min="0" style="height: 39px;">
+                <div class="form-floating shadow-sm-hover">
+                    <input id="floating_yol5v46q3" type="number" class="form-control border-0 shadow-sm-hover bg-white dark:bg-[#1a2533] dark:text-white fw-bold" v-model.number="discountValue" min="0" style="height: 39px;" placeholder="...">
+                    <label for="floating_yol5v46q3" class="fw-bold text-muted" style="font-size: 0.85rem;">MỨC GIẢM</label>
+                  </div>
                 <small class="text-urban fw-bold mt-1 d-block" v-if="discountType === 'amount' && discountValue > 0">- {{ formatCurrency(discountValue) }}</small>
                 <small class="text-urban fw-bold mt-1 d-block" v-if="discountType === 'percent' && discountValue > 0">- {{ discountValue }} %</small>
               </div>
@@ -114,8 +122,10 @@
           </div>
 
           <div>
-             <label class="form-label fw-bold text-dark dark:text-gray-200 small text-uppercase">Mô tả ngắn (Tùy chọn)</label>
-             <input type="text" class="form-control bg-light dark:bg-[#212529] dark:text-white border-0 shadow-sm-hover" v-model="form.description">
+             <div class="form-floating shadow-sm-hover">
+                    <input id="floating_tm99q6df2" type="text" class="form-control bg-light dark:bg-[#212529] dark:text-white border-0 shadow-sm-hover" v-model="form.description" placeholder="...">
+                    <label for="floating_tm99q6df2" class="fw-bold text-muted" style="font-size: 0.85rem;">MÔ TẢ NGẮN (TÙY CHỌN)</label>
+                  </div>
           </div>
         </div>
 
@@ -386,7 +396,7 @@ const getImageUrl = (path) => {
       cleanPath = cleanPath.replace('storage/', '');
   }
 
-  let baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1';
+  let baseUrl = import.meta.env.VITE_API_BASE_URL;
   baseUrl = baseUrl.replace('/api/v1', '');
   return `${baseUrl}/storage/${cleanPath}`;
 };

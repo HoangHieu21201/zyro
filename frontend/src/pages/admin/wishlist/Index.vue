@@ -1,5 +1,5 @@
 <template>
-  <div class="wishlist-index-wrapper pb-5 mb-5">
+  <div class="wishlist-index-wrapper">
     
     <div v-if="isFirstLoad" class="d-flex flex-column justify-content-center align-items-center w-100" style="min-height: 70vh;">
       <h1 class="logo-shimmer mb-3">ZYRO</h1>
@@ -439,7 +439,7 @@ const zoomedImageUrl = ref('');
 let imageZoomModalInstance = null;
 
 const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
-const getImageUrl = (path) => path ? `http://127.0.0.1:8000/storage/${path}` : defaultProduct;
+const getImageUrl = (path) => path ? `${import.meta.env.VITE_STORAGE_URL}${path}` : defaultProduct;
 const handleProductError = (e) => { e.target.src = defaultProduct; };
 
 const formatCurrency = (val) => {
@@ -506,8 +506,8 @@ const changePage = (page) => {
 const fetchFilterData = async () => {
   try {
      const [resCats, resBrands] = await Promise.all([
-        axios.get('http://127.0.0.1:8000/api/v1/admin/categories', { headers: getHeaders() }),
-        axios.get('http://127.0.0.1:8000/api/v1/admin/brands', { headers: getHeaders() })
+        axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/categories`, { headers: getHeaders() }),
+        axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/brands`, { headers: getHeaders() })
      ]);
      // ĐÃ CẬP NHẬT: Lọc trạng thái Active/Published để đổ vào Dropdown
      filterData.value.categories = Array.isArray(resCats.data?.data) ? resCats.data.data.filter(c => !c.deleted_at && (c.status === 'active' || c.status === 'published')) : [];
@@ -521,7 +521,7 @@ const fetchData = async (isSilent = false) => {
   try {
     if (isFirstLoad.value) {
         fetchFilterData();
-        const resModules = await axios.get('http://127.0.0.1:8000/api/v1/admin/modules', { headers: getHeaders() });
+        const resModules = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/modules`, { headers: getHeaders() });
         systemModules.value = resModules.data.data;
         const currentModule = systemModules.value.find(m => m.module_code === (route.meta?.moduleCode || 'admin_wishlists'));
         if (currentModule) currentPageLevel.value = currentModule.required_level;

@@ -1,5 +1,5 @@
 <template>
-  <div class="admin-index-wrapper pb-5 mb-5">
+  <div class="admin-index-wrapper">
     
     <div class="container-fluid py-4" v-if="!isPageLoading">
       <div class="row mb-4 align-items-center">
@@ -91,34 +91,28 @@
                     <span class="badge rounded-pill px-3 py-2 d-inline-block text-truncate" style="max-width: 100%;" :class="staff.role?.badge_class || 'bg-secondary'" :title="staff.role?.label">{{ staff.role?.label || 'Chưa gán' }}</span>
                   </td>
                   <td class="px-4">
-                    <div class="text-dark dark:text-gray-300 fw-medium small mb-1 text-truncate" :title="staff.phone"><i class="bi bi-telephone text-urban me-1"></i> {{ staff.phone || 'N/A' }}</div>
-                    <div class="text-muted dark:text-gray-400 small text-truncate" :title="staff.address"><i class="bi bi-geo-alt text-urban me-1"></i> {{ staff.address || 'N/A' }}</div>
+                    <div class="text-dark dark:text-gray-300 fw-medium small mb-1 text-truncate" :title="staff.phone"><i class="bi bi-telephone text-urban me-1"></i> {{ staff.phone || '...' }}</div>
+                    <div class="text-muted dark:text-gray-400 small text-truncate" :title="staff.address"><i class="bi bi-geo-alt text-urban me-1"></i> {{ staff.address || '...' }}</div>
                   </td>
                   <td class="px-4 text-center">
                     <span v-if="staff.deleted_at" class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary">
                       <i class="bi bi-trash3-fill"></i> Đã xóa
                     </span>
-                    <div v-else class="d-flex align-items-center justify-content-center gap-1">
-                      <select class="form-select form-select-sm border shadow-sm fw-semibold flex-shrink-0 dark:bg-[#212529] dark:text-gray-200" 
-                              style="width: 110px; font-size: 0.75rem;"
-                              :class="getStatusSelectClass(staff.localStatus || staff.status)"
-                              v-model="staff.localStatus"
-                              @change="checkStatusChange(staff)"
-                              :disabled="staff.isUpdatingStatus || staff.id === 1 || staff.id === currentUserId">
-                        <option value="active">Hoạt động</option>
-                        <option value="locked">Bị Khóa</option>
-                      </select>
-                      <div class="d-flex align-items-center" style="min-width: 50px;">
-                        <div v-if="staff.isUpdatingStatus" class="spinner-border text-urban ms-1" style="width: 1rem; height: 1rem; border-width: 0.15em;"></div>
-                        <template v-else-if="staff.isStatusChanged">
-                          <button @click="saveStaffStatus(staff)" class="btn btn-sm btn-success rounded-circle p-0 ms-1 d-flex align-items-center justify-content-center" style="width: 22px; height: 22px;" title="Lưu">
-                            <i class="bi bi-check-lg" style="font-size: 0.7rem;"></i>
-                          </button>
-                          <button @click="cancelStatusChange(staff)" class="btn btn-sm btn-light dark:bg-[#2b3035] text-danger border rounded-circle p-0 ms-1 d-flex align-items-center justify-content-center" style="width: 22px; height: 22px;" title="Hủy">
-                            <i class="bi bi-x-lg" style="font-size: 0.7rem;"></i>
-                          </button>
-                        </template>
+                    <div v-else class="d-flex align-items-center justify-content-center">
+                      <div v-if="staff.id === currentUserId || staff.id === 1" 
+                           @click="showBlockedToast(staff.id === currentUserId ? 'Không thể tự thay đổi trạng thái của tài khoản đang đăng nhập!' : 'Không thể thay đổi trạng thái của tài khoản Root!')" 
+                           class="badge bg-light text-muted border px-3 py-2 rounded-pill shadow-sm cursor-pointer" 
+                           style="cursor: not-allowed">
+                        Không khả dụng
                       </div>
+                      <AdminStatusUpdate v-else
+                        v-model="staff.localStatus"
+                        :originalStatus="staff.status"
+                        :isUpdating="staff.isUpdatingStatus"
+                        @save="saveStaffStatus(staff)"
+                        @cancel="cancelStatusChange(staff)"
+                        :options="[{ value: 'active', label: 'Hoạt động' }, { value: 'locked', label: 'Bị Khóa' }]"
+                      />
                     </div>
                   </td>
                   <td class="px-4 text-center">
@@ -130,7 +124,11 @@
                         <router-link :to="{ name: 'admin-admins-edit', params: { id: staff.id } }" class="btn btn-sm btn-light dark:bg-[#2b3035] dark:border-gray-600 text-primary shadow-sm border" title="Sửa & Thiết lập">
                           <i class="bi bi-pencil-square"></i>
                         </router-link>
-                        <button class="btn btn-sm btn-light dark:bg-[#2b3035] dark:border-gray-600 text-danger shadow-sm border" @click="confirmDelete(staff.id, staff.fullname)" :disabled="staff.id === 1 || staff.id === currentUserId">
+                        <button class="btn btn-sm btn-light dark:bg-[#2b3035] dark:border-gray-600 text-danger shadow-sm border" 
+                          @click="(staff.id === 1 || staff.id === currentUserId) ? showBlockedToast('Không thể xóa tài khoản hệ thống hoặc tài khoản đang đăng nhập!') : confirmDelete(staff.id, staff.fullname)" 
+                          :class="{'opacity-50': staff.id === 1 || staff.id === currentUserId}"
+                          :style="(staff.id === 1 || staff.id === currentUserId) ? 'cursor: not-allowed' : ''"
+                          title="Xóa tài khoản">
                           <i class="bi bi-trash"></i>
                         </button>
                       </template>
@@ -171,7 +169,13 @@
                   <button class="btn btn-light dark:bg-[#2b3035] dark:border-gray-600 text-info border" style="min-width: 46px;" @click="openQuickView(staff)"><i class="bi bi-eye"></i></button>
                   <router-link v-if="!staff.deleted_at" :to="{ name: 'admin-admins-edit', params: { id: staff.id } }" class="btn btn-light dark:bg-[#2b3035] dark:border-gray-600 text-primary border flex-grow-1"><i class="bi bi-pencil-square"></i> Sửa</router-link>
                   <button v-if="staff.deleted_at" class="btn btn-light dark:bg-[#2b3035] dark:border-gray-600 text-success border flex-grow-1 fw-bold" @click="restoreStaff(staff.id)"><i class="bi bi-arrow-counterclockwise"></i> Khôi phục</button>
-                  <button v-if="!staff.deleted_at" class="btn btn-light dark:bg-[#2b3035] dark:border-gray-600 text-danger border" style="min-width: 46px;" @click="confirmDelete(staff.id, staff.fullname)" :disabled="staff.id === 1 || staff.id === currentUserId"><i class="bi bi-trash"></i></button>
+                  <button v-if="!staff.deleted_at" class="btn btn-light dark:bg-[#2b3035] dark:border-gray-600 text-danger border" 
+                    style="min-width: 46px;" 
+                    @click="(staff.id === 1 || staff.id === currentUserId) ? showBlockedToast('Không thể xóa tài khoản hệ thống hoặc tài khoản đang đăng nhập!') : confirmDelete(staff.id, staff.fullname)" 
+                    :class="{'opacity-50': staff.id === 1 || staff.id === currentUserId}"
+                    :style="(staff.id === 1 || staff.id === currentUserId) ? 'cursor: not-allowed' : ''">
+                    <i class="bi bi-trash"></i>
+                  </button>
                 </div>
               </div>
             </div>
@@ -258,6 +262,7 @@
 </template>
 
 <script setup>
+import AdminStatusUpdate from '@/components/admin/AdminStatusUpdate.vue';
 import { ref, onMounted, onUnmounted, onBeforeUnmount, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
@@ -328,17 +333,29 @@ const formatDateTime = (dateString) => {
   return `${d.toLocaleDateString('vi-VN')} ${d.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}`;
 };
 
+const showBlockedToast = (msg) => {
+  Swal.fire({
+    toast: true,
+    position: 'top-end',
+    icon: 'warning',
+    title: msg || 'Thao tác bị chặn!',
+    showConfirmButton: false,
+    timer: 3000,
+    timerProgressBar: true
+  });
+};
+
 const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
-const getAvatarUrl = (path) => path ? `http://127.0.0.1:8000/storage/${path}` : defaultAvatar;
+const getAvatarUrl = (path) => path ? `${import.meta.env.VITE_STORAGE_URL}${path}` : defaultAvatar;
 const handleImageError = (e) => { e.target.src = defaultAvatar; };
 
 const fetchData = async (isSilent = false) => {
   if (isSilent) isRefreshing.value = true; else isPageLoading.value = true;
   try {
     const [resStaff, resRole, resModules] = await Promise.all([
-      axios.get('http://127.0.0.1:8000/api/v1/admin/admins', { headers: getHeaders() }),
-      axios.get('http://127.0.0.1:8000/api/v1/admin/roles', { headers: getHeaders() }),
-      axios.get('http://127.0.0.1:8000/api/v1/admin/modules', { headers: getHeaders() })
+      axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/admins`, { headers: getHeaders() }),
+      axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/roles`, { headers: getHeaders() }),
+      axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/modules`, { headers: getHeaders() })
     ]);
     staffs.value = resStaff.data.data.map(s => ({ ...s, localStatus: s.status, isStatusChanged: false, isUpdatingStatus: false }));
     roles.value = resRole.data.data;
@@ -423,7 +440,7 @@ onUnmounted(() => { if(window.Echo) window.Echo.leave('admin.admins'); });
 .btn-urban:hover { background-color: var(--color-c-dark, #213448); }
 .btn-outline-urban { color: var(--color-c-hover, #547792); border-color: var(--color-c-hover, #547792); transition: 0.2s; background: transparent; }
 .btn-outline-urban:hover { background-color: var(--color-c-hover, #547792); color: white; }
-.logo-shimmer { font-size: 3.5rem; font-weight: 900; background: linear-gradient(120deg, #213448 30%, #547792 50%, #213448 70%); background-size: 200% auto; color: transparent; -webkit-background-clip: text; background-clip: text; animation: shine 1.5s linear infinite; }
+.logo-shimmer { font-size: 3.5rem; font-weight: 900; letter-spacing: -1.5px; background: linear-gradient(120deg, var(--color-c-dark) 30%, var(--color-c-light) 50%, var(--color-c-dark) 70%); background-size: 200% auto; color: transparent; -webkit-background-clip: text; background-clip: text; animation: shine 1.5s linear infinite; }
 @keyframes shine { to { background-position: 200% center; } }
 .custom-tab { font-weight: 600 !important; color: #6c757d; border-bottom: 2px solid transparent !important; transition: color 0.2s ease; }
 .custom-tab:hover, .custom-tab.active-tab { color: var(--color-c-hover, #547792) !important; }

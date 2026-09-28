@@ -1,5 +1,5 @@
 <template>
-  <div class="user-profile-wrapper pb-5 mb-5">
+  <div class="user-profile-wrapper">
     <div class="pt-5 mt-4">
       <div class="zyro-container">
         <nav aria-label="breadcrumb" class="mb-4">
@@ -497,7 +497,7 @@ const fetchProfile = async () => {
         birthday: u.birthday ? u.birthday.split('T')[0] : '', height_cm: u.height_cm || null, weight_kg: u.weight_kg || null, avatar: null
       };
 
-      if (u.avatar_url) previewAvatar.value = import.meta.env.VITE_API_BASE_URL.replace('/api/v1', '/storage/') + u.avatar_url;
+      if (u.avatar_url) previewAvatar.value = import.meta.env.VITE_STORAGE_URL + u.avatar_url;
 
       setTimeout(() => {
         let currentTierIndex = 0;

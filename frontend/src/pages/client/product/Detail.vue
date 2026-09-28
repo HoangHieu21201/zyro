@@ -56,12 +56,17 @@
                       class="thumb-box border rounded-3 cursor-pointer overflow-hidden flex-shrink-0 transition-all bg-light dark:bg-[#212529]"
                       :class="activeImage === img ? 'border-urban border-2 shadow-sm scale-102' : 'border-light-subtle dark:border-gray-700 opacity-75 hover-opacity-100'"
                       @click="activeImage = img" style="height: 105px; width: 100%;">
-                     <img :src="img" @error="handleImageError" class="w-100 h-100 object-fit-cover p-1 rounded-3">
+                     <img :src="getThumbUrl(img)" loading="lazy" @error="handleImageError" class="w-100 h-100 object-fit-cover p-1 rounded-3">
                  </div>
               </div>
 
-              <div class="main-img-box flex-grow-1 position-relative rounded-4 overflow-hidden cursor-zoom-in group shadow-sm" @click="openZoom">
-                 <img :src="activeImage" @error="handleImageError" class="w-100 h-auto transition-transform group-hover-zoom" :alt="product.name">
+              <div class="main-img-box flex-grow-1 position-relative rounded-4 overflow-hidden cursor-zoom-in group shadow-sm bg-light dark:bg-[#1a2533]" @click="openZoom">
+                 <img :src="getHighResUrl(activeImage)" 
+                      @load="isMainImageLoading = false" 
+                      @error="handleImageError" 
+                      class="w-100 h-auto transition-all group-hover-zoom" 
+                      :class="{ 'img-blur': isMainImageLoading }"
+                      :alt="product.name">
                  
                  <div v-if="product.discount_percent" class="position-absolute top-0 start-0 m-3 z-index-2">
                     <span class="badge bg-danger fs-6 px-3 py-2 rounded-pill shadow-sm">-{{ product.discount_percent }}%</span>
@@ -332,7 +337,7 @@
           <i class="bi bi-x-lg fs-5"></i>
         </button>
         
-        <img :src="zoomedImageUrl" class="zoomed-img object-fit-contain shadow-lg" @click.stop>
+        <img :src="getHighResUrl(zoomedImageUrl)" class="zoomed-img object-fit-contain shadow-lg" @click.stop>
         
       </div>
     </transition>
@@ -373,6 +378,7 @@ const isTogglingWishlist = ref(false);
 const product = ref(null);
 
 const activeImage = ref('');
+const isMainImageLoading = ref(true);
 const selectedColor = ref(null);
 const selectedSize = ref(null);
 const quantity = ref(1);
@@ -497,6 +503,25 @@ watch(selectedColor, (newColor) => {
     }
   }
 });
+
+watch(activeImage, () => {
+  isMainImageLoading.value = true;
+});
+
+// Helper tối ưu hóa ảnh (Image Optimization & Thumbnail)
+const getThumbUrl = (url) => {
+  if (!url) return defaultImage;
+  if (url.includes('unsplash.com')) return url + '&w=150&q=40';
+  if (url.includes('?')) return url + '&size=thumb';
+  return url + '?size=thumb';
+};
+
+const getHighResUrl = (url) => {
+  if (!url) return defaultImage;
+  if (url.includes('unsplash.com')) return url + '&w=1200&q=90';
+  if (url.includes('?')) return url + '&size=full';
+  return url + '?size=full';
+};
 
 // ĐÃ FIX: Watch theo "slug" thay vì "id" do đã đổi router
 watch(() => route.params.slug, (newSlug) => {
@@ -667,9 +692,14 @@ onMounted(() => {
 .main-img-box {
   transition: all 0.3s ease;
 }
+.img-blur {
+  filter: blur(15px);
+  opacity: 0.6;
+  transform: scale(1.05); /* Avoid clear edges when blurred */
+}
 .cursor-zoom-in { cursor: zoom-in; }
-.group-hover-zoom { transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
-.group:hover .group-hover-zoom { transform: scale(1.05); }
+.group-hover-zoom { transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94), filter 0.3s ease, opacity 0.3s ease; }
+.group:hover .group-hover-zoom:not(.img-blur) { transform: scale(1.05); }
 .z-index-2 { z-index: 2; }
 
 .nav-btn-zoom {

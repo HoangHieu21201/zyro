@@ -1,5 +1,5 @@
 <template>
-  <div class="category-edit-wrapper pb-5 mb-5">
+  <div class="category-edit-wrapper">
     <div class="container-fluid py-4" v-if="!isLoading">
       <div class="d-flex align-items-center mb-4">
         <router-link :to="{ name: 'admin-categories' }" class="text-decoration-none text-muted me-3 hover:text-urban transition-all">
@@ -17,9 +17,11 @@
               
               <div class="row g-4">
                 <div class="col-md-12">
-                  <label class="form-label fw-bold text-dark dark:text-gray-200">Tên danh mục <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control py-2 dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" 
+                  <div class="form-floating shadow-sm-hover">
+                    <input id="floating_niszib558" type="text" class="form-control dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" 
                          v-model="form.name" :class="{'is-invalid': errors.name}" placeholder="VD: Áo thun nam">
+                    <label for="floating_niszib558" class="fw-bold text-muted" style="font-size: 0.85rem;">TÊN DANH MỤC <span class="text-danger">*</span></label>
+                  </div>
                   <div class="invalid-feedback">{{ errors.name?.[0] }}</div>
                 </div>
 
@@ -179,7 +181,7 @@ const getHeaders = () => ({ 'Authorization': `Bearer ${localStorage.getItem('adm
 const fetchData = async () => {
   try {
     const [resCats, resDetail] = await Promise.all([
-      axios.get('http://127.0.0.1:8000/api/v1/admin/categories', { headers: getHeaders() }),
+      axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/categories`, { headers: getHeaders() }),
       axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/categories/${categoryId}`, { headers: getHeaders() })
     ]);
 
@@ -198,11 +200,11 @@ const fetchData = async () => {
     }
 
     if (cat.thumbnail) {
-       previewThumbnail.value = `http://127.0.0.1:8000/storage/${cat.thumbnail}`;
+       previewThumbnail.value = `${import.meta.env.VITE_STORAGE_URL}${cat.thumbnail}`;
        hasOldThumbnail.value = true;
     }
     if (cat.size_guide_image) {
-       previewSizeGuide.value = `http://127.0.0.1:8000/storage/${cat.size_guide_image}`;
+       previewSizeGuide.value = `${import.meta.env.VITE_STORAGE_URL}${cat.size_guide_image}`;
        hasOldSizeGuide.value = true;
     }
 

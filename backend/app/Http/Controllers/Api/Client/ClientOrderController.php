@@ -31,13 +31,37 @@ class ClientOrderController extends Controller
                 'total_spent'  => Order::where('user_id', $userId)->where('status', 'completed')->sum('total_amount')
             ];
 
+            $sort = $request->query('sort', 'desc');
+            $search = $request->query('search', '');
+            $dateFrom = $request->query('date_from', '');
+            $dateTo = $request->query('date_to', '');
+
             $query = Order::where('user_id', $userId)
-                          ->with(['items.variant.product', 'items.lookbook'])
-                          ->orderBy('created_at', 'desc');
+                          ->with(['items.variant.product', 'items.lookbook']);
 
             if ($status !== 'all') {
                 $query->where('status', $status);
             }
+
+            if (!empty($search)) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('order_code', 'LIKE', '%' . $search . '%')
+                      ->orWhereHas('items', function ($iq) use ($search) {
+                          $iq->where('product_name', 'LIKE', '%' . $search . '%');
+                      });
+                });
+            }
+
+            if (!empty($dateFrom)) {
+                $query->whereDate('created_at', '>=', $dateFrom);
+            }
+
+            if (!empty($dateTo)) {
+                $query->whereDate('created_at', '<=', $dateTo);
+            }
+
+            // Always order by created_at based on the sort parameter
+            $query->orderBy('created_at', $sort === 'asc' ? 'asc' : 'desc');
 
             $orders = $query->paginate(10);
 
@@ -163,9 +187,28 @@ class ClientOrderController extends Controller
             }
 
             $reason = $request->input('reason', 'Khách hàng yêu cầu trả hàng');
+            
+            // Lấy thông tin tài khoản ngân hàng để hoàn tiền
+            $refundAccountInfo = null;
+            if ($request->filled('bank_name') || $request->filled('account_number') || $request->filled('account_name')) {
+                $refundAccountInfo = json_encode([
+                    'bank_name'      => $request->input('bank_name'),
+                    'account_number' => $request->input('account_number'),
+                    'account_name'   => $request->input('account_name'),
+                ]);
+            }
+            
+            $refundQrCodePath = null;
+            if ($request->hasFile('qr_code_image')) {
+                $refundQrCodePath = $request->file('qr_code_image')->store('refund_qr', 'public');
+            }
 
-            DB::transaction(function () use ($order, $reason) {
-                $order->update(['status' => 'returned']);
+            DB::transaction(function () use ($order, $reason, $refundAccountInfo, $refundQrCodePath) {
+                $order->update([
+                    'status' => 'returned',
+                    'refund_account_info' => $refundAccountInfo,
+                    'refund_qr_code'      => $refundQrCodePath
+                ]);
 
                 OrderStatusHistory::create([
                     'order_id'        => $order->id,

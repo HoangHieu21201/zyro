@@ -1,8 +1,9 @@
 <template>
   <!-- ĐÃ FIX: Đổi sự kiện bấm vào Card thành mở hình ảnh thu nhỏ (Zoom) -->
-  <div class="product-card cursor-pointer w-100" @click="openZoom">
+  <div class="product-card cursor-pointer w-100 p-2 p-lg-3 rounded-4 border border-gray-200 dark:border-gray-800 transition-all bg-white bg-opacity-50 dark:bg-[#1a2533] dark:bg-opacity-50 shadow-sm" style="backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);" @click="openZoom">
     
     <!-- KHUNG HÌNH ẢNH SẢN PHẨM -->
+
     <div class="product-img-wrapper position-relative overflow-hidden rounded-3 mb-3 bg-light dark:bg-[#1a2533]">
       
       <!-- currentImage sẽ tự động thay đổi khi bấm thẻ màu -->
@@ -53,8 +54,15 @@
     <!-- THÔNG TIN SẢN PHẨM -->
     <div class="product-info text-start px-1 overflow-hidden w-100">
       
+      <!-- TÊN SẢN PHẨM -->
+      <h6 class="product-title mb-1 fw-bold line-clamp-1 w-100 text-uppercase" :title="product.name" style="font-size: 1rem; letter-spacing: 0.3px;">
+        <router-link :to="`/product/${product.slug || product.id}`" class="text-decoration-none text-dark dark:text-gray-200 product-link transition-all" @click.stop>
+          {{ product.name }}
+        </router-link>
+      </h6>
+
       <!-- GIÁ TIỀN -->
-      <div class="product-price d-flex align-items-center gap-2 mb-1 flex-wrap">
+      <div class="product-price d-flex align-items-center gap-2 mb-2 flex-wrap">
         <span class="fw-bold" 
               :class="product.old_price && product.old_price > product.price ? 'text-danger dark:text-red-400' : 'text-dark dark:text-white'" 
               style="font-size: 1.15rem;">
@@ -67,13 +75,6 @@
           {{ formatCurrency(product.old_price) }}
         </span>
       </div>
-
-      <!-- TÊN SẢN PHẨM -->
-      <h6 class="product-title mb-2 fw-normal line-clamp-1 w-100" :title="product.name" style="font-size: 0.95rem;">
-        <router-link :to="`/product/${product.slug || product.id}`" class="text-decoration-none text-dark dark:text-gray-200 product-link transition-all" @click.stop>
-          {{ product.name }}
-        </router-link>
-      </h6>
 
       <!-- MÀU SẮC -->
       <div class="color-swatches d-flex gap-2" style="min-height: 24px;">
@@ -245,6 +246,16 @@ const closeZoom = () => {
 }
 
 /* HOVER ACTIONS */
+.product-card:hover {
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08) !important;
+  transform: translateY(-4px);
+  border-color: rgba(84, 119, 146, 0.2) !important;
+}
+html.dark .product-card:hover {
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3) !important;
+  border-color: rgba(255,255,255,0.1) !important;
+}
+
 .product-card:hover .product-img { transform: scale(1.08); }
 .product-card:hover .hover-overlay { opacity: 1; }
 .product-card:hover .action-right-panel { opacity: 1; visibility: visible; transform: translateX(0); }
@@ -290,9 +301,7 @@ html.dark .swatch-na { background-color: #2b3035 !important; border-color: #4950
 
 .transition-all { transition: all 0.3s ease; }
 
-/* =====================================
-   ĐÃ THÊM: CSS CHO MODAL ZOOM ẢNH
-===================================== */
+/* ĐÃ THÊM: CSS CHO MODAL ZOOM ẢNH */
 .custom-zoom-overlay {
   position: fixed;
   top: 0;

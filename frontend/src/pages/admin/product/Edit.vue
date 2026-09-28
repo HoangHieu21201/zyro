@@ -1,5 +1,5 @@
 <template>
-  <div class="product-edit-wrapper pb-5 mb-5">
+  <div class="product-edit-wrapper">
 
     <div v-if="isPageLoading" class="d-flex flex-column justify-content-center align-items-center w-100" style="min-height: 70vh;">
       <h1 class="logo-shimmer mb-3">ZYRO</h1>
@@ -57,12 +57,16 @@
                   <h6 class="fw-bold mb-4 text-urban text-uppercase"><i class="bi bi-card-text me-2"></i>Dữ liệu cơ sở</h6>
                   <div class="row g-3">
                     <div class="col-md-12">
-                      <label class="form-label fw-bold text-dark dark:text-gray-200">Tên sản phẩm <span class="text-danger">*</span></label>
-                      <input type="text" class="form-control form-control-lg bg-white dark:bg-[#1a2533] dark:text-white border-secondary-subtle dark:border-gray-600 shadow-sm-hover" v-model="form.name" @input="generateSlug" required>
+                      <div class="form-floating shadow-sm-hover">
+                    <input id="floating_pbs7nqf0v" type="text" class="form-control form-control-lg bg-white dark:bg-[#1a2533] dark:text-white border-secondary-subtle dark:border-gray-600 shadow-sm-hover" v-model="form.name" @input="generateSlug" required placeholder="...">
+                    <label for="floating_pbs7nqf0v" class="fw-bold text-muted" style="font-size: 0.85rem;">TÊN SẢN PHẨM <span class="text-danger">*</span></label>
+                  </div>
                     </div>
                     <div class="col-md-12">
-                      <label class="form-label fw-bold text-dark dark:text-gray-200">Đường dẫn (Slug)</label>
-                      <input type="text" class="form-control bg-light-subtle dark:bg-[#2b3035] text-muted dark:text-gray-400 font-monospace border-secondary-subtle dark:border-gray-600" v-model="form.slug" readonly>
+                      <div class="form-floating shadow-sm-hover">
+                    <input id="floating_yx3dhq522" type="text" class="form-control bg-light-subtle dark:bg-[#2b3035] text-muted dark:text-gray-400 font-monospace border-secondary-subtle dark:border-gray-600" v-model="form.slug" readonly placeholder="...">
+                    <label for="floating_yx3dhq522" class="fw-bold text-muted" style="font-size: 0.85rem;">ĐƯỜNG DẪN (SLUG)</label>
+                  </div>
                     </div>
 
                     <div class="col-md-6">
@@ -410,8 +414,10 @@
           </div>
           <div class="modal-body p-4">
             <div class="mb-4">
-              <label class="form-label small fw-bold dark:text-gray-200">Tên thuộc tính hệ thống</label>
-              <input type="text" class="form-control bg-light dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-inner rounded-3" v-model="newAttrForm.name" placeholder="VD: Khối lượng, Màu viền..." @keydown.enter.prevent="submitCreateAttribute">
+              <div class="form-floating shadow-sm-hover">
+                    <input id="floating_aikdrksry" type="text" class="form-control bg-light dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-inner rounded-3" v-model="newAttrForm.name" placeholder="VD: Khối lượng, Màu viền..." @keydown.enter.prevent="submitCreateAttribute">
+                    <label for="floating_aikdrksry" class="fw-bold text-muted" style="font-size: 0.85rem;">TÊN THUỘC TÍNH HỆ THỐNG</label>
+                  </div>
             </div>
             <button type="button" class="btn btn-urban w-100 fw-bold rounded-pill shadow-sm" @click="submitCreateAttribute" :disabled="!newAttrForm.name">Lưu Thuộc Tính</button>
           </div>
@@ -429,10 +435,12 @@
           </div>
           <div class="modal-body p-4">
             <div class="mb-4">
-              <label class="form-label fw-bold dark:text-gray-200">
-                Nhập các giá trị cho <span class="badge bg-success fs-6 ms-1">{{ currentOperatingAttr ? currentOperatingAttr.name : '' }}</span>
+              <div class="form-floating shadow-sm-hover">
+                    <input id="floating_vgpiebdfu" type="text" class="form-control form-control-lg bg-light dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-inner rounded-3 my-2" v-model="newValueForm.value" placeholder="VD: S, M, L, XL, XXL..." @keydown.enter.prevent="submitCreateValue" ref="newValueInputRef">
+                    <label for="floating_vgpiebdfu" class="fw-bold text-muted" style="font-size: 0.85rem;">
+                NHẬP CÁC GIÁ TRỊ CHO <span class="badge bg-success fs-6 ms-1">{{ CURRENTOPERATINGATTR ? CURRENTOPERATINGATTR.NAME : '' }}</span>
               </label>
-              <input type="text" class="form-control form-control-lg bg-light dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-inner rounded-3 my-2" v-model="newValueForm.value" placeholder="VD: S, M, L, XL, XXL..." @keydown.enter.prevent="submitCreateValue" ref="newValueInputRef">
+                  </div>
               <small class="text-muted fst-italic"><i class="bi bi-info-circle me-1"></i>Mẹo: Gõ nhiều giá trị cách nhau bằng dấu phẩy (,) để tạo hàng loạt cùng lúc.</small>
             </div>
             <button type="button" class="btn btn-success btn-lg w-100 fw-bold rounded-pill shadow-sm hover-scale" @click="submitCreateValue" :disabled="!newValueForm.value">Lưu Giá Trị</button>
@@ -584,7 +592,7 @@ const getImageUrl = (path) => {
   cleanPath = cleanPath.replace(/^\/+/, '');
   if (cleanPath.startsWith('storage/')) cleanPath = cleanPath.replace('storage/', '');
 
-  let baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1';
+  let baseUrl = import.meta.env.VITE_API_BASE_URL;
   baseUrl = baseUrl.replace('/api/v1', '');
   return `${baseUrl}/storage/${cleanPath}`;
 };

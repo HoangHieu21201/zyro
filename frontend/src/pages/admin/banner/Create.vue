@@ -1,5 +1,5 @@
 <template>
-  <div class="banner-create-wrapper pb-5 mb-5">
+  <div class="banner-create-wrapper">
     <div class="container-fluid py-4">
       <div class="d-flex align-items-center mb-4">
         <router-link :to="{ name: 'admin-banners' }" class="text-decoration-none text-muted me-3 hover:text-urban transition-all">
@@ -17,9 +17,11 @@
               
               <div class="row g-4">
                 <div class="col-md-12">
-                  <label class="form-label fw-bold text-dark dark:text-gray-200">Tiêu đề Banner (Cho mục đích quản lý) <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control py-2 dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" 
+                  <div class="form-floating shadow-sm-hover">
+                    <input id="floating_z79mpnqs0" type="text" class="form-control dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" 
                          v-model="form.title" :class="{'is-invalid': errors.title}" placeholder="VD: Khuyến mãi Thu Đông 2026">
+                    <label for="floating_z79mpnqs0" class="fw-bold text-muted" style="font-size: 0.85rem;">TIÊU ĐỀ BANNER (CHO MỤC ĐÍCH QUẢN LÝ) <span class="text-danger">*</span></label>
+                  </div>
                   <div class="invalid-feedback">{{ errors.title?.[0] }}</div>
                 </div>
 
@@ -57,12 +59,16 @@
                   <h6 class="fw-bold text-urban mb-3"><i class="bi bi-clock-history me-2"></i>Hẹn giờ hiển thị (Tùy chọn)</h6>
                   <div class="row g-3">
                     <div class="col-md-6">
-                      <label class="form-label small fw-bold text-muted text-uppercase">Bắt đầu lúc</label>
-                      <input type="datetime-local" class="form-control dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" v-model="form.start_time">
+                      <div class="form-floating shadow-sm-hover">
+                    <input id="floating_chd87bqx9" type="datetime-local" class="form-control dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" v-model="form.start_time" placeholder="...">
+                    <label for="floating_chd87bqx9" class="fw-bold text-muted" style="font-size: 0.85rem;">BẮT ĐẦU LÚC</label>
+                  </div>
                     </div>
                     <div class="col-md-6">
-                      <label class="form-label small fw-bold text-muted text-uppercase">Kết thúc lúc</label>
-                      <input type="datetime-local" class="form-control dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" v-model="form.end_time" :class="{'is-invalid': errors.end_time}">
+                      <div class="form-floating shadow-sm-hover">
+                    <input id="floating_tx0med76k" type="datetime-local" class="form-control dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" v-model="form.end_time" :class="{'is-invalid': errors.end_time}" placeholder="...">
+                    <label for="floating_tx0med76k" class="fw-bold text-muted" style="font-size: 0.85rem;">KẾT THÚC LÚC</label>
+                  </div>
                       <div class="invalid-feedback">{{ errors.end_time?.[0] }}</div>
                       <small class="text-success fw-bold d-block mt-1"><i class="bi bi-infinity"></i> Bỏ trống = Vô thời hạn</small>
                     </div>
@@ -176,7 +182,7 @@ const saveBanner = async () => {
   });
 
   try {
-    await axios.post('http://127.0.0.1:8000/api/v1/admin/banners', formData, { headers: { ...getHeaders(), 'Content-Type': 'multipart/form-data' } });
+    await axios.post(`${import.meta.env.VITE_API_BASE_URL}/admin/banners`, formData, { headers: { ...getHeaders(), 'Content-Type': 'multipart/form-data' } });
     Swal.fire({ icon: 'success', title: 'Thành công', text: 'Đã tạo Banner mới', timer: 1500, showConfirmButton: false });
     router.push({ name: 'admin-banners' });
   } catch (err) {

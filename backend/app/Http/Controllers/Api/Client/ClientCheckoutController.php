@@ -541,10 +541,7 @@ class ClientCheckoutController extends Controller
                 return response()->json(['message' => 'Amount mismatch'], 400);
             }
 
-            // =========================================================================================
-            // ĐÃ FIX (GÓC KHUẤT 1): SỬ DỤNG ATOMIC UPDATE ĐỂ BẬT NGƯỢC RACE CONDITION
-            // =========================================================================================
-            $isProcessed = false;
+          $isProcessed = false;
 
             DB::transaction(function () use ($order, $request, &$isProcessed) {
                 

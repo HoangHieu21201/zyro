@@ -1,5 +1,5 @@
 <template>
-  <div class="checkout-failed-wrapper pb-5 mb-5">
+  <div class="checkout-failed-wrapper">
     <div class="pt-5 mt-4">
       <div class="zyro-container d-flex justify-content-center align-items-center" style="min-height: 60vh;">
         

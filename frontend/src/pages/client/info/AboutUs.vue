@@ -65,7 +65,7 @@
                     <div
                       class="p-4 bg-light dark:bg-[#1a2533] border dark:border-gray-700 rounded-4 h-100 shadow-sm transition-all hover-transform">
                       <div class="icon-box-sm rounded-circle d-flex align-items-center justify-content-center mb-3">
-                        <i class="bi bi-eye-fill text-urban fs-5"></i>
+                        <i class="bi bi-eye-fill text-primary fs-5"></i>
                       </div>
                       <h5 class="fw-bold text-dark dark:text-white mb-2">Tầm nhìn</h5>
                       <p class="text-muted small lh-lg m-0">Trở thành nền tảng mua sắm thời trang trực tuyến hàng đầu,
@@ -76,7 +76,7 @@
                     <div
                       class="p-4 bg-light dark:bg-[#1a2533] border dark:border-gray-700 rounded-4 h-100 shadow-sm transition-all hover-transform">
                       <div class="icon-box-sm rounded-circle d-flex align-items-center justify-content-center mb-3">
-                        <i class="bi bi-rocket-takeoff-fill text-urban fs-5"></i>
+                        <i class="bi bi-rocket-takeoff-fill text-danger fs-5"></i>
                       </div>
                       <h5 class="fw-bold text-dark dark:text-white mb-2">Sứ mệnh</h5>
                       <p class="text-muted small lh-lg m-0">Không ngừng cải tiến chất lượng sản phẩm và dịch vụ, mang
@@ -90,22 +90,22 @@
                 <h4 class="fw-bold text-urban-dark dark:text-white mb-3 tracking-wide">3. Giá trị cốt lõi</h4>
                 <ul class="list-unstyled lh-lg mt-3">
                   <li class="mb-3 d-flex align-items-start">
-                    <i class="bi bi-check-circle-fill text-urban mt-1 me-3"></i>
+                    <i class="bi bi-check-circle-fill text-success mt-1 me-3"></i>
                     <div><strong>Chất lượng hàng đầu:</strong> Khắt khe trong việc lựa chọn chất liệu và kiểm duyệt sản
                       phẩm trước khi đến tay khách hàng.</div>
                   </li>
                   <li class="mb-3 d-flex align-items-start">
-                    <i class="bi bi-check-circle-fill text-urban mt-1 me-3"></i>
+                    <i class="bi bi-check-circle-fill text-success mt-1 me-3"></i>
                     <div><strong>Tận tâm phục vụ:</strong> Đặt khách hàng làm trung tâm, luôn lắng nghe và hỗ trợ bằng
                       sự chân thành.</div>
                   </li>
                   <li class="mb-3 d-flex align-items-start">
-                    <i class="bi bi-check-circle-fill text-urban mt-1 me-3"></i>
+                    <i class="bi bi-check-circle-fill text-success mt-1 me-3"></i>
                     <div><strong>Đổi mới sáng tạo:</strong> Luôn cập nhật xu hướng mới nhất, áp dụng công nghệ để nâng
                       cao trải nghiệm người dùng.</div>
                   </li>
                   <li class="d-flex align-items-start">
-                    <i class="bi bi-check-circle-fill text-urban mt-1 me-3"></i>
+                    <i class="bi bi-check-circle-fill text-success mt-1 me-3"></i>
                     <div><strong>Trách nhiệm xã hội:</strong> Phát triển kinh doanh đi đôi với việc bảo vệ môi trường và
                       đóng góp cho cộng đồng.</div>
                   </li>

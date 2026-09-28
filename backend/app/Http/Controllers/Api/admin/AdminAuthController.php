@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\RateLimiter;
 
 class AdminAuthController extends Controller
 {
@@ -47,12 +48,16 @@ class AdminAuthController extends Controller
         }
 
         $abilities = $admin->role ? ['level:' . $admin->role->level] : ['level:5'];
-        $token = $admin->createToken('admin_token', $abilities)->plainTextToken;
+        $accessAbilities = array_merge($abilities, ['access-api']);
+        
+        $accessToken = $admin->createToken('admin_access_token', $accessAbilities, now()->addHours(12))->plainTextToken;
+        $refreshToken = $admin->createToken('admin_refresh_token', ['issue-access-token'], now()->addDays(7))->plainTextToken;
 
         return response()->json([
             'success' => true,
             'message' => 'Đăng nhập thành công',
-            'token'   => $token,
+            'token'   => $accessToken,
+            'refresh_token' => $refreshToken,
             'admin'   => $admin 
         ]);
     }
@@ -61,9 +66,21 @@ class AdminAuthController extends Controller
     public function forgotPassword(AdminForgotPasswordRequest $request): JsonResponse
     {
         $email = $request->validated('email');
+
+        // Chống spam email: 1 lần / 2 phút
+        if (RateLimiter::tooManyAttempts('admin-send-otp-' . $email, 1)) {
+            $seconds = RateLimiter::availableIn('admin-send-otp-' . $email);
+            return response()->json(['success' => false, 'message' => "Hệ thống đang xử lý. Vui lòng thử lại sau {$seconds} giây."], 429);
+        }
+        RateLimiter::hit('admin-send-otp-' . $email, 120);
+
         $otp = (string) random_int(100000, 999999);
 
-        Cache::put('admin_pwd_reset_' . $email, $otp, now()->addMinutes(15));
+        // Lưu Cache dưới dạng array để đếm số lần nhập sai
+        Cache::put('admin_pwd_reset_' . $email, [
+            'otp' => $otp,
+            'attempts' => 0
+        ], now()->addMinutes(15));
 
         try {
             $htmlContent = "
@@ -96,15 +113,35 @@ class AdminAuthController extends Controller
     public function resetPassword(AdminResetPasswordRequest $request): JsonResponse
     {
         $data = $request->validated();
-        $cachedOtp = Cache::get('admin_pwd_reset_' . $data['email']);
+        $email = $data['email'];
 
-        if (!$cachedOtp) {
+        // Chống Brute-force: Khóa 5 phút nếu sai 5 lần ở cấp độ Request IP
+        if (RateLimiter::tooManyAttempts('admin-verify-otp-' . $email, 5)) {
+            return response()->json(['success' => false, 'message' => 'Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau 5 phút.'], 429);
+        }
+
+        $cacheKey = 'admin_pwd_reset_' . $email;
+        $cacheData = Cache::get($cacheKey);
+
+        if (!$cacheData) {
             return response()->json(['success' => false, 'message' => 'Mã xác nhận đã hết hạn hoặc không tồn tại.'], 400);
         }
 
-        if ($cachedOtp !== $data['token']) {
+        if ($cacheData['attempts'] >= 5) {
+            Cache::forget($cacheKey);
+            return response()->json(['success' => false, 'message' => 'Bạn đã nhập sai quá nhiều lần. Mã OTP đã bị hủy để bảo mật.'], 403);
+        }
+
+        if ($cacheData['otp'] !== $data['token']) {
+            RateLimiter::hit('admin-verify-otp-' . $email, 300); // 5 phút khóa
+            
+            $cacheData['attempts']++;
+            Cache::put($cacheKey, $cacheData, now()->addMinutes(15));
+
             return response()->json(['success' => false, 'message' => 'Mã xác nhận không hợp lệ.'], 400);
         }
+
+        RateLimiter::clear('admin-verify-otp-' . $email);
 
         $admin = Admin::where('email', $data['email'])->first();
         $admin->update(['password' => Hash::make($data['password'])]);
@@ -122,10 +159,35 @@ class AdminAuthController extends Controller
         return response()->json(['success' => true, 'data' => $admin]);
     }
 
+    public function refreshToken(Request $request): JsonResponse
+    {
+        $admin = $request->user();
+
+        if (!$admin->tokenCan('issue-access-token')) {
+            return response()->json(['success' => false, 'message' => 'Token không hợp lệ để làm mới.'], 403);
+        }
+
+        // Xóa refresh token hiện tại (xoay vòng token)
+        $admin->currentAccessToken()->delete();
+
+        $abilities = $admin->role ? ['level:' . $admin->role->level] : ['level:5'];
+        $accessAbilities = array_merge($abilities, ['access-api']);
+
+        $newAccessToken = $admin->createToken('admin_access_token', $accessAbilities, now()->addHours(12))->plainTextToken;
+        $newRefreshToken = $admin->createToken('admin_refresh_token', ['issue-access-token'], now()->addDays(7))->plainTextToken;
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Làm mới token thành công',
+            'token'   => $newAccessToken,
+            'refresh_token' => $newRefreshToken
+        ]);
+    }
+
     // Đăng xuất
     public function logout(Request $request): JsonResponse
     {
-        $request->user()->currentAccessToken()->delete();
+        $request->user()->tokens()->delete();
         return response()->json(['success' => true, 'message' => 'Đăng xuất thành công']);
     }
 }

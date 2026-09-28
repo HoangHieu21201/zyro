@@ -1,5 +1,5 @@
 <template>
-  <div class="review-page-wrapper pb-5 mb-5" style="padding-top: 100px;">
+  <div class="review-page-wrapper" style="padding-top: 100px;">
     <div class="zyro-container">
       
       <nav aria-label="breadcrumb" class="mb-4">
@@ -27,9 +27,7 @@
               </router-link>
             </div>
 
-            <!-- ============================================== -->
             <!-- ĐÃ FIX: SKELETON LOADING ĐỒNG BỘ FORM ĐÁNH GIÁ -->
-            <!-- ============================================== -->
             <div v-if="isLoading" class="pe-none">
                <div v-for="i in 2" :key="'rskel'+i" class="mb-4 bg-light dark:bg-[#212529] p-3 p-md-4 rounded-4 border dark:border-gray-700 shadow-sm">
                  <div class="d-flex align-items-center gap-3 mb-4 border-bottom dark:border-gray-600 pb-3">
@@ -185,7 +183,7 @@ const isEditingMode = computed(() => {
 const getImageUrl = (path) => {
   if (!path) return '/client_placeholder.png';
   if (path.startsWith('http')) return path;
-  return import.meta.env.VITE_API_BASE_URL.replace('/api/v1', '/storage/') + path;
+  return import.meta.env.VITE_STORAGE_URL + path;
 };
 
 const parseAttributes = (jsonStr) => {

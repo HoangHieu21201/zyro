@@ -1,22 +1,22 @@
 <template>
   <div ref="mapContainer" class="w-100 h-100 position-relative rounded-3 overflow-hidden">
-    
+
     <!-- KHUNG CHỨA BẢN ĐỒ -->
     <div :id="mapId" class="w-100 h-100 bg-light" style="z-index: 1;"></div>
-    
+
     <!-- ĐÃ THÊM: NÚT RESET GÓC NHÌN (RECENTER) -->
-    <button v-if="!isLoading && isMapReady" 
-            @click="recenterMap" 
-            class="btn btn-white text-urban shadow-lg position-absolute d-flex align-items-center justify-content-center rounded-circle transition-transform hover-scale bg-white" 
-            style="bottom: 20px; left: 20px; width: 45px; height: 45px; z-index: 1000; border: 2px solid var(--color-c-hover);"
-            title="Xem toàn bộ tuyến đường">
-       <i class="bi bi-crosshair fs-5"></i>
+    <button v-if="!isLoading && isMapReady" @click="recenterMap"
+      class="btn btn-white text-urban shadow-lg position-absolute d-flex align-items-center justify-content-center rounded-circle transition-transform hover-scale bg-white"
+      style="bottom: 20px; left: 20px; width: 45px; height: 45px; z-index: 1000; border: 2px solid var(--color-c-hover);"
+      title="Xem toàn bộ tuyến đường">
+      <i class="bi bi-crosshair fs-5"></i>
     </button>
 
     <!-- HIỆU ỨNG LOADING KẾT NỐI -->
-    <div v-if="isLoading" class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center bg-white bg-opacity-75 z-index-loader">
-        <div class="spinner-border text-urban mb-2" style="width: 2.5rem; height: 2.5rem;"></div>
-        <div class="fw-bold text-urban small font-sans-vn">Đang thiết lập vệ tinh...</div>
+    <div v-if="isLoading"
+      class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center bg-white bg-opacity-75 z-index-loader">
+      <div class="spinner-border text-urban mb-2" style="width: 2.5rem; height: 2.5rem;"></div>
+      <div class="fw-bold text-urban small font-sans-vn">Đang thiết lập vệ tinh...</div>
     </div>
   </div>
 </template>
@@ -60,20 +60,18 @@ const loadLeafletScript = () => {
   });
 };
 
-// ==========================================
 // HÀM RESET GÓC NHÌN (SỬ DỤNG CHO NÚT BẤM VÀ AUTO LOAD)
-// ==========================================
 const recenterMap = () => {
   if (leafletMap && routingLine) {
     // Ép map cập nhật lại size đề phòng modal mở chậm
     leafletMap.invalidateSize();
-    
+
     // ĐÃ FIX: Giới hạn maxZoom: 12 để không bị zoom sát mái nhà nếu giao gần
-    leafletMap.fitBounds(routingLine.getBounds(), { 
-        padding: [60, 60], 
-        maxZoom: 12, 
-        animate: true, 
-        duration: 1 
+    leafletMap.fitBounds(routingLine.getBounds(), {
+        padding: [60, 60],
+        maxZoom: 12,
+        animate: true,
+        duration: 1
     });
   }
 };
@@ -101,13 +99,13 @@ const renderMap = async () => {
     window.L.latLng(25.0, 115.0) // Góc Đông Bắc
   );
 
-  leafletMap = window.L.map(mapId, { 
+  leafletMap = window.L.map(mapId, {
       zoomControl: false,
       minZoom: 5,                  // Cấm zoom out ra khỏi Trái Đất
       maxBounds: vnBounds,         // Khóa màn hình không cho lăn sang nước khác
       maxBoundsViscosity: 0.8      // Độ đàn hồi khi cố tình kéo ra ngoài biên
   }).setView(p1, 6);
-  
+
   // Chuyển nút zoom mặc định sang góc dưới phải
   window.L.control.zoom({ position: 'bottomright' }).addTo(leafletMap);
 
@@ -124,16 +122,16 @@ const renderMap = async () => {
   }
 
   // Label Điểm Đi / Điểm Đến
-  const iconOrigin = window.L.divIcon({ 
-    html: '<div class="bg-dark text-white rounded-pill d-flex align-items-center justify-content-center shadow-lg px-3" style="height:32px; font-weight:bold; border:2px solid white; white-space: nowrap; font-family: sans-serif; font-size: 13px;"><i class="bi bi-shop me-2"></i> Kho Gửi</div>', 
-    className: '', iconSize: [100, 32], iconAnchor: [50, 32] 
+  const iconOrigin = window.L.divIcon({
+    html: '<div class="bg-dark text-white rounded-pill d-flex align-items-center justify-content-center shadow-lg px-3" style="height:32px; font-weight:bold; border:2px solid white; white-space: nowrap; font-family: sans-serif; font-size: 13px;"><i class="bi bi-shop me-2"></i> Kho Gửi</div>',
+    className: '', iconSize: [100, 32], iconAnchor: [50, 32]
   });
-  
-  const iconDestination = window.L.divIcon({ 
-    html: '<div class="bg-success text-white rounded-pill d-flex align-items-center justify-content-center shadow-lg px-3" style="height:32px; font-weight:bold; border:2px solid white; white-space: nowrap; font-family: sans-serif; font-size: 13px;"><i class="bi bi-house-door-fill me-2"></i> Nơi Nhận</div>', 
-    className: '', iconSize: [100, 32], iconAnchor: [50, 32] 
+
+  const iconDestination = window.L.divIcon({
+    html: '<div class="bg-success text-white rounded-pill d-flex align-items-center justify-content-center shadow-lg px-3" style="height:32px; font-weight:bold; border:2px solid white; white-space: nowrap; font-family: sans-serif; font-size: 13px;"><i class="bi bi-house-door-fill me-2"></i> Nơi Nhận</div>',
+    className: '', iconSize: [100, 32], iconAnchor: [50, 32]
   });
-  
+
   window.L.marker(p1, {icon: iconOrigin}).bindPopup(`<b>Từ:</b> ${props.mapData.origin.name}`).addTo(leafletMap);
   window.L.marker(p2, {icon: iconDestination}).bindPopup(`<b>Đến:</b> ${props.mapData.destination.name}`).addTo(leafletMap);
 
@@ -160,7 +158,7 @@ const renderMap = async () => {
      let intermediate = [];
      if (isLongDistance) {
        intermediate = ql1a_waypoints.filter(wp => wp.lat < maxLat - 0.5 && wp.lat > minLat + 0.5);
-       if (lat1 > lat2) { intermediate.sort((a, b) => b.lat - a.lat); } 
+       if (lat1 > lat2) { intermediate.sort((a, b) => b.lat - a.lat); }
        else { intermediate.sort((a, b) => a.lat - b.lat); }
      }
 
@@ -168,7 +166,7 @@ const renderMap = async () => {
      intermediate.forEach(wp => { waypoints += `;${wp.lng},${wp.lat}`; });
      waypoints += `;${p2[1]},${p2[0]}`;
 
-     let apiUrl = mapboxToken 
+     let apiUrl = mapboxToken
         ? `https://api.mapbox.com/directions/v5/mapbox/driving/${waypoints}?geometries=geojson&overview=full&access_token=${mapboxToken}`
         : `https://router.project-osrm.org/route/v1/driving/${waypoints}?overview=full&geometries=geojson`;
 
@@ -176,7 +174,7 @@ const renderMap = async () => {
      const routeCoords = res.data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
 
      routingLine = window.L.polyline(routeCoords, { color: '#009981', weight: 5, opacity: 0.8 }).addTo(leafletMap);
-     
+
      // ĐÃ FIX: Delay lệnh fitBounds 350ms để đợi Modal/DOM mở ra hoàn toàn, tránh lỗi tính nhầm khung hình (gây zoom out quá đà)
      setTimeout(() => {
         recenterMap();
@@ -186,15 +184,15 @@ const renderMap = async () => {
      // Marker chiếc xe tải
      const truckHtml = `<div class="bg-danger text-white rounded shadow-lg d-flex align-items-center justify-content-center border border-2 border-white" style="width:34px; height:34px;"><i class="bi bi-truck fs-5"></i></div>`;
      const truckDivIcon = window.L.divIcon({ html: truckHtml, className: '', iconSize: [34, 34], iconAnchor: [17, 17] });
-     
+
      let totalPoints = routeCoords.length;
-     let currentIndex = 0; 
+     let currentIndex = 0;
      let speed = Math.ceil(totalPoints / 250) || 1;
 
      if (props.status === 'completed' || props.status === 'returned') {
-         currentIndex = totalPoints - 1; 
+         currentIndex = totalPoints - 1;
      } else {
-         currentIndex = Math.floor(totalPoints * 0.1); 
+         currentIndex = Math.floor(totalPoints * 0.1);
      }
 
      truckMarker = window.L.marker(routeCoords[currentIndex], {icon: truckDivIcon}).addTo(leafletMap);
@@ -240,15 +238,26 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.z-index-loader { z-index: 1050; }
-.font-sans-vn { font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif !important; }
+.z-index-loader {
+  z-index: 1050;
+}
+
+.font-sans-vn {
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif !important;
+}
 
 /* CSS cho nút Recenter */
-.text-urban { color: var(--color-c-hover, #547792) !important; }
-.hover-scale { transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease; }
-.hover-scale:hover { 
-  transform: scale(1.1); 
-  background-color: var(--color-c-hover, #547792) !important; 
+.text-urban {
+  color: var(--color-c-hover, #547792) !important;
+}
+
+.hover-scale {
+  transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.hover-scale:hover {
+  transform: scale(1.1);
+  background-color: var(--color-c-hover, #547792) !important;
   color: white !important;
 }
 </style>

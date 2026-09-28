@@ -31,9 +31,7 @@
 
           <transition name="fade-slide" mode="out-in">
             
-            <!-- ============================================== -->
             <!-- TRẠNG THÁI 1: KHI Ô TÌM KIẾM TRỐNG             -->
-            <!-- ============================================== -->
             <div v-if="!searchQuery.trim()" key="empty-state" class="w-100">
               <!-- LỊCH SỬ TÌM KIẾM -->
               <div v-if="recentSearches.length > 0" class="mb-5 mx-auto" style="max-width: 800px;">
@@ -84,9 +82,7 @@
               </div>
             </div>
 
-            <!-- ============================================== -->
             <!-- TRẠNG THÁI 2: ĐANG TÌM KIẾM (LIVE SEARCH)      -->
-            <!-- ============================================== -->
             <div v-else key="results-state" class="mb-4 mx-auto w-100" style="max-width: 1200px;">
               <div class="d-flex justify-content-between align-items-center mb-4">
                 <h6 class="text-muted dark:text-gray-400 fw-semibold mb-0">

@@ -1,5 +1,5 @@
 <template>
-  <div class="flash-sale-index-wrapper pb-5 mb-5">
+  <div class="flash-sale-index-wrapper">
     
     <div v-if="isFirstLoad" class="d-flex flex-column justify-content-center align-items-center w-100" style="min-height: 70vh;">
       <h1 class="logo-shimmer mb-3">ZYRO</h1>
@@ -106,28 +106,15 @@
 
                   <td class="px-4 text-center">
                     <div class="d-flex align-items-center justify-content-center gap-1">
-                      <select class="form-select form-select-sm border shadow-sm fw-semibold flex-shrink-0 dark:bg-[#212529] dark:text-gray-200" 
-                              style="width: 120px; font-size: 0.75rem;"
-                              :class="getStatusSelectClass(item.localStatus || item.status)"
-                              v-model="item.localStatus"
-                              @change="checkStatusChange(item)"
-                              :disabled="item.isUpdatingStatus">
-                        <option value="active">Đang chạy</option>
-                        <option value="hidden">Tạm ẩn</option>
-                        <option value="ended">Kết thúc</option>
-                      </select>
-                      <div class="d-flex align-items-center" style="min-width: 50px;">
-                        <div v-if="item.isUpdatingStatus" class="spinner-border text-urban ms-1" style="width: 1rem; height: 1rem; border-width: 0.15em;" role="status"></div>
-                        <template v-else-if="item.isStatusChanged">
-                          <button @click="saveStatus(item)" class="btn btn-sm btn-success rounded-circle p-0 ms-1 d-flex align-items-center justify-content-center shadow-sm" style="width: 22px; height: 22px;" title="Lưu">
-                            <i class="bi bi-check-lg" style="font-size: 0.7rem;"></i>
-                          </button>
-                          <button @click="cancelStatusChange(item)" class="btn btn-sm btn-light dark:bg-[#2b3035] text-danger border dark:border-gray-600 rounded-circle p-0 ms-1 d-flex align-items-center justify-content-center shadow-sm" style="width: 22px; height: 22px;" title="Hủy">
-                            <i class="bi bi-x-lg" style="font-size: 0.7rem;"></i>
-                          </button>
-                        </template>
+                        <AdminStatusUpdate 
+                          v-model="item.localStatus"
+                          :originalStatus="item.status"
+                          :isUpdating="item.isUpdatingStatus"
+                          @save="saveStatus(item)"
+                          @cancel="cancelStatusChange(item)"
+                          :options="[{ value: 'active', label: 'Đang chạy' }, { value: 'hidden', label: 'Tạm ẩn' }, { value: 'ended', label: 'Kết thúc' }]"
+                        />
                       </div>
-                    </div>
                   </td>
 
                   <td class="px-4 text-center">
@@ -315,6 +302,7 @@
 </template>
 
 <script setup>
+import AdminStatusUpdate from '@/components/admin/AdminStatusUpdate.vue';
 import { ref, onMounted, onUnmounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
@@ -338,7 +326,7 @@ const selectedFlashSale = ref(null);
 let quickViewModalInstance = null;
 
 const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
-const getImageUrl = (path) => path ? `http://127.0.0.1:8000/storage/${path}` : defaultImg;
+const getImageUrl = (path) => path ? `${import.meta.env.VITE_STORAGE_URL}${path}` : defaultImg;
 const handleImageError = (e) => { e.target.src = defaultImg; };
 
 const formatDateTime = (dateStr) => {

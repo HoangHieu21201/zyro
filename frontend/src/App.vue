@@ -1,9 +1,9 @@
 <template>
+
   <!-- MÀN HÌNH CHỜ ĐIỆN ẢNH (SPLASH SCREEN) -->
   <transition name="splash-fade">
     <div v-if="showSplash" class="global-splash d-flex align-items-center justify-content-center">
       
-      <!-- Hiệu ứng Sóng Nước (Liquid Wave Ribbon) -->
       <svg viewBox="0 0 400 120" class="zyro-svg-logo">
         <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" class="zyro-svg-text wave-1">zyro.</text>
         <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" class="zyro-svg-text wave-2">zyro.</text>
@@ -13,7 +13,6 @@
     </div>
   </transition>
 
-  <!-- NỘI DUNG WEB CHÍNH -->
   <router-view></router-view>
 </template>
 
@@ -26,17 +25,13 @@ const router = useRouter();
 const route = useRoute();
 
 onMounted(() => {
-  // Lắng nghe Vue Router: Khi nào tải xong các file giao diện thì bắt đầu đếm giờ tắt Splash
   router.isReady().then(() => {
-    // Để thời gian 2.5 giây cho hiệu ứng sóng nước chảy mượt mà trước khi fade out
     setTimeout(() => {
       showSplash.value = false;
     }, 2500); 
   });
 });
 
-// GLOBAL AUTO SCROLL TO TOP
-// Lắng nghe mọi sự thay đổi của đường dẫn để cuộn lên đầu trang
 watch(() => route.path, () => {
   nextTick(() => {
     setTimeout(() => {
@@ -66,9 +61,6 @@ watch(() => route.path, () => {
   }
 }
 
-/* =======================================================
-   HIỆU ỨNG SPLASH SCREEN (SÓNG NƯỚC - LIQUID WAVE)
-======================================================== */
 .global-splash {
   position: fixed;
   inset: 0;
@@ -260,5 +252,10 @@ html.dark .logo-shimmer {
 }
 @keyframes shine { 
   to { background-position: 200% center; } 
+}
+
+/* Custom animation for IFTA (form-floating) Labels to make them smooth */
+.form-floating > label {
+  transition: opacity 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
 }
 </style>

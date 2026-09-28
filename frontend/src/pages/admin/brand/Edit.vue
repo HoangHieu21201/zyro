@@ -1,5 +1,5 @@
 <template>
-  <div class="brand-edit-wrapper pb-5 mb-5">
+  <div class="brand-edit-wrapper">
     <div class="container-fluid py-4" v-if="!isLoading">
       <div class="d-flex align-items-center mb-4">
         <router-link :to="{ name: 'admin-brands' }" class="text-decoration-none text-muted me-3 hover:text-urban transition-all">
@@ -133,7 +133,7 @@ const fetchData = async () => {
     form.value.status = b.status;
 
     if (b.logo) {
-       previewLogo.value = `http://127.0.0.1:8000/storage/${b.logo}`;
+       previewLogo.value = `${import.meta.env.VITE_STORAGE_URL}${b.logo}`;
        hasOldLogo.value = true;
     }
   } catch (err) { 

@@ -125,7 +125,7 @@ const handleResetPassword = async () => {
     };
 
     // ĐÃ KÍCH HOẠT API
-    const response = await axios.post('http://127.0.0.1:8000/api/v1/admin/reset-password', payload);
+    const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/admin/reset-password`, payload);
 
     successMessage.value = response.data.message || 'Đổi mật khẩu thành công! Đang chuyển về Đăng nhập...';
     

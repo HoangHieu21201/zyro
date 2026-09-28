@@ -1,5 +1,5 @@
 <template>
-  <div class="gallery-index-wrapper pb-5 mb-5">
+  <div class="gallery-index-wrapper">
     
     <div v-if="isFirstLoad" class="d-flex flex-column justify-content-center align-items-center w-100" style="min-height: 70vh;">
       <h1 class="logo-shimmer mb-3">ThinkHub</h1>
@@ -286,7 +286,7 @@ const fetchData = async () => {
           // MAP 2: Lấy đúng cột image_path của Backend
           let mappedImageUrl = g.image_path || '';
           if (mappedImageUrl && !mappedImageUrl.startsWith('http') && !mappedImageUrl.startsWith('data:image')) {
-             const baseUrl = import.meta.env.VITE_API_BASE_URL.replace('/api', '');
+             const baseUrl = import.meta.env.VITE_BACKEND_URL;
              mappedImageUrl = `${baseUrl}/storage/${mappedImageUrl}`;
           }
 
@@ -411,7 +411,7 @@ onMounted(() => fetchData());
 </script>
 
 <style scoped>
-.logo-shimmer { font-size: 3.5rem; font-weight: 900; letter-spacing: -1.5px; background: linear-gradient(120deg, #009981 30%, #4dffdf 50%, #009981 70%); background-size: 200% auto; color: transparent; -webkit-background-clip: text; background-clip: text; animation: shine 1.5s linear infinite; }
+.logo-shimmer { font-size: 3.5rem; font-weight: 900; letter-spacing: -1.5px; background: linear-gradient(120deg, var(--color-c-dark) 30%, var(--color-c-light) 50%, var(--color-c-dark) 70%); background-size: 200% auto; color: transparent; -webkit-background-clip: text; background-clip: text; animation: shine 1.5s linear infinite; }
 @keyframes shine { to { background-position: 200% center; } }
 
 .gallery-thumbnail {

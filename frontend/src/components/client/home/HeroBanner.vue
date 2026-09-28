@@ -46,6 +46,7 @@
             </h1>
             
             <a :href="banner.target_url || '/category'" target="_blank" rel="noopener noreferrer" 
+               @click="trackClick(banner.id)"
                class="btn rounded-pill px-4 py-2.5 fw-semibold text-uppercase mt-4 shadow-sm hover-scale-glass transition-all d-inline-flex align-items-center gap-2 font-sans-vn text-white border border-light border-opacity-50" 
                style="background: rgba(0,0,0,0.25); backdrop-filter: blur(6px); letter-spacing: 1px; font-size: 0.85rem;">
               Khám Phá Ngay <i class="bi bi-arrow-right fs-6"></i>
@@ -90,6 +91,8 @@
 </template>
 
 <script setup>
+import axios from 'axios';
+
 defineProps({
   banners: {
     type: Array,
@@ -100,6 +103,14 @@ defineProps({
     default: false
   }
 });
+
+const trackClick = async (bannerId) => {
+  try {
+    await axios.post(`${import.meta.env.VITE_API_BASE_URL}/client/banners/${bannerId}/click`);
+  } catch (error) {
+    console.error('Failed to track banner click:', error);
+  }
+};
 </script>
 
 <style scoped>
@@ -129,9 +140,7 @@ defineProps({
 .animation-fade-in { animation: fadeIn 1.2s ease-in-out forwards; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-/* ==========================================
    CSS CHO SKELETON LOADER
-========================================== */
 .shimmer-bg {
   background: #e2e8f0;
   background-image: linear-gradient(to right, #e2e8f0 0%, #f1f5f9 20%, #e2e8f0 40%, #e2e8f0 100%);

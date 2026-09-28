@@ -1,5 +1,5 @@
 <template>
-  <div class="review-index-wrapper pb-5 mb-5">
+  <div class="review-index-wrapper">
     
     <div v-if="isFirstLoad" class="d-flex flex-column justify-content-center align-items-center w-100" style="min-height: 70vh;">
       <h1 class="logo-shimmer mb-3">ZYRO</h1>
@@ -454,7 +454,7 @@ let imageZoomModalInstance = null;
 let searchTimeout = null;
 
 const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
-const getImageUrl = (path) => path ? `http://127.0.0.1:8000/storage/${path}` : defaultAvatar;
+const getImageUrl = (path) => path ? `${import.meta.env.VITE_STORAGE_URL}${path}` : defaultAvatar;
 const handleImageError = (e) => { e.target.src = defaultAvatar; };
 const handleProductImageError = (e) => { e.target.src = defaultProduct; };
 
@@ -544,9 +544,9 @@ const fetchData = async (isSilent = false) => {
     // Gọi các Master Data 1 lần
     if (isFirstLoad.value) {
         const [resModules, resCats, resProds] = await Promise.all([
-            axios.get('http://127.0.0.1:8000/api/v1/admin/modules', { headers: getHeaders() }),
-            axios.get('http://127.0.0.1:8000/api/v1/admin/categories', { headers: getHeaders() }),
-            axios.get('http://127.0.0.1:8000/api/v1/admin/products', { headers: getHeaders() })
+            axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/modules`, { headers: getHeaders() }),
+            axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/categories`, { headers: getHeaders() }),
+            axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/products`, { headers: getHeaders() })
         ]);
         
         systemModules.value = resModules.data.data;

@@ -1,5 +1,5 @@
 <template>
-  <div class="lookbook-index-wrapper pb-5 mb-5">
+  <div class="lookbook-index-wrapper">
     
     <div v-if="isFirstLoad" class="d-flex flex-column justify-content-center align-items-center w-100" style="min-height: 70vh;">
       <h1 class="logo-shimmer mb-3">ZYRO</h1>
@@ -154,30 +154,16 @@
 
                   <td class="px-4 text-center">
                     <span v-if="lb.deleted_at" class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary"><i class="bi bi-trash3-fill"></i> Đã xóa</span>
-                    <div v-else class="d-flex align-items-center justify-content-center gap-1">
-                      <select class="form-select form-select-sm border shadow-sm fw-semibold flex-shrink-0 dark:bg-[#212529] dark:text-gray-200" 
-                              style="width: 115px; font-size: 0.75rem;"
-                              :class="getStatusSelectClass(lb.localStatus || lb.status)"
-                              v-model="lb.localStatus"
-                              @change="checkStatusChange(lb)"
-                              :disabled="lb.isUpdatingStatus">
-                        <option value="published">Xuất bản</option>
-                        <option value="draft">Bản nháp</option>
-                        <option value="hidden">Đang ẩn</option>
-                      </select>
-                      
-                      <div class="d-flex align-items-center" style="min-width: 50px;">
-                        <div v-if="lb.isUpdatingStatus" class="spinner-border text-urban ms-1" style="width: 1rem; height: 1rem; border-width: 0.15em;" role="status"></div>
-                        <template v-else-if="lb.isStatusChanged">
-                          <button @click="saveStatus(lb)" class="btn btn-sm btn-success rounded-circle p-0 ms-1 d-flex align-items-center justify-content-center shadow-sm" style="width: 22px; height: 22px;" title="Lưu">
-                            <i class="bi bi-check-lg" style="font-size: 0.7rem;"></i>
-                          </button>
-                          <button @click="cancelStatusChange(lb)" class="btn btn-sm btn-light dark:bg-[#2b3035] text-danger border dark:border-gray-600 rounded-circle p-0 ms-1 d-flex align-items-center justify-content-center shadow-sm" style="width: 22px; height: 22px;" title="Hủy">
-                            <i class="bi bi-x-lg" style="font-size: 0.7rem;"></i>
-                          </button>
-                        </template>
+                    <div v-else class="d-flex align-items-center justify-content-center">
+                        <AdminStatusUpdate 
+                          v-model="lb.localStatus"
+                          :originalStatus="lb.status"
+                          :isUpdating="lb.isUpdatingStatus"
+                          @save="saveStatus(lb)"
+                          @cancel="cancelStatusChange(lb)"
+                           :options="[{ value: 'published', label: 'Xuất bản' }, { value: 'draft', label: 'Bản nháp' }, { value: 'hidden', label: 'Đang ẩn' }]"
+                        />
                       </div>
-                    </div>
                   </td>
 
                   <td class="px-4 text-center">
@@ -429,6 +415,7 @@
 </template>
 
 <script setup>
+import AdminStatusUpdate from '@/components/admin/AdminStatusUpdate.vue';
 import { ref, onMounted, onBeforeUnmount, onUnmounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
@@ -474,7 +461,7 @@ const getThumbnail = (path) => {
       cleanPath = cleanPath.replace('storage/', '');
   }
 
-  let baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/v1';
+  let baseUrl = import.meta.env.VITE_API_BASE_URL;
   baseUrl = baseUrl.replace('/api/v1', '');
   return `${baseUrl}/storage/${cleanPath}`;
 };

@@ -49,10 +49,6 @@ class VoucherController extends Controller
             $data['code'] = strtoupper($data['code']);
             $data['usage_count'] = 0; 
 
-            // =========================================================
-            // ĐÃ BỔ SUNG: Vệ sinh dữ liệu (Sanitize Data) trước khi lưu
-            // Chuyển rỗng hoặc 0 thành Null để Database hiểu là "Không giới hạn"
-            // =========================================================
             if (empty($data['usage_limit']) || $data['usage_limit'] <= 0) $data['usage_limit'] = null;
             if (empty($data['usage_limit_per_user']) || $data['usage_limit_per_user'] <= 0) $data['usage_limit_per_user'] = null;
             if (empty($data['max_discount_amount']) || $data['max_discount_amount'] <= 0) $data['max_discount_amount'] = null;
@@ -85,9 +81,6 @@ class VoucherController extends Controller
             $data = $request->validated();
             $data['code'] = strtoupper($data['code']);
 
-            // =========================================================
-            // ĐÃ BỔ SUNG: Vệ sinh dữ liệu (Sanitize Data) trước khi lưu
-            // =========================================================
             if (empty($data['usage_limit']) || $data['usage_limit'] <= 0) $data['usage_limit'] = null;
             if (empty($data['usage_limit_per_user']) || $data['usage_limit_per_user'] <= 0) $data['usage_limit_per_user'] = null;
             if (empty($data['max_discount_amount']) || $data['max_discount_amount'] <= 0) $data['max_discount_amount'] = null;

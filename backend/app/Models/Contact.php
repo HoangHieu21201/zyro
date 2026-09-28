@@ -18,7 +18,10 @@ class Contact extends Model
         'subject',
         'message',
         'status',
-        'is_spam'
+        'is_spam',
+        'reply_message',
+        'replied_at',
+        'replied_by'
     ];
 
     protected function casts(): array
@@ -27,6 +30,7 @@ class Contact extends Model
             'is_spam' => 'boolean',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
+            'replied_at' => 'datetime',
         ];
     }
 }
