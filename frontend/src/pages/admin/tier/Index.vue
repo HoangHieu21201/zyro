@@ -1,5 +1,5 @@
 <template>
-  <div class="tier-index-wrapper pb-5 mb-5">
+  <div class="tier-index-wrapper">
     
     <div v-if="isFirstLoad" class="d-flex flex-column justify-content-center align-items-center w-100" style="min-height: 70vh;">
       <h1 class="logo-shimmer mb-3">ZYRO</h1>
@@ -167,7 +167,7 @@ const isLoading = ref(true);
 const isFirstLoad = ref(true); 
 
 const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
-const getImageUrl = (path) => path ? `http://127.0.0.1:8000/storage/${path}` : null;
+const getImageUrl = (path) => path ? `${import.meta.env.VITE_STORAGE_URL}${path}` : null;
 const handleImageError = (e) => { e.target.style.display = 'none'; };
 
 const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
@@ -190,8 +190,8 @@ const fetchData = async (isSilent = false) => {
   
   try {
     const [resTiers, resModules] = await Promise.all([
-      axios.get('http://127.0.0.1:8000/api/v1/admin/tiers', { headers: getHeaders() }),
-      axios.get('http://127.0.0.1:8000/api/v1/admin/modules', { headers: getHeaders() })
+      axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/tiers`, { headers: getHeaders() }),
+      axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/modules`, { headers: getHeaders() })
     ]);
 
     tiers.value = Array.isArray(resTiers.data.data) ? resTiers.data.data : [];

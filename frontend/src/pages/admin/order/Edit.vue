@@ -1,5 +1,5 @@
 <template>
-  <div class="order-edit-wrapper pb-5 mb-5">
+  <div class="order-edit-wrapper">
     
     <div v-if="isPageLoading" class="d-flex flex-column justify-content-center align-items-center w-100" style="min-height: 70vh;">
       <h1 class="logo-shimmer mb-3">ZYRO</h1>
@@ -478,7 +478,7 @@ const quickNotes = computed(() => {
 });
 
 const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
-const getImageUrl = (path) => path ? `http://127.0.0.1:8000/storage/${path}` : defaultAvatar;
+const getImageUrl = (path) => path ? `${import.meta.env.VITE_STORAGE_URL}${path}` : defaultAvatar;
 const handleImageError = (e) => { e.target.src = defaultAvatar; };
 
 const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0);

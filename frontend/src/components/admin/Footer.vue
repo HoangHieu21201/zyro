@@ -4,8 +4,8 @@
       &copy; {{ new Date().getFullYear() }} ZYRO E-Commerce. All rights reserved.
     </p>
     <div class="d-flex gap-3 small">
-      <a href="#" class="text-decoration-none text-muted">Hỗ trợ</a>
-      <a href="#" class="text-decoration-none text-muted">Tài liệu API</a>
+      <a href="#" class="text-decoration-none text-muted">Website</a>
+      <a href="#" class="text-decoration-none text-muted">DEMO</a>
     </div>
   </footer>
 </template>

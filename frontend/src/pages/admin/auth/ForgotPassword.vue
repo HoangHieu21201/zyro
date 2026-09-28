@@ -178,7 +178,7 @@ const handleRequestOTP = async () => {
 
   try {
     // ĐÃ KÍCH HOẠT API
-    const response = await axios.post('http://127.0.0.1:8000/api/v1/admin/forgot-password', form);
+    const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/admin/forgot-password`, form);
     
     successMessage.value = response.data.message || 'Mã xác nhận đã được gửi thành công!';
     step.value = 2;

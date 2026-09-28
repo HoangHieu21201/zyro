@@ -1,5 +1,5 @@
 <template>
-  <div class="voucher-edit-wrapper pb-5 mb-5">
+  <div class="voucher-edit-wrapper">
     
     <div v-if="isPageLoading" class="d-flex flex-column justify-content-center align-items-center w-100" style="min-height: 70vh;">
       <h1 class="logo-shimmer mb-3">ZYRO</h1>
@@ -279,7 +279,7 @@ const formatCode = (e) => {
 
 const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0);
 
-const getImageUrl = (path) => path ? `http://127.0.0.1:8000/storage/${path}` : defaultImage;
+const getImageUrl = (path) => path ? `${import.meta.env.VITE_STORAGE_URL}${path}` : defaultImage;
 const handleImageError = (e) => { e.target.src = defaultImage; };
 
 const formatDateForInput = (dateStr) => {
@@ -330,8 +330,8 @@ const fetchData = async () => {
   try {
     const [resDetail, resCats, resProds] = await Promise.all([
       axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/vouchers/${voucherId}`, { headers: getHeaders() }),
-      axios.get('http://127.0.0.1:8000/api/v1/admin/categories', { headers: getHeaders() }),
-      axios.get('http://127.0.0.1:8000/api/v1/admin/products?status=published', { headers: getHeaders() })
+      axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/categories`, { headers: getHeaders() }),
+      axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/products?status=published`, { headers: getHeaders() })
     ]);
     
     const v = resDetail.data.data;

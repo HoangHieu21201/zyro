@@ -1,23 +1,27 @@
 <!-- File: frontend/src/pages/client/StoreLocator.vue -->
 <template>
-  <div class="store-locator-wrapper pb-5 mb-5">
-    
+  <div class="store-locator-wrapper">
+
     <!-- ĐÃ FIX: Tăng khoảng cách đẩy nội dung xuống dưới Header -->
     <div class="pt-5 mt-5">
       <div class="zyro-container pt-4">
-        
+
         <!-- BREADCRUMB -->
         <nav aria-label="breadcrumb" class="mb-4">
           <ol class="breadcrumb small fw-semibold text-uppercase" style="letter-spacing: 0.5px;">
-            <li class="breadcrumb-item"><router-link to="/" class="text-decoration-none text-muted hover-text-dark">Trang chủ</router-link></li>
+            <li class="breadcrumb-item"><router-link to="/"
+                class="text-decoration-none text-muted hover-text-dark">Trang chủ</router-link></li>
             <li class="breadcrumb-item active text-dark" aria-current="page">Hệ thống cửa hàng</li>
           </ol>
         </nav>
 
-        <div class="mb-4 pb-3 border-bottom dark:border-gray-700 d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3">
+        <div
+          class="mb-4 pb-3 border-bottom dark:border-gray-700 d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3">
           <div>
-            <h2 class="fw-bold text-dark dark:text-white m-0 text-uppercase tracking-widest" style="letter-spacing: 2px;">Hệ Thống Cửa Hàng ZYRO</h2>
-            <p class="text-muted mt-2 mb-0">Khám phá không gian mua sắm hiện đại tại {{ stores.length }} chi nhánh trên toàn quốc.</p>
+            <h2 class="fw-bold text-dark dark:text-white m-0 text-uppercase tracking-widest"
+              style="letter-spacing: 2px;">Hệ Thống Cửa Hàng ZYRO</h2>
+            <p class="text-muted mt-2 mb-0">Khám phá không gian mua sắm hiện đại tại {{ stores.length }} chi nhánh trên
+              toàn quốc.</p>
           </div>
         </div>
 
@@ -27,13 +31,17 @@
             <!-- Box Filter -->
             <div class="card border-0 shadow-sm rounded-4 dark:bg-[#1a2533] p-4 mb-3 animation-fade-in">
               <div class="mb-3">
-                <div class="input-group shadow-sm-hover border border-secondary-subtle dark:border-gray-600 rounded-pill overflow-hidden bg-light dark:bg-[#212529]">
+                <div
+                  class="input-group shadow-sm-hover border border-secondary-subtle dark:border-gray-600 rounded-pill overflow-hidden bg-light dark:bg-[#212529]">
                   <span class="input-group-text bg-transparent border-0 text-muted"><i class="bi bi-search"></i></span>
-                  <input type="text" class="form-control border-0 bg-transparent shadow-none dark:text-white" v-model="searchQuery" placeholder="Tìm theo tên, địa chỉ...">
+                  <input type="text" class="form-control border-0 bg-transparent shadow-none dark:text-white"
+                    v-model="searchQuery" placeholder="Tìm theo tên, địa chỉ...">
                 </div>
               </div>
               <div>
-                <select class="form-select form-select-sm border-secondary-subtle dark:border-gray-600 rounded-pill px-3 shadow-sm-hover bg-light dark:bg-[#212529] dark:text-white fw-medium py-2" v-model="selectedCity">
+                <select
+                  class="form-select form-select-sm border-secondary-subtle dark:border-gray-600 rounded-pill px-3 shadow-sm-hover bg-light dark:bg-[#212529] dark:text-white fw-medium py-2"
+                  v-model="selectedCity">
                   <option value="">Tất cả Tỉnh/Thành phố</option>
                   <option v-for="city in cities" :key="city" :value="city">{{ city }}</option>
                 </select>
@@ -41,9 +49,11 @@
             </div>
 
             <!-- Danh sách Cửa hàng -->
-            <div class="card border-0 shadow-sm rounded-4 dark:bg-[#1a2533] overflow-hidden flex-grow-1 animation-fade-in">
+            <div
+              class="card border-0 shadow-sm rounded-4 dark:bg-[#1a2533] overflow-hidden flex-grow-1 animation-fade-in">
               <div class="card-header bg-white dark:bg-[#1a2533] border-bottom dark:border-gray-700 py-3 px-4">
-                <h6 class="fw-bold m-0 text-urban d-flex align-items-center"><i class="bi bi-shop me-2"></i> Danh sách chi nhánh ({{ filteredStores.length }})</h6>
+                <h6 class="fw-bold m-0 text-urban d-flex align-items-center"><i class="bi bi-shop me-2"></i> Danh sách
+                  chi nhánh ({{ filteredStores.length }})</h6>
               </div>
               <!-- ĐÃ FIX: Giảm chiều cao list để cân đối với bản đồ mới -->
               <div class="card-body p-0 custom-scrollbar-y" style="height: 500px; overflow-y: auto;">
@@ -52,17 +62,21 @@
                   Không tìm thấy cửa hàng nào.
                 </div>
                 <div v-else class="list-group list-group-flush">
-                  <button v-for="store in filteredStores" :key="store.id" 
-                          class="list-group-item list-group-item-action p-4 border-bottom dark:border-gray-700 bg-transparent transition-all store-item"
-                          :class="{'active-store': selectedStore && selectedStore.id === store.id}"
-                          @click="focusStore(store)">
+                  <button v-for="store in filteredStores" :key="store.id"
+                    class="list-group-item list-group-item-action p-4 border-bottom dark:border-gray-700 bg-transparent transition-all store-item"
+                    :class="{ 'active-store': selectedStore && selectedStore.id === store.id }"
+                    @click="focusStore(store)">
                     <h6 class="fw-bold mb-2 text-dark dark:text-white">{{ store.name }}</h6>
-                    <p class="text-muted small mb-2"><i class="bi bi-geo-alt-fill text-urban me-2"></i>{{ store.address }}</p>
-                    <p class="text-muted small mb-2"><i class="bi bi-telephone-fill text-urban me-2"></i>{{ store.phone }}</p>
-                    <p class="text-muted small mb-3"><i class="bi bi-clock-fill text-urban me-2"></i>{{ store.hours }}</p>
-                    
+                    <p class="text-muted small mb-2"><i class="bi bi-geo-alt-fill text-urban me-2"></i>{{ store.address
+                      }}</p>
+                    <p class="text-muted small mb-2"><i class="bi bi-telephone-fill text-urban me-2"></i>{{ store.phone
+                      }}</p>
+                    <p class="text-muted small mb-3"><i class="bi bi-clock-fill text-urban me-2"></i>{{ store.hours }}
+                    </p>
+
                     <div class="d-flex gap-2">
-                      <a :href="getDirectionUrl(store)" target="_blank" class="btn btn-outline-urban btn-sm rounded-pill fw-semibold flex-grow-1" @click.stop>
+                      <a :href="getDirectionUrl(store)" target="_blank"
+                        class="btn btn-outline-urban btn-sm rounded-pill fw-semibold flex-grow-1" @click.stop>
                         <i class="bi bi-cursor-fill me-1"></i> Chỉ đường Google Maps
                       </a>
                     </div>
@@ -75,13 +89,15 @@
           <!-- ĐÃ FIX: CỘT PHẢI GIẢM XUỐNG COL-7 ĐỂ BẢN ĐỒ KHÔNG QUÁ TO -->
           <div class="col-lg-7 col-xl-7 mb-4 mb-lg-0">
             <!-- ĐÃ FIX: Giảm min-height để bản đồ vừa vặn trong màn hình -->
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden position-relative h-100 animation-fade-in" style="min-height: 550px; height: 100%;">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden position-relative h-100 animation-fade-in"
+              style="min-height: 550px; height: 100%;">
               <div id="store-map" class="w-100 h-100 position-absolute top-0 start-0 z-1 bg-light"></div>
-              
+
               <!-- Loading Overlay -->
-              <div v-if="isMapLoading" class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center bg-white bg-opacity-75 dark:bg-[#1a2533] dark:bg-opacity-75 z-index-2">
-                  <div class="spinner-border text-urban mb-2" style="width: 3rem; height: 3rem;"></div>
-                  <div class="fw-bold text-urban">Đang kết nối vệ tinh...</div>
+              <div v-if="isMapLoading"
+                class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center bg-white bg-opacity-75 dark:bg-[#1a2533] dark:bg-opacity-75 z-index-2">
+                <div class="spinner-border text-urban mb-2" style="width: 3rem; height: 3rem;"></div>
+                <div class="fw-bold text-urban">Đang kết nối vệ tinh...</div>
               </div>
             </div>
           </div>
@@ -121,9 +137,9 @@ const cities = computed(() => {
 const filteredStores = computed(() => {
   return stores.value.filter(s => {
     const matchCity = selectedCity.value === '' || s.city === selectedCity.value;
-    const matchSearch = searchQuery.value === '' || 
-                        s.name.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
-                        s.address.toLowerCase().includes(searchQuery.value.toLowerCase());
+    const matchSearch = searchQuery.value === '' ||
+      s.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      s.address.toLowerCase().includes(searchQuery.value.toLowerCase());
     return matchCity && matchSearch;
   });
 });
@@ -132,9 +148,7 @@ const getDirectionUrl = (store) => {
   return `https://www.google.com/maps/dir/?api=1&destination=${store.lat},${store.lng}`;
 };
 
-// ==========================================
 // LOGIC BẢN ĐỒ (Leaflet)
-// ==========================================
 const loadLeafletScript = () => {
   return new Promise((resolve) => {
     if (window.L) return resolve();
@@ -152,24 +166,24 @@ const loadLeafletScript = () => {
 const initMap = async () => {
   await loadLeafletScript();
   isMapLoading.value = false;
-  
+
   if (!map) {
     map = window.L.map('store-map').setView([16.0471, 108.2068], 6); // Trọng tâm VN
     window.L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
       attribution: '&copy; OpenStreetMap'
     }).addTo(map);
   }
-  
+
   updateMapMarkers();
 };
 
 const updateMapMarkers = () => {
   if (!map) return;
-  
+
   // Xóa markers cũ
   leafletMarkers.forEach(m => map.removeLayer(m));
   leafletMarkers = [];
-  
+
   // Tùy chỉnh Icon Marker ZYRO
   const iconHtml = `<div class="bg-dark text-white rounded-circle shadow-lg d-flex align-items-center justify-content-center border border-2 border-white hover-transform" style="width:35px; height:35px; background-color: var(--color-c-dark) !important;"><i class="bi bi-shop"></i></div>`;
   const customIcon = window.L.divIcon({ html: iconHtml, className: '', iconSize: [35, 35], iconAnchor: [17, 35], popupAnchor: [0, -35] });
@@ -178,7 +192,7 @@ const updateMapMarkers = () => {
 
   filteredStores.value.forEach(store => {
     const marker = window.L.marker([store.lat, store.lng], { icon: customIcon }).addTo(map);
-    
+
     // Popup thông tin cửa hàng mượt mà
     const popupContent = `
       <div class="text-start" style="min-width: 220px; font-family: inherit;">
@@ -188,12 +202,12 @@ const updateMapMarkers = () => {
         <a href="${getDirectionUrl(store)}" target="_blank" class="btn btn-sm text-white w-100 rounded-pill fw-semibold mt-2" style="background-color: var(--color-c-dark); border: none;">Chỉ đường</a>
       </div>
     `;
-    
+
     marker.bindPopup(popupContent);
     marker.storeId = store.id;
     leafletMarkers.push(marker);
     bounds.push([store.lat, store.lng]);
-    
+
     marker.on('click', () => {
       selectedStore.value = store;
       map.setView([store.lat, store.lng], 16);
@@ -220,7 +234,7 @@ const focusStore = (store) => {
 };
 
 watch([filteredStores], () => {
-  selectedStore.value = null; 
+  selectedStore.value = null;
   updateMapMarkers();
 });
 
@@ -231,57 +245,137 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.store-locator-wrapper { width: 100%; }
+.store-locator-wrapper {
+  width: 100%;
+}
 
 /* CHUẨN ZYRO CONTAINER */
-.zyro-container { width: 100%; max-width: 1310px; margin: 0 auto; padding-left: 20px; padding-right: 20px; }
-@media (min-width: 1400px) { .zyro-container { padding-left: 0; padding-right: 0; } }
+.zyro-container {
+  width: 100%;
+  max-width: 1310px;
+  margin: 0 auto;
+  padding-left: 20px;
+  padding-right: 20px;
+}
 
-.text-urban { color: var(--color-c-hover, #547792) !important; }
-.btn-outline-urban { color: var(--color-c-hover, #547792); border-color: var(--color-c-hover, #547792); background: transparent; transition: 0.2s; }
-.btn-outline-urban:hover { background-color: var(--color-c-hover, #547792); color: white; }
+@media (min-width: 1400px) {
+  .zyro-container {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
 
-.shadow-sm-hover { transition: box-shadow 0.2s ease, border-color 0.2s ease; }
-.shadow-sm-hover:focus-within { box-shadow: 0 4px 15px rgba(84, 119, 146, 0.1) !important; }
-.form-control:focus, .form-select:focus { border-color: var(--color-c-hover, #547792); box-shadow: none !important; }
+.text-urban {
+  color: var(--color-c-hover, #547792) !important;
+}
+
+.btn-outline-urban {
+  color: var(--color-c-hover, #547792);
+  border-color: var(--color-c-hover, #547792);
+  background: transparent;
+  transition: 0.2s;
+}
+
+.btn-outline-urban:hover {
+  background-color: var(--color-c-hover, #547792);
+  color: white;
+}
+
+.shadow-sm-hover {
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.shadow-sm-hover:focus-within {
+  box-shadow: 0 4px 15px rgba(84, 119, 146, 0.1) !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--color-c-hover, #547792);
+  box-shadow: none !important;
+}
 
 /* Tùy chỉnh thanh cuộn */
-.custom-scrollbar-y::-webkit-scrollbar { width: 5px; }
-.custom-scrollbar-y::-webkit-scrollbar-track { background: transparent; }
-.custom-scrollbar-y::-webkit-scrollbar-thumb { background: var(--color-c-light, #94B4C1); border-radius: 10px; }
+.custom-scrollbar-y::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scrollbar-y::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar-y::-webkit-scrollbar-thumb {
+  background: var(--color-c-light, #94B4C1);
+  border-radius: 10px;
+}
 
 /* Item Cửa hàng */
-.store-item { cursor: pointer; }
-.store-item:hover { background-color: rgba(84, 119, 146, 0.05) !important; }
-html.dark .store-item:hover { background-color: rgba(255, 255, 255, 0.05) !important; }
+.store-item {
+  cursor: pointer;
+}
+
+.store-item:hover {
+  background-color: rgba(84, 119, 146, 0.05) !important;
+}
+
+html.dark .store-item:hover {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
 
 /* Trạng thái Store đang chọn */
 .active-store {
   background-color: rgba(84, 119, 146, 0.1) !important;
   border-left: 4px solid var(--color-c-hover, #547792) !important;
 }
-html.dark .active-store { background-color: rgba(255, 255, 255, 0.05) !important; }
+
+html.dark .active-store {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
 
 /* Override Leaflet Map Dark Mode & Popup */
-html.dark #store-map { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
+html.dark #store-map {
+  filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+}
 
 :deep(.leaflet-popup-content-wrapper) {
   border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
 }
+
 :deep(.leaflet-popup-content) {
   margin: 16px;
 }
+
 html.dark :deep(.leaflet-popup-content-wrapper) {
   background-color: #1a2533;
   color: #fff;
 }
+
 html.dark :deep(.leaflet-popup-tip) {
   background-color: #1a2533;
 }
 
-.tracking-widest { letter-spacing: 2px; }
-.animation-fade-in { animation: fadeIn 0.4s ease-in-out; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-.z-index-2 { z-index: 2; }
+.tracking-widest {
+  letter-spacing: 2px;
+}
+
+.animation-fade-in {
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.z-index-2 {
+  z-index: 2;
+}
 </style>

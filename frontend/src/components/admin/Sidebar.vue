@@ -188,7 +188,7 @@ const menuItems = ref([
       { name: 'Chatbot AI', path: '/admin/chatbot', moduleCode: 'admin_chatbot' }
     ]
   },
-  
+
 ]);
 
 const menuState = reactive({
@@ -216,7 +216,6 @@ const handleDropdownClick = (item) => {
   }
 };
 
-// ================= LOGIC PHÂN QUYỀN =================
 const getHeaders = () => ({
   'Accept': 'application/json',
   'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
@@ -224,7 +223,7 @@ const getHeaders = () => ({
 
 const fetchSidebarData = async () => {
   try {
-    const res = await axios.get('http://127.0.0.1:8000/api/v1/admin/modules', { headers: getHeaders() });
+    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/modules`, { headers: getHeaders() });
     systemModules.value = res.data.data || [];
   } catch (err) {
     console.error("Lỗi tải dữ liệu cấu hình phân quyền Sidebar", err);
@@ -255,7 +254,6 @@ const showAccessDenied = (menuName, reqLevel) => {
   });
 };
 
-// ================= LẮNG NGHE REAL-TIME =================
 const setupRealtime = () => {
   if (window.Echo) {
     // Lắng nghe kênh 'admin.modules'

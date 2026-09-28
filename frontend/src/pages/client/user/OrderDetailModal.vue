@@ -13,9 +13,8 @@
         
         <div class="modal-body p-3 p-md-4 custom-scrollbar-y bg-light dark:bg-[#121416]">
            
-           <div v-if="isModalLoading" class="text-center py-5">
-             <div class="spinner-border text-urban" role="status"></div>
-             <div class="mt-2 text-muted font-sans-vn">Đang tải dữ liệu...</div>
+           <div v-if="isModalLoading" class="d-flex justify-content-center py-5">
+             <LoadingSpinner />
            </div>
 
            <div v-else-if="selectedOrder">
@@ -52,91 +51,9 @@
                  </div>
               </div>
 
-              <div class="row g-3 mb-3">
-                <!-- LIVE MAP DÙNG COMPONENT CHUNG -->
-                <div class="col-12" v-if="stepLevel >= 3 && mapData">
-                   <div class="bg-white dark:bg-[#1a2533] p-3 rounded-4 shadow-sm border dark:border-gray-700">
-                      <div class="d-flex justify-content-between align-items-center mb-3 px-2">
-                         <h6 class="fw-bold text-dark dark:text-white m-0 font-sans-vn"><i class="bi bi-map text-urban me-2"></i>Hành trình đơn hàng</h6>
-                         <span class="badge bg-urban font-sans-vn">{{ mapData.shipping_provider || 'Đơn vị Vận Chuyển' }}</span>
-                      </div>
-                      
-                      <!-- GỌI COMPONENT TRACKING MAP Ở ĐÂY -->
-                      <div class="rounded-3 border overflow-hidden" style="height: 350px;">
-                          <TrackingMap :map-data="mapData" :status="selectedOrder.status" />
-                      </div>
-
-                      <div class="small text-muted mt-2 px-2 fst-italic text-end font-sans-vn"><i class="bi bi-info-circle me-1"></i>Mô phỏng đường đi bằng Mapbox Navigation.</div>
-                   </div>
-                </div>
-
-                <div class="col-md-6">
-                  <div class="p-3 bg-white dark:bg-[#1a2533] border dark:border-gray-700 rounded-4 shadow-sm h-100 font-sans-vn">
-                    <h6 class="fw-bold text-dark dark:text-white mb-3 border-bottom dark:border-gray-600 pb-2">Địa chỉ nhận hàng</h6>
-                    <div class="fw-bold text-dark dark:text-gray-200 fs-5 mb-1">{{ selectedOrder.shipping_info?.name || 'Chưa cập nhật' }}</div>
-                    <div class="text-muted small mt-2"><i class="bi bi-telephone-fill text-urban me-2"></i>{{ selectedOrder.shipping_info?.phone || 'Chưa cập nhật' }}</div>
-                    <div class="text-muted small mt-2 lh-lg"><i class="bi bi-geo-alt-fill text-urban me-2"></i>{{ selectedOrder.shipping_info?.address || 'Chưa cập nhật' }}</div>
-                  </div>
-                </div>
-
-                <div class="col-md-6">
-                  <div class="p-3 bg-white dark:bg-[#1a2533] border dark:border-gray-700 rounded-4 shadow-sm h-100 font-sans-vn">
-                    <h6 class="fw-bold text-dark dark:text-white mb-3 border-bottom dark:border-gray-600 pb-2">Thông tin thanh toán</h6>
-                    <div class="d-flex justify-content-between mb-2 small text-muted dark:text-gray-400">
-                      <span>Phương thức:</span>
-                      <span class="fw-bold text-dark dark:text-white text-uppercase">{{ selectedOrder.payment_method || 'COD' }}</span>
-                    </div>
-                    <div class="d-flex justify-content-between mb-2 small text-muted dark:text-gray-400">
-                      <span>Tình trạng:</span>
-                      <span class="badge border px-2 py-1 shadow-sm" :class="getPaymentStatusClass(selectedOrder.payment_status)">
-                        {{ getPaymentStatusLabel(selectedOrder.payment_status) }}
-                      </span>
-                    </div>
-                    
-                    <div class="d-flex justify-content-between mb-2 small text-muted dark:text-gray-400 mt-4">
-                      <span>Tạm tính ({{ selectedOrder.items?.length || 0 }} SP):</span>
-                      <span class="fw-bold text-dark dark:text-gray-200">{{ formatCurrency(selectedOrder.sub_total || (Number(selectedOrder.total_amount) - Number(selectedOrder.shipping_fee || 0) + Number(selectedOrder.discount_amount || 0))) }}</span>
-                    </div>
-
-                    <div v-if="selectedOrder.flash_sale_discount > 0" class="d-flex justify-content-between mb-2 small text-success">
-                      <span>Trợ giá Flash Sale:</span>
-                      <span class="fw-bold">- {{ formatCurrency(selectedOrder.flash_sale_discount) }}</span>
-                    </div>
-                    
-                    <div v-if="selectedOrder.tier_discount > 0" class="d-flex justify-content-between mb-2 small text-success">
-                      <span>Ưu đãi Hạng (<span class="fw-bold">{{ selectedOrder.discount_details?.tier_name || 'Thành viên' }}</span>):</span>
-                      <span class="fw-bold">- {{ formatCurrency(selectedOrder.tier_discount) }}</span>
-                    </div>
-
-                    <div v-if="selectedOrder.voucher_discount > 0" class="d-flex justify-content-between mb-2 small text-success">
-                      <span>Giảm giá (Voucher):</span>
-                      <span class="fw-bold">- {{ formatCurrency(selectedOrder.voucher_discount) }}</span>
-                    </div>
-
-                    <!-- FALLBACK: Dự phòng cho các đơn hàng cũ gộp chung discount_amount -->
-                    <div v-if="selectedOrder.discount_amount > 0 && !selectedOrder.tier_discount && !selectedOrder.voucher_discount" class="d-flex justify-content-between mb-2 small text-success">
-                      <span>Tổng Khuyến mãi:</span>
-                      <span class="fw-bold">- {{ formatCurrency(selectedOrder.discount_amount) }}</span>
-                    </div>
-
-                    <div class="d-flex justify-content-between mb-2 small text-muted dark:text-gray-400">
-                      <span>Phí vận chuyển:</span>
-                      <span class="fw-bold text-dark dark:text-gray-200">{{ formatCurrency(selectedOrder.shipping_fee || 0) }}</span>
-                    </div>
-                    
-                    <hr class="dark:border-gray-600 my-2">
-                    <div class="d-flex justify-content-between align-items-center mt-2">
-                      <span class="fw-bold text-dark dark:text-white text-uppercase">Tổng thanh toán:</span>
-                      <span class="text-danger fw-bold fs-4">{{ formatCurrency(selectedOrder.total_amount) }}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
+                <!-- GIAO DIỆN SẢN PHẨM & COMBO                     -->
               <!-- ============================================== -->
-              <!-- GIAO DIỆN SẢN PHẨM & COMBO                     -->
-              <!-- ============================================== -->
-              <div class="bg-white dark:bg-[#1a2533] p-0 rounded-4 shadow-sm border dark:border-gray-700 overflow-hidden">
+              <div class="bg-white dark:bg-[#1a2533] p-0 rounded-4 shadow-sm border dark:border-gray-700 overflow-hidden mb-3">
                 <div class="p-3 p-md-4 border-bottom dark:border-gray-700">
                    <h6 class="fw-bold text-dark dark:text-white m-0 font-sans-vn">Sản phẩm đã mua ({{ selectedOrder.items?.length || 0 }})</h6>
                 </div>
@@ -240,6 +157,90 @@
                 </div>
               </div>
 
+            <div class="row g-3 mb-3">
+                <!-- LIVE MAP DÙNG COMPONENT CHUNG -->
+                <div class="col-12" v-if="stepLevel >= 3 && mapData">
+                   <div class="bg-white dark:bg-[#1a2533] p-3 rounded-4 shadow-sm border dark:border-gray-700">
+                      <div class="d-flex justify-content-between align-items-center mb-3 px-2">
+                         <h6 class="fw-bold text-dark dark:text-white m-0 font-sans-vn"><i class="bi bi-map text-urban me-2"></i>Hành trình đơn hàng</h6>
+                         <span class="badge bg-urban font-sans-vn">{{ mapData.shipping_provider || 'Đơn vị Vận Chuyển' }}</span>
+                      </div>
+                      
+                      <!-- GỌI COMPONENT TRACKING MAP Ở ĐÂY -->
+                      <div class="rounded-3 border overflow-hidden" style="height: 350px;">
+                          <TrackingMap :map-data="mapData" :status="selectedOrder.status" />
+                      </div>
+
+                      <div class="small text-muted mt-2 px-2 fst-italic text-end font-sans-vn"><i class="bi bi-info-circle me-1"></i>Mô phỏng đường đi bằng Mapbox Navigation.</div>
+                   </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="p-3 bg-white dark:bg-[#1a2533] border dark:border-gray-700 rounded-4 shadow-sm h-100 font-sans-vn">
+                    <h6 class="fw-bold text-dark dark:text-white mb-3 border-bottom dark:border-gray-600 pb-2">Địa chỉ nhận hàng</h6>
+                    <div class="fw-bold text-dark dark:text-gray-200 fs-5 mb-1">{{ selectedOrder.shipping_info?.name || 'Chưa cập nhật' }}</div>
+                    <div class="text-muted small mt-2"><i class="bi bi-telephone-fill text-urban me-2"></i>{{ selectedOrder.shipping_info?.phone || 'Chưa cập nhật' }}</div>
+                    <div class="text-muted small mt-2 lh-lg"><i class="bi bi-geo-alt-fill text-urban me-2"></i>{{ selectedOrder.shipping_info?.address || 'Chưa cập nhật' }}</div>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="p-3 bg-white dark:bg-[#1a2533] border dark:border-gray-700 rounded-4 shadow-sm h-100 font-sans-vn">
+                    <h6 class="fw-bold text-dark dark:text-white mb-3 border-bottom dark:border-gray-600 pb-2">Thông tin thanh toán</h6>
+                    <div class="d-flex justify-content-between mb-2 small text-muted dark:text-gray-400">
+                      <span>Phương thức:</span>
+                      <span class="fw-bold text-dark dark:text-white text-uppercase">{{ selectedOrder.payment_method || 'COD' }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2 small text-muted dark:text-gray-400">
+                      <span>Tình trạng:</span>
+                      <span class="badge border px-2 py-1 shadow-sm" :class="getPaymentStatusClass(selectedOrder.payment_status)">
+                        {{ getPaymentStatusLabel(selectedOrder.payment_status) }}
+                      </span>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mb-2 small text-muted dark:text-gray-400 mt-4">
+                      <span>Tạm tính ({{ selectedOrder.items?.length || 0 }} SP):</span>
+                      <span class="fw-bold text-dark dark:text-gray-200">{{ formatCurrency(selectedOrder.sub_total || (Number(selectedOrder.total_amount) - Number(selectedOrder.shipping_fee || 0) + Number(selectedOrder.discount_amount || 0))) }}</span>
+                    </div>
+
+                    <div v-if="selectedOrder.flash_sale_discount > 0" class="d-flex justify-content-between mb-2 small text-success">
+                      <span>Trợ giá Flash Sale:</span>
+                      <span class="fw-bold">- {{ formatCurrency(selectedOrder.flash_sale_discount) }}</span>
+                    </div>
+                    
+                    <div v-if="selectedOrder.tier_discount > 0" class="d-flex justify-content-between mb-2 small text-success">
+                      <span>Ưu đãi Hạng (<span class="fw-bold">{{ selectedOrder.discount_details?.tier_name || 'Thành viên' }}</span>):</span>
+                      <span class="fw-bold">- {{ formatCurrency(selectedOrder.tier_discount) }}</span>
+                    </div>
+
+                    <div v-if="selectedOrder.voucher_discount > 0" class="d-flex justify-content-between mb-2 small text-success">
+                      <span>Giảm giá (Voucher):</span>
+                      <span class="fw-bold">- {{ formatCurrency(selectedOrder.voucher_discount) }}</span>
+                    </div>
+
+                    <!-- FALLBACK: Dự phòng cho các đơn hàng cũ gộp chung discount_amount -->
+                    <div v-if="selectedOrder.discount_amount > 0 && !selectedOrder.tier_discount && !selectedOrder.voucher_discount" class="d-flex justify-content-between mb-2 small text-success">
+                      <span>Tổng Khuyến mãi:</span>
+                      <span class="fw-bold">- {{ formatCurrency(selectedOrder.discount_amount) }}</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-2 small text-muted dark:text-gray-400">
+                      <span>Phí vận chuyển:</span>
+                      <span class="fw-bold text-dark dark:text-gray-200">{{ formatCurrency(selectedOrder.shipping_fee || 0) }}</span>
+                    </div>
+                    
+                    <hr class="dark:border-gray-600 my-2">
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                      <span class="fw-bold text-dark dark:text-white text-uppercase">Tổng thanh toán:</span>
+                      <span class="text-danger fw-bold fs-4">{{ formatCurrency(selectedOrder.total_amount) }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ============================================== -->
+
+
            </div>
         </div>
         
@@ -282,6 +283,7 @@
 
 <script setup>
 import { ref, computed, nextTick, onBeforeUnmount } from 'vue';
+import LoadingSpinner from '@/components/shared/LoadingSpinner.vue';
 import { useRouter } from 'vue-router';
 import api from '@/utils/axios';
 import Swal from 'sweetalert2';

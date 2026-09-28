@@ -39,11 +39,11 @@
                   <!-- Câu 1 -->
                   <div class="accordion-item bg-transparent border-0 mb-3 rounded-4 shadow-sm overflow-hidden bg-white dark:bg-[#1a2533] border dark:border-gray-700">
                     <h2 class="accordion-header" id="headingOne">
-                      <button class="accordion-button bg-transparent fw-bold text-dark dark:text-white shadow-none px-4 py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                      <button class="accordion-button bg-transparent fw-bold text-dark dark:text-white shadow-none px-4 py-3" type="button" @click="activeFaq = activeFaq === 'collapseOne' ? null : 'collapseOne'" aria-expanded="true" aria-controls="collapseOne" :class="{ 'collapsed': activeFaq !== 'collapseOne' }">
                         1. Tôi có thể hủy đơn hàng sau khi đã đặt không?
                       </button>
                     </h2>
-                    <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionFaq">
+                    <div id="collapseOne" class="accordion-collapse" v-show="activeFaq === 'collapseOne'" aria-labelledby="headingOne" >
                       <div class="accordion-body text-muted dark:text-gray-400 px-4 pb-4 pt-1 lh-lg">
                         Được. Bạn có thể tự thao tác hủy đơn hàng trên website trong mục <strong>Đơn mua hàng</strong> MIỄN LÀ đơn hàng đó đang ở trạng thái <strong>Chờ xác nhận</strong>. Nếu đơn hàng đã chuyển sang Đang giao, vui lòng liên hệ CSKH để được hỗ trợ từ chối nhận hàng.
                       </div>
@@ -53,11 +53,11 @@
                   <!-- Câu 2 -->
                   <div class="accordion-item bg-transparent border-0 mb-3 rounded-4 shadow-sm overflow-hidden bg-white dark:bg-[#1a2533] border dark:border-gray-700">
                     <h2 class="accordion-header" id="headingTwo">
-                      <button class="accordion-button collapsed bg-transparent fw-bold text-dark dark:text-white shadow-none px-4 py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                      <button class="accordion-button bg-transparent fw-bold text-dark dark:text-white shadow-none px-4 py-3" type="button" @click="activeFaq = activeFaq === 'collapseTwo' ? null : 'collapseTwo'" aria-expanded="false" aria-controls="collapseTwo" :class="{ 'collapsed': activeFaq !== 'collapseTwo' }">
                         2. Làm sao để biết Size nào vừa với tôi?
                       </button>
                     </h2>
-                    <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionFaq">
+                    <div id="collapseTwo" class="accordion-collapse" v-show="activeFaq === 'collapseTwo'" aria-labelledby="headingTwo" >
                       <div class="accordion-body text-muted dark:text-gray-400 px-4 pb-4 pt-1 lh-lg">
                         Bên trong mỗi trang chi tiết sản phẩm, ZYRO đều cung cấp <strong>Bảng Quy đổi Kích Cỡ (Size Guide)</strong> chi tiết theo chiều cao và cân nặng. Bạn cũng có thể nhắn tin trực tiếp cho ZYRO để được nhân viên tư vấn size chuẩn xác nhất.
                       </div>
@@ -67,11 +67,11 @@
                   <!-- Câu 3 -->
                   <div class="accordion-item bg-transparent border-0 mb-3 rounded-4 shadow-sm overflow-hidden bg-white dark:bg-[#1a2533] border dark:border-gray-700">
                     <h2 class="accordion-header" id="headingThree">
-                      <button class="accordion-button collapsed bg-transparent fw-bold text-dark dark:text-white shadow-none px-4 py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                      <button class="accordion-button bg-transparent fw-bold text-dark dark:text-white shadow-none px-4 py-3" type="button" @click="activeFaq = activeFaq === 'collapseThree' ? null : 'collapseThree'" aria-expanded="false" aria-controls="collapseThree" :class="{ 'collapsed': activeFaq !== 'collapseThree' }">
                         3. Thời gian hoàn tiền là bao lâu nếu tôi trả hàng?
                       </button>
                     </h2>
-                    <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionFaq">
+                    <div id="collapseThree" class="accordion-collapse" v-show="activeFaq === 'collapseThree'" aria-labelledby="headingThree" >
                       <div class="accordion-body text-muted dark:text-gray-400 px-4 pb-4 pt-1 lh-lg">
                         Ngay sau khi kho ZYRO nhận lại sản phẩm hoàn và kiểm tra hợp lệ, kế toán sẽ thực hiện lệnh hoàn tiền (Refund). Thời gian tiền về tài khoản ngân hàng thường từ <strong>24h - 48h làm việc</strong>. Đối với ví MoMo, thời gian xử lý từ <strong>1 - 3 ngày</strong>.
                       </div>
@@ -81,11 +81,11 @@
                   <!-- Câu 4 -->
                   <div class="accordion-item bg-transparent border-0 mb-3 rounded-4 shadow-sm overflow-hidden bg-white dark:bg-[#1a2533] border dark:border-gray-700">
                     <h2 class="accordion-header" id="headingFour">
-                      <button class="accordion-button collapsed bg-transparent fw-bold text-dark dark:text-white shadow-none px-4 py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                      <button class="accordion-button bg-transparent fw-bold text-dark dark:text-white shadow-none px-4 py-3" type="button" @click="activeFaq = activeFaq === 'collapseFour' ? null : 'collapseFour'" aria-expanded="false" aria-controls="collapseFour" :class="{ 'collapsed': activeFaq !== 'collapseFour' }">
                         4. Tôi có được kiểm tra hàng trước khi nhận không?
                       </button>
                     </h2>
-                    <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#accordionFaq">
+                    <div id="collapseFour" class="accordion-collapse" v-show="activeFaq === 'collapseFour'" aria-labelledby="headingFour" >
                       <div class="accordion-body text-muted dark:text-gray-400 px-4 pb-4 pt-1 lh-lg">
                         <strong>CÓ.</strong> Nhằm đảm bảo quyền lợi, ZYRO cho phép bạn mở bưu phẩm để đồng kiểm (kiểm tra ngoại quan, màu sắc, số lượng) trước khi thanh toán cho Shipper. <i>Lưu ý: Không hỗ trợ mặc thử hoặc làm rách tem mác.</i>
                       </div>
@@ -112,6 +112,7 @@
 </template>
 
 <script setup>
+const activeFaq = ref('collapseOne');
 import { ref, onMounted } from 'vue';
 import InfoNavigation from '@/components/client/info/InfoNavigation.vue';
 

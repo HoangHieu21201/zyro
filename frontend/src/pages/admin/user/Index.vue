@@ -1,5 +1,5 @@
 <template>
-  <div class="user-index-wrapper pb-5 mb-5">
+  <div class="user-index-wrapper">
     
     <div v-if="isFirstLoad" class="d-flex flex-column justify-content-center align-items-center w-100" style="min-height: 70vh;">
       <h1 class="logo-shimmer mb-3">ZYRO</h1>
@@ -120,35 +120,22 @@
                   </td>
                   
                   <td class="px-4 text-muted dark:text-gray-400 small text-truncate">
-                    <div class="mb-1"><i class="bi bi-telephone text-urban me-1"></i>{{ user.phone || 'N/A' }}</div>
+                    <div class="mb-1"><i class="bi bi-telephone text-urban me-1"></i>{{ user.phone || '...' }}</div>
                     <div><i class="bi bi-geo-alt text-urban me-1"></i>{{ user.addresses_count || 0 }} địa chỉ lưu</div>
                   </td>
 
                   <td class="px-4 text-center">
                     <span v-if="user.deleted_at" class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary"><i class="bi bi-trash3-fill"></i> Đã xóa</span>
-                    <div v-else class="d-flex align-items-center justify-content-center gap-1">
-                      <select class="form-select form-select-sm border shadow-sm fw-semibold flex-shrink-0 dark:bg-[#212529] dark:text-gray-200 bg-white" 
-                              style="width: 110px; font-size: 0.75rem;"
-                              :class="getStatusSelectClass(user.localStatus || user.status)"
-                              v-model="user.localStatus"
-                              @change="checkStatusChange(user)"
-                              :disabled="user.isUpdatingStatus">
-                        <option value="active">Hoạt động</option>
-                        <option value="locked">Bị Khóa</option>
-                      </select>
-                      
-                      <div class="d-flex align-items-center" style="min-width: 50px;">
-                        <div v-if="user.isUpdatingStatus" class="spinner-border text-urban ms-1" style="width: 1rem; height: 1rem; border-width: 0.15em;" role="status"></div>
-                        <template v-else-if="user.isStatusChanged">
-                          <button @click="saveUserStatus(user)" class="btn btn-sm btn-success rounded-circle p-0 ms-1 d-flex align-items-center justify-content-center shadow-sm" style="width: 22px; height: 22px;" title="Lưu">
-                            <i class="bi bi-check-lg" style="font-size: 0.7rem;"></i>
-                          </button>
-                          <button @click="cancelStatusChange(user)" class="btn btn-sm btn-light dark:bg-[#2b3035] text-danger border dark:border-gray-600 rounded-circle p-0 ms-1 d-flex align-items-center justify-content-center shadow-sm" style="width: 22px; height: 22px;" title="Hủy">
-                            <i class="bi bi-x-lg" style="font-size: 0.7rem;"></i>
-                          </button>
-                        </template>
+                    <div v-else class="d-flex align-items-center justify-content-center">
+                        <AdminStatusUpdate 
+                          v-model="user.localStatus"
+                          :originalStatus="user.status"
+                          :isUpdating="user.isUpdatingStatus"
+                          @save="saveUserStatus(user)"
+                          @cancel="cancelStatusChange(user)"
+                           :options="[{ value: 'active', label: 'Hoạt động' }, { value: 'locked', label: 'Bị Khóa' }]"
+                        />
                       </div>
-                    </div>
                   </td>
 
                   <td class="px-4 text-center">
@@ -313,7 +300,7 @@
                   
                   <div class="mb-3 pb-3 border-bottom dark:border-gray-700 d-flex justify-content-between align-items-center">
                     <span class="text-muted dark:text-gray-400 fw-semibold"><i class="bi bi-gender-ambiguous text-urban me-1"></i>Giới tính / Tuổi:</span>
-                    <span class="text-dark dark:text-gray-200 fw-bold">{{ selectedUser.gender || 'N/A' }} <span v-if="selectedUser.birthday">({{ calculateAge(selectedUser.birthday) }}T)</span></span>
+                    <span class="text-dark dark:text-gray-200 fw-bold">{{ selectedUser.gender || '...' }} <span v-if="selectedUser.birthday">({{ calculateAge(selectedUser.birthday) }}T)</span></span>
                   </div>
 
                   <div class="mb-3 pb-3 border-bottom dark:border-gray-700 d-flex justify-content-between align-items-center">
@@ -374,6 +361,7 @@
 </template>
 
 <script setup>
+import AdminStatusUpdate from '@/components/admin/AdminStatusUpdate.vue';
 import { ref, onMounted, onBeforeUnmount, onUnmounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
@@ -400,7 +388,7 @@ const selectedUser = ref(null);
 let quickViewModalInstance = null;
 
 const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
-const getImageUrl = (path) => path ? `http://127.0.0.1:8000/storage/${path}` : defaultImage;
+const getImageUrl = (path) => path ? `${import.meta.env.VITE_STORAGE_URL}${path}` : defaultImage;
 const handleImageError = (e) => { e.target.src = defaultImage; };
 
 // ===============================================
@@ -569,9 +557,9 @@ const fetchData = async (isSilent = false) => {
   
   try {
     const [resUsers, resModules, resTiers] = await Promise.all([
-      axios.get('http://127.0.0.1:8000/api/v1/admin/users', { headers: getHeaders() }),
-      axios.get('http://127.0.0.1:8000/api/v1/admin/modules', { headers: getHeaders() }),
-      axios.get('http://127.0.0.1:8000/api/v1/admin/tiers', { headers: getHeaders() }).catch(() => ({data: {data: []}}))
+      axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/users`, { headers: getHeaders() }),
+      axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/modules`, { headers: getHeaders() }),
+      axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/tiers`, { headers: getHeaders() }).catch(() => ({data: {data: []}}))
     ]);
 
     const rawData = Array.isArray(resUsers.data.data) ? resUsers.data.data : [];

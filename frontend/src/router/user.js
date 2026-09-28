@@ -42,42 +42,50 @@ const user = [
       {
         path: '/checkout',
         name: 'client-checkout',
-        component: () => import('@/pages/client/checkout/Index.vue')
+        component: () => import('@/pages/client/checkout/Index.vue'),
+        meta: { requiresAuth: true }
       },
       {
         path: '/checkout/success',
         name: 'client-checkout-success',
-        component: () => import('@/pages/client/checkout/Success.vue')
+        component: () => import('@/pages/client/checkout/Success.vue'),
+        meta: { requiresAuth: true }
       },
       {
         path: '/checkout/failed',
         name: 'client-checkout-failed',
-        component: () => import('@/pages/client/checkout/Failed.vue')
+        component: () => import('@/pages/client/checkout/Failed.vue'),
+        meta: { requiresAuth: true }
       },
       {
         path: '/user/profile',
         name: 'client-profile',
-        component: () => import('@/pages/client/user/Profile.vue')
+        component: () => import('@/pages/client/user/Profile.vue'),
+        meta: { requiresAuth: true }
       },
       {
         path: '/user/orders',
         name: 'client-orders',
-        component: () => import('@/pages/client/user/Orders.vue')
+        component: () => import('@/pages/client/user/Orders.vue'),
+        meta: { requiresAuth: true }
       },
       {
         path: '/user/wishlist',
         name: 'client-wishlist',
-        component: () => import('@/pages/client/user/Wishlist.vue')
+        component: () => import('@/pages/client/user/Wishlist.vue'),
+        meta: { requiresAuth: true }
       },
       {
         path: '/user/address',
         name: 'client-address',
-        component: () => import('@/pages/client/user/Address.vue')
+        component: () => import('@/pages/client/user/Address.vue'),
+        meta: { requiresAuth: true }
       },
       {
         path: '/user/password',
         name: 'client-password',
-        component: () => import('@/pages/client/user/Password.vue')
+        component: () => import('@/pages/client/user/Password.vue'),
+        meta: { requiresAuth: true }
       },
       {
         path: '/track-order',

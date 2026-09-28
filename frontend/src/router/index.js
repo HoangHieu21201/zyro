@@ -16,4 +16,21 @@ const router = createRouter({
     }
 });
 
+
+router.beforeEach((to, from, next) => {
+    if (to.matched.some(record => record.meta.requiresAuth)) {
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            next({
+                path: '/login',
+                query: { redirect: to.fullPath }
+            });
+        } else {
+            next();
+        }
+    } else {
+        next();
+    }
+});
+
 export default router;

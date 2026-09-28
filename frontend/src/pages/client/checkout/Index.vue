@@ -1,5 +1,5 @@
 <template>
-  <div class="checkout-page-wrapper pb-5 mb-5" style="padding-top: 30px;">
+  <div class="checkout-page-wrapper" style="padding-top: 30px;">
     <div class="pt-5 mt-4">
       <div class="zyro-container">
         
@@ -85,56 +85,25 @@
                         <input type="email" class="form-control custom-input" v-model="form.email" required placeholder="Nhập địa chỉ email">
                     </div>
 
-                    <!-- tỉnh thành -->
-                    <div class="col-md-4 mt-3 position-relative">
-                        <label class="form-label small fw-bold text-muted text-uppercase">Tỉnh/Thành phố <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control custom-input dropdown-search-input" 
-                            v-model="searchProvince" 
-                            @focus="showProvinceDrop = true"
-                            @input="handleAddressEdit"
-                            @blur="handleBlur('province')"
-                            placeholder="Tìm Tỉnh/Thành..." required>
-                        <i class="bi bi-chevron-down position-absolute text-muted" style="right: 1.2rem; top: 2.7rem; pointer-events: none; font-size: 0.8rem;"></i>
-                        <ul v-if="showProvinceDrop" class="dropdown-menu w-100 show shadow border-0 custom-scrollbar-y p-1 dark:bg-[#212529]" style="max-height: 200px; position: absolute; z-index: 1050; top: 100%;">
-                        <li v-for="c in filteredProvinces" :key="c.code"><a class="dropdown-item py-2 px-3 cursor-pointer rounded-2 transition-all hover-bg-effect dark:text-gray-300" @mousedown.prevent="selectProvince(c)">{{ c.name }}</a></li>
-                        <li v-if="filteredProvinces.length === 0"><span class="dropdown-item text-muted py-2 fst-italic">Không tìm thấy</span></li>
-                        </ul>
-                    </div>
-
-                    <!-- quận huyện -->
-                    <div class="col-md-4 mt-3 position-relative">
-                        <label class="form-label small fw-bold text-muted text-uppercase">Quận/Huyện <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control custom-input dropdown-search-input" 
-                            v-model="searchDistrict" 
-                            @focus="showDistrictDrop = true"
-                            @input="handleAddressEdit"
-                            @blur="handleBlur('district')"
-                            placeholder="Tìm Quận/Huyện..." required :disabled="!addressHelper.province || loadingDistricts">
-                        <i class="bi bi-chevron-down position-absolute text-muted" style="right: 1.2rem; top: 2.7rem; pointer-events: none; font-size: 0.8rem;"></i>
-                        <ul v-if="showDistrictDrop && addressHelper.province" class="dropdown-menu w-100 show shadow border-0 custom-scrollbar-y p-1 dark:bg-[#212529]" style="max-height: 200px; position: absolute; z-index: 1050; top: 100%;">
-                        <li v-for="d in filteredDistricts" :key="d.code"><a class="dropdown-item py-2 px-3 cursor-pointer rounded-2 transition-all hover-bg-effect dark:text-gray-300" @mousedown.prevent="selectDistrict(d)">{{ d.name }}</a></li>
-                        <li v-if="filteredDistricts.length === 0"><span class="dropdown-item text-muted py-2 fst-italic">Không tìm thấy</span></li>
-                        </ul>
-                    </div>
-
-                    <!-- phường xã -->
-                    <div class="col-md-4 mt-3 position-relative">
-                        <label class="form-label small fw-bold text-muted text-uppercase">Phường/Xã <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control custom-input dropdown-search-input" 
-                            v-model="searchWard" 
-                            @focus="showWardDrop = true"
-                            @input="handleAddressEdit"
-                            @blur="handleBlur('ward')"
-                            placeholder="Tìm Phường/Xã..." required :disabled="!addressHelper.district || loadingWards">
-                        <i class="bi bi-chevron-down position-absolute text-muted" style="right: 1.2rem; top: 2.7rem; pointer-events: none; font-size: 0.8rem;"></i>
-                        <ul v-if="showWardDrop && addressHelper.district" class="dropdown-menu w-100 show shadow border-0 custom-scrollbar-y p-1 dark:bg-[#212529]" style="max-height: 200px; position: absolute; z-index: 1050; top: 100%;">
-                        <li v-for="w in filteredWards" :key="w.code"><a class="dropdown-item py-2 px-3 cursor-pointer rounded-2 transition-all hover-bg-effect dark:text-gray-300" @mousedown.prevent="selectWard(w)">{{ w.name }}</a></li>
-                        <li v-if="filteredWards.length === 0"><span class="dropdown-item text-muted py-2 fst-italic">Không tìm thấy</span></li>
-                        </ul>
+                    <!-- Địa chỉ (Component dùng chung) -->
+                    <div class="col-12 mt-3">
+                        <AddressSelector 
+                            show-location-button location-button-class="btn-outline-danger" @location-detail="val => { addressHelper.detail = val; handleAddressEdit(); }"
+                            v-model:city="addressHelper.province"
+                            v-model:district="addressHelper.district"
+                            v-model:ward="addressHelper.ward"
+                            labelClass="text-muted text-uppercase"
+                            @update:city="handleAddressEdit"
+                            @update:district="handleAddressEdit"
+                            @update:ward="handleAddressEdit"
+                        />
                     </div>
                     
                     <div class="col-12 mt-3">
-                        <label class="form-label small fw-bold text-muted text-uppercase">Địa chỉ cụ thể <span class="text-danger">*</span></label>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                          <label class="form-label small fw-bold text-muted text-uppercase m-0">Địa chỉ cụ thể <span class="text-danger">*</span></label>
+                          
+                        </div>
                         <input type="text" class="form-control custom-input" v-model="addressHelper.detail" @input="handleAddressEdit" required placeholder="Nhập số nhà, tên đường">
                     </div>
 
@@ -499,8 +468,8 @@
 import { ref, computed, reactive, onMounted, onBeforeUnmount, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import Swal from 'sweetalert2';
-import axios from 'axios';
 import api from '@/utils/axios';
+import AddressSelector from '@/components/shared/AddressSelector.vue';
 
 import { useCartStore } from '@/stores/cartStore';
 import { ZyroSwal } from '@/components/client/ZyroSwal';
@@ -525,20 +494,11 @@ const useSavedAddress = ref(false);
 const selectedSavedAddressId = ref('');
 const currentUser = ref({});
 
-const provinces = ref([]);
-const districts = ref([]);
-const wards = ref([]);
-const loadingDistricts = ref(false);
-const loadingWards = ref(false);
+
+
 const addressHelper = reactive({ province: '', district: '', ward: '', detail: '' });
 
-const searchProvince = ref('');
-const searchDistrict = ref('');
-const searchWard = ref('');
 
-const showProvinceDrop = ref(false);
-const showDistrictDrop = ref(false);
-const showWardDrop = ref(false);
 
 const availableCoupons = ref([]);
 const selectedCouponCode = ref('');
@@ -583,26 +543,11 @@ const vatInfo = ref({ company_name: '', tax_code: '', email: '', address: '' });
 
 const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0);
 
-const removeAccents = (str) => {
-  if (!str) return '';
-  return str.toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().trim();
-};
 
-const filteredProvinces = computed(() => {
-  if (!searchProvince.value) return provinces.value;
-  const q = removeAccents(searchProvince.value);
-  return provinces.value.filter(p => removeAccents(p.name).includes(q));
-});
-const filteredDistricts = computed(() => {
-  if (!searchDistrict.value) return districts.value;
-  const q = removeAccents(searchDistrict.value);
-  return districts.value.filter(d => removeAccents(d.name).includes(q));
-});
-const filteredWards = computed(() => {
-  if (!searchWard.value) return wards.value;
-  const q = removeAccents(searchWard.value);
-  return wards.value.filter(w => removeAccents(w.name).includes(q));
-});
+
+
+
+
 
 const initCheckoutData = async () => {
   try {
@@ -640,9 +585,9 @@ const toggleAddressMode = () => {
     form.value.phone = currentUser.value?.phone || '';
     form.value.email = currentUser.value?.email || '';
     
-    addressHelper.province = ''; searchProvince.value = '';
-    addressHelper.district = ''; searchDistrict.value = '';
-    addressHelper.ward = ''; searchWard.value = '';
+    addressHelper.province = '';
+    addressHelper.district = '';
+    addressHelper.ward = '';
     addressHelper.detail = '';
   }
 };
@@ -660,11 +605,8 @@ const applySavedAddress = (addr) => {
   form.value.email = currentUser.value?.email || '';
   
   addressHelper.province = addr.city;
-  searchProvince.value = addr.city;
   addressHelper.district = addr.district;
-  searchDistrict.value = addr.district;
   addressHelper.ward = addr.ward;
-  searchWard.value = addr.ward;
   addressHelper.detail = addr.shipping_address;
 };
 
@@ -673,58 +615,16 @@ const applySelectedAddress = () => {
   if (addr) applySavedAddress(addr);
 };
 
-const fetchProvinces = async () => {
-  try {
-    const res = await axios.get('https://provinces.open-api.vn/api/p/');
-    provinces.value = res.data;
-  } catch (err) { }
-};
 
-const onProvinceChange = async () => {
-  addressHelper.district = ''; addressHelper.ward = ''; districts.value = []; wards.value = [];
-  const p = provinces.value.find(i => i.name === addressHelper.province);
-  if (p) {
-    loadingDistricts.value = true;
-    try {
-      const res = await axios.get(`https://provinces.open-api.vn/api/p/${p.code}?depth=2`);
-      districts.value = res.data.districts;
-    } finally { loadingDistricts.value = false; }
-  }
-};
 
-const onDistrictChange = async () => {
-  addressHelper.ward = ''; wards.value = [];
-  const d = districts.value.find(i => i.name === addressHelper.district);
-  if (d) {
-    loadingWards.value = true;
-    try {
-      const res = await axios.get(`https://provinces.open-api.vn/api/d/${d.code}?depth=2`);
-      wards.value = res.data.wards;
-    } finally { loadingWards.value = false; }
-  }
-};
 
-const selectProvince = (p) => {
-  handleAddressEdit();
-  addressHelper.province = p.name; searchProvince.value = p.name; showProvinceDrop.value = false; onProvinceChange();
-};
-const selectDistrict = (d) => {
-  handleAddressEdit();
-  addressHelper.district = d.name; searchDistrict.value = d.name; showDistrictDrop.value = false; onDistrictChange();
-};
-const selectWard = (w) => {
-  handleAddressEdit();
-  addressHelper.ward = w.name; searchWard.value = w.name; showWardDrop.value = false;
-};
 
-const handleBlur = (type) => {
-  setTimeout(() => {
-      showProvinceDrop.value = false; showDistrictDrop.value = false; showWardDrop.value = false;
-      if (type === 'province' && searchProvince.value !== addressHelper.province) searchProvince.value = addressHelper.province;
-      else if (type === 'district' && searchDistrict.value !== addressHelper.district) searchDistrict.value = addressHelper.district;
-      else if (type === 'ward' && searchWard.value !== addressHelper.ward) searchWard.value = addressHelper.ward;
-  }, 200);
-};
+
+
+
+
+
+
 
 const expandedGroups = ref([]);
 
@@ -733,6 +633,8 @@ const cartGroups = computed(() => {
   const normalGroup = { isLookbook: false, items: [] };
 
   cartStore.items.forEach(item => {
+    if (item.is_available === undefined) item.is_available = true;
+
     if (item.lookbook_id) {
       let group = result.find(g => g.isLookbook && g.lookbook_id === item.lookbook_id);
       if (!group) {
@@ -1069,6 +971,53 @@ const placeOrder = async () => {
   }
 };
 
+const restoreDraftIfAny = async () => {
+  if (useSavedAddress.value) return;
+  const draft = localStorage.getItem('zyro_checkout_draft');
+  if (!draft) return;
+  try {
+    const parsed = JSON.parse(draft);
+    if (parsed.form) {
+      form.value.fullname = parsed.form.fullname || form.value.fullname;
+      form.value.phone = parsed.form.phone || form.value.phone;
+      form.value.email = parsed.form.email || form.value.email;
+      form.value.note = parsed.form.note || form.value.note;
+    }
+    if (parsed.addressHelper) {
+      addressHelper.detail = parsed.addressHelper.detail || '';
+      addressHelper.province = parsed.addressHelper.province || '';
+      addressHelper.district = parsed.addressHelper.district || '';
+      addressHelper.ward = parsed.addressHelper.ward || '';
+    }
+  } catch (e) {
+    console.error("Lỗi khi khôi phục bản nháp:", e);
+  }
+};
+
+watch(
+  () => ({
+    fullname: form.value.fullname,
+    phone: form.value.phone,
+    email: form.value.email,
+    note: form.value.note,
+    province: addressHelper.province,
+    district: addressHelper.district,
+    ward: addressHelper.ward,
+    detail: addressHelper.detail
+  }),
+  (newVal) => {
+    if (!useSavedAddress.value) {
+      localStorage.setItem('zyro_checkout_draft', JSON.stringify({
+        form: { fullname: newVal.fullname, phone: newVal.phone, email: newVal.email, note: newVal.note },
+        addressHelper: { province: newVal.province, district: newVal.district, ward: newVal.ward, detail: newVal.detail }
+      }));
+    }
+  },
+  { deep: true }
+);
+
+
+
 onMounted(async () => {
   window.scrollTo(0, 0);
   document.addEventListener('click', closeVoucherDropdown);
@@ -1082,7 +1031,7 @@ onMounted(async () => {
         return;
     }
     
-    fetchProvinces();
+    
     
     const token = localStorage.getItem('access_token');
     
@@ -1090,6 +1039,8 @@ onMounted(async () => {
     const initTask = token ? initCheckoutData() : Promise.resolve();
 
     await Promise.all([initTask, minDelay]);
+
+    await restoreDraftIfAny();
 
   } catch (error) {
     console.error("Lỗi:", error);

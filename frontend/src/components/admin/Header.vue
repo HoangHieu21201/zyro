@@ -17,17 +17,18 @@
           </button>
         </li>
 
-        <!-- ========================================== -->
+
         <!-- NÚT CHUÔNG THÔNG BÁO REAL-TIME (MỚI THÊM)  -->
-        <!-- ========================================== -->
+
         <li class="nav-item dropdown me-3 notification-menu-container" ref="notiMenuContainer" v-if="isLoggedIn">
           <button @click="toggleNotiMenu"
             class="btn rounded-circle shadow-sm d-flex align-items-center justify-content-center p-0 theme-toggle-btn position-relative"
             :class="isDarkMode ? 'btn-secondary border-secondary' : 'btn-light border-light'"
-            style="width: 36px; height: 36px; transition: all 0.3s;"
-            title="Thông báo hệ thống">
+            style="width: 36px; height: 36px; transition: all 0.3s;" title="Thông báo hệ thống">
             <i class="bi bi-bell-fill" :class="isDarkMode ? 'text-light' : 'text-brand'"></i>
-            <span v-if="unreadCount > 0" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white dark:border-dark" style="font-size: 0.65rem; padding: 0.35em 0.5em;">
+            <span v-if="unreadCount > 0"
+              class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white dark:border-dark"
+              style="font-size: 0.65rem; padding: 0.35em 0.5em;">
               {{ unreadCount > 99 ? '99+' : unreadCount }}
             </span>
           </button>
@@ -35,40 +36,46 @@
           <div class="dropdown-menu dropdown-menu-end shadow-lg border mt-2 transition-all p-0 overflow-hidden"
             :class="[{ 'show': isNotiMenuActive }, isDarkMode ? 'bg-dark border-secondary' : 'bg-white border-0']"
             style="width: 350px; right: -10px !important;">
-            <div class="p-3 border-bottom d-flex justify-content-between align-items-center" :class="isDarkMode ? 'border-secondary' : ''">
-               <h6 class="m-0 fw-bold font-sans-vn" :class="isDarkMode ? 'text-white' : 'text-dark'">Thông báo mới</h6>
-               <a href="#" v-if="unreadCount > 0" @click.prevent="markAllAsRead" class="small fw-semibold text-decoration-none text-brand transition-all hover-opacity">Đánh dấu đọc hết</a>
+            <div class="p-3 border-bottom d-flex justify-content-between align-items-center"
+              :class="isDarkMode ? 'border-secondary' : ''">
+              <h6 class="m-0 fw-bold font-sans-vn" :class="isDarkMode ? 'text-white' : 'text-dark'">Thông báo mới</h6>
+              <a href="#" v-if="unreadCount > 0" @click.prevent="markAllAsRead"
+                class="small fw-semibold text-decoration-none text-brand transition-all hover-opacity">Đánh dấu đọc
+                hết</a>
             </div>
-            
+
             <div class="custom-scrollbar-y" style="max-height: 400px; overflow-y: auto;">
-               <div v-if="isLoadingNoti" class="text-center p-4">
-                  <div class="spinner-border spinner-border-sm text-brand" role="status"></div>
-               </div>
-               <div v-else-if="notifications.length === 0" class="text-center p-5 text-muted small font-sans-vn">
-                  <i class="bi bi-bell-slash fs-2 d-block mb-2 opacity-50"></i>
-                  Bạn đã xem hết thông báo.
-               </div>
-               <div v-else>
-                  <a href="#" v-for="noti in notifications" :key="noti.id" 
-                     @click.prevent="handleNotiClick(noti)"
-                     class="dropdown-item p-3 border-bottom d-flex align-items-start gap-3 transition-all text-wrap"
-                     :class="[
-                        isDarkMode ? 'border-secondary hover-dark text-light' : 'text-dark hover-light',
-                        !noti.read_at ? (isDarkMode ? 'bg-secondary bg-opacity-25' : 'bg-brand-soft') : ''
-                     ]">
-                     <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 mt-1 shadow-sm"
-                          :class="getIconClass(noti.data?.type)" style="width: 38px; height: 38px;">
-                        <i class="bi text-white fs-6" :class="getIconName(noti.data?.type)"></i>
-                     </div>
-                     <div class="font-sans-vn">
-                        <h6 class="fw-bold mb-1 line-clamp-2" style="font-size: 0.9rem;" :class="!noti.read_at ? (isDarkMode ? 'text-white' : 'text-dark') : 'text-muted'">
-                           {{ noti.data?.title }}
-                        </h6>
-                        <p class="small mb-1 opacity-75 line-clamp-2" style="font-size: 0.8rem; line-height: 1.4;">{{ noti.data?.message }}</p>
-                        <small class="text-muted font-monospace" style="font-size: 0.7rem;"><i class="bi bi-clock me-1"></i>{{ formatTime(noti.created_at) }}</small>
-                     </div>
-                  </a>
-               </div>
+              <div v-if="isLoadingNoti" class="text-center p-4">
+                <div class="spinner-border spinner-border-sm text-brand" role="status"></div>
+              </div>
+              <div v-else-if="notifications.length === 0" class="text-center p-5 text-muted small font-sans-vn">
+                <i class="bi bi-bell-slash fs-2 d-block mb-2 opacity-50"></i>
+                Bạn đã xem hết thông báo.
+              </div>
+              <div v-else>
+                <a href="#" v-for="noti in notifications" :key="noti.id" @click.prevent="handleNotiClick(noti)"
+                  class="dropdown-item p-3 border-bottom d-flex align-items-start gap-3 transition-all text-wrap"
+                  :class="[
+                    isDarkMode ? 'border-secondary hover-dark text-light' : 'text-dark hover-light',
+                    !noti.read_at ? (isDarkMode ? 'bg-secondary bg-opacity-25' : 'bg-brand-soft') : ''
+                  ]">
+                  <div
+                    class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 mt-1 shadow-sm"
+                    :class="getIconClass(noti.data?.type)" style="width: 38px; height: 38px;">
+                    <i class="bi text-white fs-6" :class="getIconName(noti.data?.type)"></i>
+                  </div>
+                  <div class="font-sans-vn">
+                    <h6 class="fw-bold mb-1 line-clamp-2" style="font-size: 0.9rem;"
+                      :class="!noti.read_at ? (isDarkMode ? 'text-white' : 'text-dark') : 'text-muted'">
+                      {{ noti.data?.title }}
+                    </h6>
+                    <p class="small mb-1 opacity-75 line-clamp-2" style="font-size: 0.8rem; line-height: 1.4;">{{
+                      noti.data?.message }}</p>
+                    <small class="text-muted font-monospace" style="font-size: 0.7rem;"><i
+                        class="bi bi-clock me-1"></i>{{ formatTime(noti.created_at) }}</small>
+                  </div>
+                </a>
+              </div>
             </div>
           </div>
         </li>
@@ -79,7 +86,8 @@
             class="nav-link d-flex align-items-center dropdown-toggle text-decoration-none"
             :class="isDarkMode ? 'text-light' : 'text-dark'">
             <img :src="adminUser.avatar" class="user-image rounded-circle shadow-sm me-2" alt="User Image">
-            <span class="d-none d-md-inline fw-semibold text-truncate font-sans-vn" style="max-width: 150px;">{{ adminUser.name }}</span>
+            <span class="d-none d-md-inline fw-semibold text-truncate font-sans-vn" style="max-width: 150px;">{{
+              adminUser.name }}</span>
           </a>
 
           <ul class="dropdown-menu dropdown-menu-end shadow border mt-2 transition-all font-sans-vn"
@@ -175,7 +183,7 @@ const getAdminData = () => {
       id: admin.id,
       name: admin.fullname || 'Quản trị viên',
       roleName: roleId == 1 ? 'Super Admin' : 'Nhân viên',
-      avatar: admin.avatar_url ? `http://127.0.0.1:8000/storage/${admin.avatar_url}` : defaultAvatar
+      avatar: admin.avatar_url ? `${import.meta.env.VITE_STORAGE_URL}${admin.avatar_url}` : defaultAvatar
     };
   }
 
@@ -184,9 +192,6 @@ const getAdminData = () => {
 
 const adminUser = ref(getAdminData());
 
-// ==========================================
-// LOGIC THÔNG BÁO (NOTIFICATIONS)
-// ==========================================
 const notifications = ref([]);
 const unreadCount = ref(0);
 const isLoadingNoti = ref(false);
@@ -304,9 +309,6 @@ const getIconName = (type) => {
   return map[type] || 'bi-bell';
 };
 
-// ==========================================
-// ĐĂNG XUẤT VÀ ĐÓNG MENU CHUNG
-// ==========================================
 const handleLogout = () => {
   Swal.fire({
     title: 'Xác nhận đăng xuất?',
@@ -317,9 +319,15 @@ const handleLogout = () => {
     cancelButtonColor: '#6c757d',
     confirmButtonText: 'Đăng xuất ngay',
     cancelButtonText: 'Hủy'
-  }).then((result) => {
+  }).then(async (result) => {
     if (result.isConfirmed) {
+      try {
+        await api.post('/admin/logout');
+      } catch (err) {
+        console.error("Lỗi đăng xuất server:", err);
+      }
       localStorage.removeItem('admin_token');
+      localStorage.removeItem('admin_refresh_token');
       localStorage.removeItem('admin_role');
       localStorage.removeItem('admin_info');
 
@@ -358,39 +366,124 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.app-header { min-height: 60px; z-index: 1000; }
-.transition-all { transition: all 0.3s ease; }
-.theme-toggle-btn:hover { transform: rotate(15deg) scale(1.1); }
+.app-header {
+  min-height: 60px;
+  z-index: 1000;
+}
 
-.text-brand { color: #009981 !important; }
-.bg-brand-soft { background-color: rgba(0, 153, 129, 0.08) !important; }
+.transition-all {
+  transition: all 0.3s ease;
+}
 
-.user-image { width: 36px; height: 36px; transition: transform 0.2s; object-fit: cover; }
-.nav-link:hover .user-image { transform: scale(1.05); }
+.theme-toggle-btn:hover {
+  transform: rotate(15deg) scale(1.1);
+}
 
-.btn-brand-outline { border: 1.5px solid #009981; color: #009981; border-radius: 8px; font-size: 14px; transition: all 0.2s; }
-.btn-brand-outline:hover { background-color: #009981; color: #fff; }
+.text-brand {
+  color: #009981 !important;
+}
 
-.dropdown-menu { border-radius: 12px; animation: slideInUp 0.3s cubic-bezier(0.165, 0.84, 0.44, 1); transform-origin: top right; right: 0 !important; display: none; }
-.dropdown-menu.show { display: block; }
+.bg-brand-soft {
+  background-color: rgba(0, 153, 129, 0.08) !important;
+}
 
-.user-header-modern { background: var(--color-c-dark, #213448) !important; margin-top: -8px; }
+.user-image {
+  width: 36px;
+  height: 36px;
+  transition: transform 0.2s;
+  object-fit: cover;
+}
 
-.dropdown-item { font-size: 14px; transition: background-color 0.2s, color 0.2s; }
-.hover-light:hover { background-color: #f8f9fa; color: #009981 !important; }
-.hover-dark:hover { background-color: #343a40 !important; color: #00ebc4 !important; }
-.hover-opacity:hover { opacity: 0.7; }
+.nav-link:hover .user-image {
+  transform: scale(1.05);
+}
 
-.font-sans-vn { font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif !important; }
-.line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.btn-brand-outline {
+  border: 1.5px solid #009981;
+  color: #009981;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.2s;
+}
 
-.custom-scrollbar-y::-webkit-scrollbar { width: 5px; }
-.custom-scrollbar-y::-webkit-scrollbar-track { background: transparent; }
-.custom-scrollbar-y::-webkit-scrollbar-thumb { background: #adb5bd; border-radius: 10px; }
-html.dark .custom-scrollbar-y::-webkit-scrollbar-thumb { background: #495057; }
+.btn-brand-outline:hover {
+  background-color: #009981;
+  color: #fff;
+}
+
+.dropdown-menu {
+  border-radius: 12px;
+  animation: slideInUp 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+  transform-origin: top right;
+  right: 0 !important;
+  display: none;
+}
+
+.dropdown-menu.show {
+  display: block;
+}
+
+.user-header-modern {
+  background: var(--color-c-dark, #213448) !important;
+  margin-top: -8px;
+}
+
+.dropdown-item {
+  font-size: 14px;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.hover-light:hover {
+  background-color: #f8f9fa;
+  color: #009981 !important;
+}
+
+.hover-dark:hover {
+  background-color: #343a40 !important;
+  color: #00ebc4 !important;
+}
+
+.hover-opacity:hover {
+  opacity: 0.7;
+}
+
+.font-sans-vn {
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif !important;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.custom-scrollbar-y::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scrollbar-y::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar-y::-webkit-scrollbar-thumb {
+  background: #adb5bd;
+  border-radius: 10px;
+}
+
+html.dark .custom-scrollbar-y::-webkit-scrollbar-thumb {
+  background: #495057;
+}
 
 @keyframes slideInUp {
-  from { opacity: 0; transform: translateY(10px) scale(0.95); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 </style>

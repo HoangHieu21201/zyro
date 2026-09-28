@@ -1,12 +1,14 @@
 <template>
-  <div class="user-orders-wrapper pb-5 mb-5">
+  <div class="user-orders-wrapper">
     <div class="pt-5 mt-4">
       <div class="zyro-container">
-        
+
         <nav aria-label="breadcrumb" class="mb-4">
           <ol class="breadcrumb small fw-semibold text-uppercase font-sans-vn" style="letter-spacing: 0.5px;">
-            <li class="breadcrumb-item"><router-link to="/" class="text-decoration-none text-muted hover-text-dark">Trang chủ</router-link></li>
-            <li class="breadcrumb-item"><router-link to="/user/profile" class="text-decoration-none text-muted hover-text-dark">Tài khoản</router-link></li>
+            <li class="breadcrumb-item"><router-link to="/"
+                class="text-decoration-none text-muted hover-text-dark">Trang chủ</router-link></li>
+            <li class="breadcrumb-item"><router-link to="/user/profile"
+                class="text-decoration-none text-muted hover-text-dark">Tài khoản</router-link></li>
             <li class="breadcrumb-item active text-c-dark" aria-current="page">Đơn mua hàng</li>
           </ol>
         </nav>
@@ -17,32 +19,39 @@
           </div>
 
           <div class="col-lg-9">
-            
+
             <!-- KHỐI THỐNG KÊ TỔNG ĐƠN HÀNG VÀ TỔNG CHI TIÊU -->
             <div class="row g-3 mb-4 animation-fade-in">
               <div class="col-md-6">
-                <div class="card border-0 shadow-sm rounded-4 h-100 bg-white dark:bg-[#1a2533] overflow-hidden position-relative p-4 border border-light-subtle dark:border-gray-700">
+                <div
+                  class="card border-0 shadow-sm rounded-4 h-100 bg-white dark:bg-[#1a2533] overflow-hidden position-relative p-4 border border-light-subtle dark:border-gray-700">
                   <div class="position-absolute top-50 translate-middle-y end-0 pe-4 opacity-10 text-muted">
                     <i class="bi bi-bag-check-fill" style="font-size: 5rem;"></i>
                   </div>
                   <div class="position-relative z-index-2">
-                    <h6 class="fw-bold text-muted mb-2 text-uppercase font-sans-vn" style="letter-spacing: 1px; font-size: 0.8rem;">Tổng số đơn hàng</h6>
-                    <h2 class="fw-bold text-dark dark:text-white mb-0 font-sans-vn d-flex align-items-baseline gap-2" style="font-size: 2.2rem;">
+                    <h6 class="fw-bold text-muted mb-2 text-uppercase font-sans-vn"
+                      style="letter-spacing: 1px; font-size: 0.8rem;">Tổng số đơn hàng</h6>
+                    <h2 class="fw-bold text-dark dark:text-white mb-0 font-sans-vn d-flex align-items-baseline gap-2"
+                      style="font-size: 2.2rem;">
                       {{ orderStats.total_orders || 0 }} <span class="fs-6 text-muted fw-normal">Đơn</span>
                     </h2>
                   </div>
                 </div>
               </div>
               <div class="col-md-6">
-                <div class="card border-0 shadow-sm rounded-4 h-100 bg-urban text-white overflow-hidden position-relative p-4">
-                  <div class="position-absolute top-0 start-0 w-100 h-100 bg-white opacity-10" style="clip-path: polygon(0 0, 100% 0, 100% 30%, 0% 100%);"></div>
-                  
+                <div
+                  class="card border-0 shadow-sm rounded-4 h-100 bg-urban text-white overflow-hidden position-relative p-4">
+                  <div class="position-absolute top-0 start-0 w-100 h-100 bg-white opacity-10"
+                    style="clip-path: polygon(0 0, 100% 0, 100% 30%, 0% 100%);"></div>
+
                   <div class="position-absolute top-50 translate-middle-y end-0 pe-4 opacity-25">
                     <i class="bi bi-wallet2" style="font-size: 5rem;"></i>
                   </div>
                   <div class="position-relative z-index-2">
-                    <h6 class="fw-bold text-white-50 mb-2 text-uppercase font-sans-vn" style="letter-spacing: 1px; font-size: 0.8rem;">Tổng chi tiêu</h6>
-                    <h2 class="fw-bold text-white mb-0 font-sans-vn d-flex align-items-baseline gap-2" style="font-size: 2.2rem;">
+                    <h6 class="fw-bold text-white-50 mb-2 text-uppercase font-sans-vn"
+                      style="letter-spacing: 1px; font-size: 0.8rem;">Tổng chi tiêu</h6>
+                    <h2 class="fw-bold text-white mb-0 font-sans-vn d-flex align-items-baseline gap-2"
+                      style="font-size: 2.2rem;">
                       {{ formatCurrency(orderStats.total_spent || 0) }}
                     </h2>
                   </div>
@@ -51,67 +60,98 @@
             </div>
 
             <!-- BỘ LỌC TÌM KIẾM -->
-            <div class="card border-0 shadow-sm rounded-4 dark:bg-[#1a2533] p-3 p-md-4 mb-4 animation-fade-in font-sans-vn">
+            <div
+              class="card border-0 shadow-sm rounded-4 dark:bg-[#1a2533] p-3 p-md-4 mb-4 animation-fade-in font-sans-vn">
               <div class="border-bottom dark:border-gray-700 pb-2 mb-3">
-                <ul class="nav nav-underline flex-wrap justify-content-start" style="gap: 5px 20px; margin-bottom: -1px;">
+                <ul class="nav nav-underline flex-wrap justify-content-start"
+                  style="gap: 5px 20px; margin-bottom: -1px;">
                   <li class="nav-item">
-                    <a class="nav-link py-2 px-1 fw-bold custom-tab text-nowrap" :class="{ 'active-tab': activeTab === 'all' }" href="#" @click.prevent="changeTab('all')">Tất cả</a>
+                    <a class="nav-link py-2 px-1 fw-bold custom-tab text-nowrap"
+                      :class="{ 'active-tab-all': activeTab === 'all' }" href="#" @click.prevent="changeTab('all')">Tất
+                      cả</a>
                   </li>
                   <li class="nav-item">
-                    <a class="nav-link py-2 px-1 fw-bold custom-tab text-nowrap" :class="{ 'active-tab': activeTab === 'pending' }" href="#" @click.prevent="changeTab('pending')">Chờ xác nhận</a>
+                    <a class="nav-link py-2 px-1 fw-bold custom-tab text-nowrap"
+                      :class="{ 'active-tab-pending': activeTab === 'pending' }" href="#"
+                      @click.prevent="changeTab('pending')">Chờ xác nhận</a>
                   </li>
                   <li class="nav-item">
-                    <a class="nav-link py-2 px-1 fw-bold custom-tab text-nowrap" :class="{ 'active-tab': activeTab === 'confirmed' }" href="#" @click.prevent="changeTab('confirmed')">Đã xác nhận</a>
+                    <a class="nav-link py-2 px-1 fw-bold custom-tab text-nowrap"
+                      :class="{ 'active-tab-confirmed': activeTab === 'confirmed' }" href="#"
+                      @click.prevent="changeTab('confirmed')">Đã xác nhận</a>
                   </li>
                   <li class="nav-item">
-                    <a class="nav-link py-2 px-1 fw-bold custom-tab text-nowrap" :class="{ 'active-tab': activeTab === 'shipping' }" href="#" @click.prevent="changeTab('shipping')">Đang giao</a>
+                    <a class="nav-link py-2 px-1 fw-bold custom-tab text-nowrap"
+                      :class="{ 'active-tab-shipping': activeTab === 'shipping' }" href="#"
+                      @click.prevent="changeTab('shipping')">Đang giao</a>
                   </li>
                   <li class="nav-item">
-                    <a class="nav-link py-2 px-1 fw-bold custom-tab text-nowrap" :class="{ 'active-tab': activeTab === 'completed' }" href="#" @click.prevent="changeTab('completed')">Thành công</a>
+                    <a class="nav-link py-2 px-1 fw-bold custom-tab text-nowrap"
+                      :class="{ 'active-tab-completed': activeTab === 'completed' }" href="#"
+                      @click.prevent="changeTab('completed')">Thành công</a>
                   </li>
                   <li class="nav-item">
-                    <a class="nav-link py-2 px-1 fw-bold custom-tab text-nowrap text-danger" :class="{ 'active-tab': activeTab === 'cancelled' }" href="#" @click.prevent="changeTab('cancelled')">Đã hủy</a>
+                    <a class="nav-link py-2 px-1 fw-bold custom-tab text-nowrap text-danger"
+                      :class="{ 'active-tab-cancelled': activeTab === 'cancelled' }" href="#"
+                      @click.prevent="changeTab('cancelled')">Đã hủy</a>
                   </li>
                   <li class="nav-item">
-                    <a class="nav-link py-2 px-1 fw-bold custom-tab text-nowrap text-secondary" :class="{ 'active-tab': activeTab === 'returned' }" href="#" @click.prevent="changeTab('returned')">Hoàn trả / Đổi hàng</a>
+                    <a class="nav-link py-2 px-1 fw-bold custom-tab text-nowrap text-secondary"
+                      :class="{ 'active-tab-returned': activeTab === 'returned' }" href="#"
+                      @click.prevent="changeTab('returned')">Hoàn trả / Đổi hàng</a>
                   </li>
                 </ul>
               </div>
 
               <div class="row g-2 g-md-3 align-items-center">
                 <div class="col-12 col-lg-5">
-                  <div class="input-group shadow-sm-hover border border-secondary-subtle dark:border-gray-600 rounded-pill overflow-hidden bg-light dark:bg-[#212529]">
-                    <span class="input-group-text bg-transparent border-0 text-muted"><i class="bi bi-search"></i></span>
-                    <input type="text" class="form-control border-0 bg-transparent shadow-none dark:text-white" v-model="searchQuery" @input="debounceFetch" placeholder="Tên SP, Mã đơn...">
+                  <div
+                    class="input-group shadow-sm-hover border border-secondary-subtle dark:border-gray-600 rounded-pill overflow-hidden bg-light dark:bg-[#212529]">
+                    <span class="input-group-text bg-transparent border-0 text-muted"><i
+                        class="bi bi-search"></i></span>
+                    <input type="text" class="form-control border-0 bg-transparent shadow-none dark:text-white"
+                      v-model="searchQuery" @input="debounceFetch" placeholder="Tên SP, Mã đơn...">
                   </div>
                 </div>
 
                 <div class="col-6 col-md-4 col-lg-2">
-                  <div class="input-group shadow-sm-hover border border-secondary-subtle dark:border-gray-600 rounded-pill overflow-hidden bg-light dark:bg-[#212529]">
-                    <span class="input-group-text bg-transparent border-0 text-muted px-2"><i class="bi bi-calendar"></i></span>
-                    <input type="date" class="form-control border-0 bg-transparent shadow-none dark:text-white px-1" style="font-size: 0.85rem;" v-model="filterDateFrom" @change="debounceFetch" title="Từ ngày">
+                  <div
+                    class="input-group shadow-sm-hover border border-secondary-subtle dark:border-gray-600 rounded-pill overflow-hidden bg-light dark:bg-[#212529]">
+                    <span class="input-group-text bg-transparent border-0 text-muted px-2"><i
+                        class="bi bi-calendar"></i></span>
+                    <input type="date" class="form-control border-0 bg-transparent shadow-none dark:text-white px-1"
+                      style="font-size: 0.85rem;" v-model="filterDateFrom" @change="debounceFetch" title="Từ ngày">
                   </div>
                 </div>
 
                 <div class="col-6 col-md-4 col-lg-2">
-                  <div class="input-group shadow-sm-hover border border-secondary-subtle dark:border-gray-600 rounded-pill overflow-hidden bg-light dark:bg-[#212529]">
-                    <span class="input-group-text bg-transparent border-0 text-muted px-2"><i class="bi bi-calendar-fill"></i></span>
-                    <input type="date" class="form-control border-0 bg-transparent shadow-none dark:text-white px-1" style="font-size: 0.85rem;" v-model="filterDateTo" @change="debounceFetch" title="Đến ngày">
+                  <div
+                    class="input-group shadow-sm-hover border border-secondary-subtle dark:border-gray-600 rounded-pill overflow-hidden bg-light dark:bg-[#212529]">
+                    <span class="input-group-text bg-transparent border-0 text-muted px-2"><i
+                        class="bi bi-calendar-fill"></i></span>
+                    <input type="date" class="form-control border-0 bg-transparent shadow-none dark:text-white px-1"
+                      style="font-size: 0.85rem;" v-model="filterDateTo" @change="debounceFetch" title="Đến ngày">
                   </div>
                 </div>
 
                 <div class="col-8 col-md-4 col-lg-2">
-                  <div class="d-flex align-items-center bg-light dark:bg-[#212529] rounded-pill border border-secondary-subtle dark:border-gray-600 px-2 overflow-hidden shadow-sm-hover h-100" style="min-height: 38px;">
-                     <i class="bi bi-sort-down text-muted ms-1"></i>
-                     <select class="form-select border-0 shadow-none fw-medium text-dark dark:text-gray-200 bg-transparent py-0" style="font-size: 0.85rem; cursor: pointer;" v-model="filterSort" @change="debounceFetch">
-                       <option value="desc">Mới nhất</option>
-                       <option value="asc">Cũ nhất</option>
-                     </select>
+                  <div
+                    class="d-flex align-items-center bg-light dark:bg-[#212529] rounded-pill border border-secondary-subtle dark:border-gray-600 px-2 overflow-hidden shadow-sm-hover h-100"
+                    style="min-height: 38px;">
+                    <i class="bi bi-sort-down text-muted ms-1"></i>
+                    <select
+                      class="form-select border-0 shadow-none fw-medium text-dark dark:text-gray-200 bg-transparent py-0"
+                      style="font-size: 0.85rem; cursor: pointer;" v-model="filterSort" @change="debounceFetch">
+                      <option value="desc">Mới nhất</option>
+                      <option value="asc">Cũ nhất</option>
+                    </select>
                   </div>
                 </div>
 
                 <div class="col-4 col-md-12 col-lg-1 text-end text-lg-center">
-                  <button v-if="hasFilters" class="btn btn-light text-danger fw-bold rounded-pill border shadow-sm w-100 p-0 d-flex align-items-center justify-content-center hover-danger" style="height: 38px;" title="Xóa lọc" @click="clearFilters">
+                  <button v-if="hasFilters"
+                    class="btn btn-light text-danger fw-bold rounded-pill border shadow-sm w-100 p-0 d-flex align-items-center justify-content-center hover-danger"
+                    style="height: 38px;" title="Xóa lọc" @click="clearFilters">
                     <i class="bi bi-x-lg"></i> <span class="d-md-none ms-1 small">Xóa</span>
                   </button>
                 </div>
@@ -119,147 +159,107 @@
             </div>
 
             <div class="animation-fade-in">
-              
+
               <div v-if="isLoading" class="d-flex flex-column gap-4 pe-none">
-                 <div v-for="i in 3" :key="'skel'+i" class="card border-light-subtle dark:border-gray-700 shadow-sm rounded-4 dark:bg-[#1a2533] overflow-hidden">
-                    <div class="card-header bg-white dark:bg-[#1a2533] border-bottom dark:border-gray-700 py-3 px-3 px-md-4 d-flex justify-content-between align-items-center">
-                       <div class="shimmer rounded mb-0" style="width: 120px; height: 18px;"></div>
-                       <div class="shimmer rounded mb-0" style="width: 80px; height: 18px;"></div>
+                <div v-for="i in 3" :key="'skel' + i"
+                  class="card border-light-subtle dark:border-gray-700 shadow-sm rounded-4 dark:bg-[#1a2533] overflow-hidden">
+                  <div
+                    class="card-header bg-white dark:bg-[#1a2533] border-bottom dark:border-gray-700 py-3 px-3 px-md-4 d-flex justify-content-between align-items-center">
+                    <div class="shimmer rounded mb-0" style="width: 120px; height: 18px;"></div>
+                    <div class="shimmer rounded mb-0" style="width: 80px; height: 18px;"></div>
+                  </div>
+                  <div class="card-body p-0">
+                    <div class="d-flex p-3 p-md-4 gap-3">
+                      <div class="shimmer rounded-3" style="width: 80px; height: 80px; flex-shrink: 0;"></div>
+                      <div class="flex-grow-1 d-flex flex-column justify-content-between py-1">
+                        <div class="d-flex justify-content-between">
+                          <div class="shimmer rounded mb-2" style="width: 50%; height: 16px;"></div>
+                          <div class="shimmer rounded" style="width: 80px; height: 16px;"></div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-end mt-2">
+                          <div class="shimmer rounded" style="width: 100px; height: 14px;"></div>
+                          <div class="shimmer rounded" style="width: 30px; height: 14px;"></div>
+                        </div>
+                      </div>
                     </div>
-                    <div class="card-body p-0">
-                       <div class="d-flex p-3 p-md-4 gap-3">
-                          <div class="shimmer rounded-3" style="width: 80px; height: 80px; flex-shrink: 0;"></div>
-                          <div class="flex-grow-1 d-flex flex-column justify-content-between py-1">
-                             <div class="d-flex justify-content-between">
-                                <div class="shimmer rounded mb-2" style="width: 50%; height: 16px;"></div>
-                                <div class="shimmer rounded" style="width: 80px; height: 16px;"></div>
-                             </div>
-                             <div class="d-flex justify-content-between align-items-end mt-2">
-                                <div class="shimmer rounded" style="width: 100px; height: 14px;"></div>
-                                <div class="shimmer rounded" style="width: 30px; height: 14px;"></div>
-                             </div>
-                          </div>
-                       </div>
-                    </div>
-                    <div class="card-footer bg-white dark:bg-[#1a2533] border-top dark:border-gray-700 p-3 px-md-4 d-flex justify-content-end align-items-center gap-2">
-                       <div class="shimmer rounded me-auto" style="width: 120px; height: 18px;"></div>
-                       <div class="shimmer rounded-pill" style="width: 90px; height: 35px;"></div>
-                       <div class="shimmer rounded-pill" style="width: 90px; height: 35px;"></div>
-                    </div>
-                 </div>
+                  </div>
+                  <div
+                    class="card-footer bg-white dark:bg-[#1a2533] border-top dark:border-gray-700 p-3 px-md-4 d-flex justify-content-end align-items-center gap-2">
+                    <div class="shimmer rounded me-auto" style="width: 120px; height: 18px;"></div>
+                    <div class="shimmer rounded-pill" style="width: 90px; height: 35px;"></div>
+                    <div class="shimmer rounded-pill" style="width: 90px; height: 35px;"></div>
+                  </div>
+                </div>
               </div>
 
               <!-- Trống -->
-              <div v-else-if="orders.length === 0" class="text-center py-5 my-4 bg-white dark:bg-[#1a2533] rounded-4 shadow-sm border border-light-subtle dark:border-gray-700">
-                <div class="bg-light dark:bg-[#212529] rounded-circle d-inline-flex justify-content-center align-items-center mb-3" style="width: 80px; height: 80px;">
+              <div v-else-if="orders.length === 0"
+                class="text-center py-5 my-4 bg-white dark:bg-[#1a2533] rounded-4 shadow-sm border border-light-subtle dark:border-gray-700">
+                <div
+                  class="bg-light dark:bg-[#212529] rounded-circle d-inline-flex justify-content-center align-items-center mb-3"
+                  style="width: 80px; height: 80px;">
                   <i class="bi bi-receipt text-muted opacity-50" style="font-size: 2.5rem;"></i>
                 </div>
                 <h6 class="fw-bold text-dark dark:text-white font-sans-vn">Chưa có đơn hàng nào</h6>
                 <p class="text-muted small font-sans-vn">Bạn chưa có đơn hàng nào trong trạng thái này.</p>
-                <router-link to="/category" class="btn btn-outline-urban rounded-pill px-4 fw-semibold mt-2 font-sans-vn">Bắt đầu mua sắm</router-link>
+                <router-link to="/category"
+                  class="btn btn-outline-urban rounded-pill px-4 fw-semibold mt-2 font-sans-vn">Bắt đầu mua
+                  sắm</router-link>
               </div>
 
               <!-- Lưới Card Đơn hàng -->
               <div v-else class="d-flex flex-column gap-4">
-                <div v-for="order in orders" :key="order.id" class="card border-light-subtle dark:border-gray-700 shadow-sm rounded-4 dark:bg-[#1a2533] overflow-hidden group hover-border-urban transition-all">
-                  
-                  <div class="card-header bg-white dark:bg-[#1a2533] border-bottom dark:border-gray-700 py-3 px-3 px-md-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div v-for="order in orders" :key="order.id"
+                  :class="['card border-light-subtle dark:border-gray-700 shadow-sm rounded-4 overflow-hidden group hover-border-urban transition-all', getOrderBgClass(order)]">
+
+                  <div
+                    class="card-header bg-transparent border-bottom dark:border-gray-700 py-3 px-3 px-md-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <div class="d-flex align-items-center gap-2 flex-wrap">
                       <span class="badge bg-urban text-white rounded-1 shadow-sm d-none d-sm-inline">ZYRO</span>
-                      <span class="fw-bold font-monospace text-dark dark:text-gray-300 small border-sm-start ps-sm-2 dark:border-gray-600">#{{ order.order_code }}</span>
-                      <span class="text-muted small ms-1 font-sans-vn"><i class="bi bi-clock me-1"></i>{{ formatDate(order.created_at) }}</span>
+                      <span
+                        class="fw-bold font-monospace text-dark dark:text-gray-300 small border-sm-start ps-sm-2 dark:border-gray-600">#{{
+                        order.order_code }}</span>
+                      <span class="text-muted small ms-1 font-sans-vn"><i class="bi bi-clock me-1"></i>{{
+                        formatDate(order.created_at) }}</span>
                     </div>
-                    
-                    <span v-if="order.return_status" class="fw-bold text-uppercase d-flex align-items-center gap-1 font-sans-vn" :class="getReturnLabelColor(order.return_status)" style="font-size: 0.8rem; letter-spacing: 0.5px;">
+
+                    <span v-if="order.return_status"
+                      class="fw-bold text-uppercase d-flex align-items-center gap-1 font-sans-vn"
+                      :class="getReturnLabelColor(order.return_status)"
+                      style="font-size: 0.8rem; letter-spacing: 0.5px;">
                       <i class="bi bi-arrow-return-left"></i> Yêu cầu đổi trả
                     </span>
-                    <span v-else class="fw-bold text-uppercase d-flex align-items-center gap-1 font-sans-vn" :class="getOrderStatusColor(order.status)" style="font-size: 0.8rem; letter-spacing: 0.5px;">
-                      <i class="bi" :class="getOrderStatusIcon(order.status)"></i> {{ getOrderStatusLabel(order.status) }}
+                    <span v-else class="fw-bold text-uppercase d-flex align-items-center gap-1 font-sans-vn"
+                      :class="getOrderStatusColor(order.status)" style="font-size: 0.8rem; letter-spacing: 0.5px;">
+                      <i class="bi" :class="getOrderStatusIcon(order.status)"></i> {{ getOrderStatusLabel(order.status)
+                      }}
                     </span>
                   </div>
 
                   <div class="card-body p-0 cursor-pointer" @click="openOrderDetail(order.id)">
-                    <template v-for="(group, gIdx) in cartGroups(order.items)" :key="'grp'+gIdx">
-
-                      <!-- GÓI COMBO LOOKBOOK -->
-                      <div v-if="group.isLookbook" class="p-3 p-md-4 border-bottom dark:border-gray-700">
-                          <div class="d-flex align-items-start gap-3">
-                             <div class="position-relative flex-shrink-0 cursor-pointer hover-opacity" style="width: 80px; height: 100px;" @click.stop="goToLookbook(group)">
-                               <img :src="group.lookbook_image" class="w-100 h-100 object-fit-cover rounded-3 border dark:border-gray-600 bg-white" @error="e => e.target.src='/client_placeholder.png'">
-                             </div>
-                             
-                             <div class="flex-grow-1 d-flex flex-column justify-content-between">
-                                <div class="d-flex justify-content-between align-items-start gap-3">
-                                   <div>
-                                      <span class="badge bg-secondary text-white rounded-pill px-2 py-1 shadow-sm font-sans-vn mb-1 cursor-pointer hover-bg-dark transition-all" style="font-size: 0.65rem;" @click.stop="goToLookbook(group)">
-                                         <i class="bi bi-magic me-1"></i> {{ group.lookbook_name }}
-                                      </span>
-                                      <h6 class="fw-bold text-dark dark:text-gray-200 mb-0 font-sans-vn cursor-pointer hover-text-urban transition-color" style="font-size: 0.95rem;" @click.stop="goToLookbook(group)">Combo {{ group.items.length }} món đồ</h6>
-                                   </div>
-                                   <div class="text-end flex-shrink-0">
-                                      <div class="fw-bold text-danger font-sans-vn">{{ formatCurrency(group.totalPrice) }}</div>
-                                   </div>
-                                </div>
-                                
-                                <div class="d-flex justify-content-between align-items-end mt-2">
-                                   <div class="text-muted small d-flex align-items-center gap-1 cursor-pointer hover-urban transition-color font-sans-vn fw-medium" @click.stop="toggleGroup(order.id, group.lookbook_id)">
-                                       <i class="bi" :class="isGroupExpanded(order.id, group.lookbook_id) ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
-                                       {{ isGroupExpanded(order.id, group.lookbook_id) ? 'Thu gọn chi tiết' : 'Xem chi tiết các món' }}
-                                   </div>
-                                   <span class="fw-semibold text-dark dark:text-gray-300 font-sans-vn">SL: {{ group.comboQuantity }}</span>
-                                </div>
-                             </div>
+                    <div v-for="(item, idx) in order.items.slice(0, 2)" :key="item.id"
+                         class="d-flex p-3 px-md-4 py-md-3 gap-3 position-relative border-bottom dark:border-gray-700 hover-bg-light dark:hover:bg-gray-800 transition-all cursor-pointer"
+                         @click="openOrderDetail(order.id)">
+                      <div class="flex-grow-1 position-relative z-1 d-flex flex-column justify-content-center">
+                        <div class="d-flex justify-content-between align-items-start gap-3">
+                          <h6 class="fw-bold text-dark dark:text-gray-200 mb-1 line-clamp-1 font-sans-vn" style="font-size: 0.95rem;">
+                            {{ item.product_name }}
+                            <span v-if="item.lookbook_id" class="badge bg-secondary text-white ms-2" style="font-size: 0.6rem;">Combo</span>
+                          </h6>
+                          <div class="text-end flex-shrink-0">
+                            <div class="fw-bold text-dark dark:text-white font-sans-vn">{{ formatCurrency(item.purchased_price) }}</div>
                           </div>
-
-                          <div v-show="isGroupExpanded(order.id, group.lookbook_id)" class="combo-details mt-3 pt-3 border-top border-light-subtle dark:border-gray-700 ps-2" @click.stop>
-                             <div class="d-flex flex-column gap-2">
-                                <div v-for="item in group.items" :key="'cb_item_'+item.id" class="d-flex align-items-center gap-3 bg-white dark:bg-[#1a2533] p-2 rounded-3 border border-light-subtle dark:border-gray-700">
-                                   <img :src="getImageUrl(item.variant_image)" style="width: 40px; height: 50px;" class="rounded-2 border dark:border-gray-600 object-fit-cover shadow-sm bg-light cursor-pointer hover-opacity" @error="e => e.target.src='/client_placeholder.png'" @click.stop="goToProduct(item)">
-                                   <div class="flex-grow-1">
-                                      <div class="fw-semibold text-dark dark:text-gray-200 line-clamp-1 font-sans-vn" style="font-size: 0.85rem;">
-                                          <!-- ĐÃ FIX: Chuyển sang Router Link theo Slug mượt mà -->
-                                          <a href="#" @click.prevent.stop="goToProduct(item)" class="text-decoration-none text-dark dark:text-gray-200 hover-text-urban transition-color">{{ item.product_name }}</a>
-                                      </div>
-                                      <div class="text-secondary dark:text-gray-400 font-sans-vn d-flex justify-content-between pe-2 mt-1" style="font-size: 0.75rem;">
-                                         <span>{{ parseAttributes(item.variant_attributes) }} <span class="mx-1">|</span> <span class="fw-bold text-dark dark:text-gray-300">{{ formatCurrency(item.purchased_price) }}</span></span>
-                                         <span class="fw-bold">x{{ item.quantity }}</span>
-                                      </div>
-                                   </div>
-                                </div>
-                             </div>
-                          </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-end mt-1">
+                          <span class="text-muted dark:text-gray-400 small font-sans-vn">Phân loại: {{ parseAttributes(item.variant_attributes) }}</span>
+                          <span class="fw-semibold text-dark dark:text-gray-300 font-sans-vn">x{{ item.quantity }}</span>
+                        </div>
                       </div>
+                    </div>
 
-                      <!-- SẢN PHẨM LẺ -->
-                      <template v-else>
-                         <div v-for="(item, idx) in group.items" :key="item.id" 
-                              class="d-flex p-3 p-md-4 gap-3 position-relative border-bottom dark:border-gray-700">
-                            
-                            <div class="position-absolute top-0 start-0 w-100 h-100 bg-c-effect opacity-25 dark:bg-[#121416] pe-none z-0"></div>
-
-                            <div class="position-relative z-1 cursor-pointer hover-opacity" style="width: 80px; height: 100px; flex-shrink: 0;" @click.stop="goToProduct(item)">
-                              <img :src="getImageUrl(item.variant_image)" class="w-100 h-100 object-fit-cover rounded-3 border dark:border-gray-600 bg-white" @error="e => e.target.src='/client_placeholder.png'">
-                            </div>
-                            
-                            <div class="flex-grow-1 position-relative z-1 d-flex flex-column justify-content-between">
-                              <div class="d-flex justify-content-between align-items-start gap-3">
-                                <h6 class="fw-bold text-dark dark:text-gray-200 mb-1 line-clamp-2 font-sans-vn" style="font-size: 0.95rem;">
-                                    <!-- ĐÃ FIX: Chuyển sang Router Link theo Slug mượt mà -->
-                                    <a href="#" @click.prevent.stop="goToProduct(item)" class="text-decoration-none text-dark dark:text-gray-200 hover-text-urban transition-color">{{ item.product_name }}</a>
-                                </h6>
-                                <div class="text-end flex-shrink-0">
-                                   <div class="fw-bold text-dark dark:text-white font-sans-vn">{{ formatCurrency(item.purchased_price) }}</div>
-                                </div>
-                              </div>
-                              <div class="d-flex justify-content-between align-items-end mt-2">
-                                 <span class="text-muted dark:text-gray-400 small font-sans-vn">PL: {{ parseAttributes(item.variant_attributes) }}</span>
-                                 <span class="fw-semibold text-dark dark:text-gray-300 font-sans-vn">x{{ item.quantity }}</span>
-                              </div>
-                            </div>
-                         </div>
-                      </template>
-
-                    </template>
+                    <div v-if="order.items.length > 2" class="p-2 text-center border-bottom dark:border-gray-700 bg-light dark:bg-[#1a2533] cursor-pointer" @click="openOrderDetail(order.id)">
+                      <span class="text-muted small fw-medium font-sans-vn">Và {{ order.items.length - 2 }} sản phẩm khác... <span class="text-urban ms-1">Xem chi tiết</span></span>
+                    </div>
                   </div>
 
                   <div class="card-footer bg-white dark:bg-[#1a2533] border-top dark:border-gray-700 p-3 px-md-4">
@@ -267,59 +267,77 @@
                       <span class="text-dark dark:text-gray-300 me-2 font-sans-vn">Thành tiền:</span>
                       <span class="fs-4 fw-bold text-urban font-sans-vn">{{ formatCurrency(order.total_amount) }}</span>
                     </div>
-                    
+
                     <div class="d-flex justify-content-end gap-2 flex-wrap">
-                      <button class="btn btn-light dark:bg-[#2b3035] dark:text-gray-300 border dark:border-gray-600 rounded-pill px-4 fw-semibold transition-all hover-dark font-sans-vn" @click="openOrderDetail(order.id)">
-                         Chi Tiết
+                      <button
+                        class="btn btn-light dark:bg-[#2b3035] dark:text-gray-300 border dark:border-gray-600 rounded-pill px-4 fw-semibold transition-all hover-dark font-sans-vn"
+                        @click="openOrderDetail(order.id)">
+                        Chi Tiết
                       </button>
-                      
-                      <button v-if="order.status === 'pending'" class="btn btn-light dark:bg-[#2b3035] text-danger border dark:border-gray-600 rounded-pill px-4 fw-semibold transition-all hover-danger font-sans-vn" @click.stop="cancelOrder(order)">
-                         Hủy Đơn
+
+                      <button v-if="order.status === 'pending'"
+                        class="btn btn-light dark:bg-[#2b3035] text-danger border dark:border-gray-600 rounded-pill px-4 fw-semibold transition-all hover-danger font-sans-vn"
+                        @click.stop="cancelOrder(order)">
+                        Hủy Đơn
                       </button>
 
                       <!-- NẾU ĐÃ LÀ ĐƠN YÊU CẦU HOÀN TRẢ -->
                       <template v-if="order.return_status">
-                         <button class="btn bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 rounded-pill px-4 fw-bold font-sans-vn pe-none">
-                            <i class="bi bi-info-circle-fill me-1"></i> {{ getReturnStatusLabel(order.return_status) }}
-                         </button>
-                         <button class="btn btn-outline-urban rounded-pill px-4 fw-semibold transition-all font-sans-vn hover-urban-bg" @click.stop="buyAgain(order)">
-                            Mua lại
-                         </button>
+                        <button
+                          class="btn bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 rounded-pill px-4 fw-bold font-sans-vn pe-none">
+                          <i class="bi bi-info-circle-fill me-1"></i> {{ getReturnStatusLabel(order.return_status) }}
+                        </button>
+                        <button
+                          class="btn btn-outline-urban rounded-pill px-4 fw-semibold transition-all font-sans-vn hover-urban-bg"
+                          @click.stop="buyAgain(order)">
+                          Mua lại
+                        </button>
                       </template>
-                      
+
                       <!-- NẾU CHƯA CÓ YÊU CẦU HOÀN TRẢ NÀO VÀ ĐÃ GIAO XONG -->
                       <template v-else-if="order.status === 'completed'">
-                        <button class="btn btn-outline-danger rounded-pill px-4 fw-semibold transition-all font-sans-vn" @click.stop="requestReturn(order)">
-                           Hoàn trả / Đổi hàng
+                        <button class="btn btn-outline-danger rounded-pill px-4 fw-semibold transition-all font-sans-vn"
+                          @click.stop="requestReturn(order)">
+                          Hoàn trả / Đổi hàng
                         </button>
-                        <button class="btn btn-outline-urban rounded-pill px-4 fw-semibold transition-all font-sans-vn" @click.stop="buyAgain(order)">
-                           Mua lại
+                        <button class="btn btn-outline-urban rounded-pill px-4 fw-semibold transition-all font-sans-vn"
+                          @click.stop="buyAgain(order)">
+                          Mua lại
                         </button>
-                        <button v-if="order.is_reviewed" class="btn btn-outline-urban rounded-pill px-4 fw-bold shadow-sm transition-all font-sans-vn" @click.stop="openReview(order)">
-                           Xem đánh giá
+                        <button v-if="order.is_reviewed"
+                          class="btn btn-outline-urban rounded-pill px-4 fw-bold shadow-sm transition-all font-sans-vn"
+                          @click.stop="openReview(order)">
+                          Xem đánh giá
                         </button>
-                        <button v-else class="btn btn-urban rounded-pill px-4 fw-bold shadow-sm transition-all font-sans-vn" @click.stop="openReview(order)">
-                           Đánh giá
+                        <button v-else
+                          class="btn btn-urban rounded-pill px-4 fw-bold shadow-sm transition-all font-sans-vn"
+                          @click.stop="openReview(order)">
+                          Đánh giá
                         </button>
                       </template>
 
                     </div>
                   </div>
-                  
+
                 </div>
               </div>
 
               <!-- PHÂN TRANG -->
               <div v-if="pagination.last_page > 1" class="d-flex justify-content-center mt-5">
                 <ul class="pagination pagination-sm mb-0 shadow-sm">
-                  <li class="page-item" :class="{'disabled': pagination.current_page === 1}">
-                    <a class="page-link shadow-none dark:bg-[#212529] dark:border-gray-600 text-urban" href="#" @click.prevent="fetchOrders(pagination.current_page - 1)"><i class="bi bi-chevron-left"></i></a>
+                  <li class="page-item" :class="{ 'disabled': pagination.current_page === 1 }">
+                    <a class="page-link shadow-none dark:bg-[#212529] dark:border-gray-600 text-urban" href="#"
+                      @click.prevent="fetchOrders(pagination.current_page - 1)"><i class="bi bi-chevron-left"></i></a>
                   </li>
-                  <li v-for="page in pagination.last_page" :key="page" class="page-item" :class="{'active': pagination.current_page === page}">
-                    <a class="page-link shadow-none dark:border-gray-600" :class="pagination.current_page === page ? 'bg-urban border-urban text-white' : 'dark:bg-[#212529] dark:text-gray-300'" href="#" @click.prevent="fetchOrders(page)">{{ page }}</a>
+                  <li v-for="page in pagination.last_page" :key="page" class="page-item"
+                    :class="{ 'active': pagination.current_page === page }">
+                    <a class="page-link shadow-none dark:border-gray-600"
+                      :class="pagination.current_page === page ? 'bg-urban border-urban text-white' : 'dark:bg-[#212529] dark:text-gray-300'"
+                      href="#" @click.prevent="fetchOrders(page)">{{ page }}</a>
                   </li>
-                  <li class="page-item" :class="{'disabled': pagination.current_page === pagination.last_page}">
-                    <a class="page-link shadow-none dark:bg-[#212529] dark:border-gray-600 text-urban" href="#" @click.prevent="fetchOrders(pagination.current_page + 1)"><i class="bi bi-chevron-right"></i></a>
+                  <li class="page-item" :class="{ 'disabled': pagination.current_page === pagination.last_page }">
+                    <a class="page-link shadow-none dark:bg-[#212529] dark:border-gray-600 text-urban" href="#"
+                      @click.prevent="fetchOrders(pagination.current_page + 1)"><i class="bi bi-chevron-right"></i></a>
                   </li>
                 </ul>
               </div>
@@ -390,10 +408,10 @@ const fetchOrders = async (page = 1) => {
       search: searchQuery.value,
       date_from: filterDateFrom.value,
       date_to: filterDateTo.value,
-      sort: filterSort.value 
+      sort: filterSort.value
     };
-    
-    const minDelay = new Promise(resolve => setTimeout(resolve, 600)); 
+
+    const minDelay = new Promise(resolve => setTimeout(resolve, 600));
     const apiCall = api.get('/client/user/orders', { params });
 
     const [res] = await Promise.all([apiCall, minDelay]);
@@ -428,24 +446,24 @@ const groupOrderItems = (items) => {
         let lbName = 'Combo Phong Cách';
         let lbImage = '/client_placeholder.png';
         let lbSlug = null;
-        
+
         if (item.lookbook) {
-           lbName = item.lookbook.name;
-           lbImage = item.lookbook.main_image ? getImageUrl(item.lookbook.main_image) : '/client_placeholder.png';
-           lbSlug = item.lookbook.slug;
+          lbName = item.lookbook.name;
+          lbImage = item.lookbook.main_image ? getImageUrl(item.lookbook.main_image) : '/client_placeholder.png';
+          lbSlug = item.lookbook.slug;
         } else if (item.variant_image) {
-           lbImage = getImageUrl(item.variant_image);
+          lbImage = getImageUrl(item.variant_image);
         }
 
-        group = { 
-          isLookbook: true, 
-          lookbook_id: item.lookbook_id, 
+        group = {
+          isLookbook: true,
+          lookbook_id: item.lookbook_id,
           lookbook_name: lbName,
           lookbook_image: lbImage,
           lookbook_slug: lbSlug,
           items: [],
-          comboQuantity: item.quantity, 
-          totalPrice: 0 
+          comboQuantity: item.quantity,
+          totalPrice: 0
         };
         result.push(group);
       }
@@ -465,9 +483,7 @@ const groupOrderItems = (items) => {
 
 const cartGroups = (items) => groupOrderItems(items);
 
-// ========================================================
 // HÀM ĐIỀU HƯỚNG BẤM TỪ ĐƠN HÀNG VỀ LINK GỐC
-// ========================================================
 const goToProduct = (item) => {
   const targetPath = item.variant?.product?.slug || item.product_id;
   router.push(`/product/${targetPath}`).then(() => {
@@ -501,9 +517,7 @@ const openOrderDetail = (id) => {
   }
 };
 
-// ========================================================
 // HỦY ĐƠN: SỬ DỤNG CHECKLIST HTML CUSTOM
-// ========================================================
 const cancelOrder = (order) => {
   if (order.status !== 'pending') {
      ZyroSwal.toastError('Chỉ có thể hủy đơn chờ xác nhận');
@@ -519,7 +533,35 @@ const cancelOrder = (order) => {
           .swal-checklist-label input[type="radio"] { cursor: pointer; width: 1.1rem; height: 1.1rem; accent-color: #dc3545; margin-top: 0; margin-right: 0.6rem; flex-shrink: 0; }
           .dark .swal-checklist-label { border-color: rgba(255,255,255,0.2); }
           .dark .swal-checklist-label:hover { background-color: rgba(255,255,255,0.05); }
-        </style>
+        
+/* STATUS BACKGROUND COLORS */
+.bg-status-pending { background-color: #fffdf5 !important; }
+.bg-status-confirmed { background-color: #f0fbfe !important; }
+.bg-status-processing, .bg-status-shipping { background-color: #f5f8fd !important; }
+.bg-status-completed { background-color: #f5fdf7 !important; }
+.bg-status-cancelled { background-color: #fdf5f6 !important; }
+.bg-status-returned { background-color: #f8f9fa !important; }
+.bg-status-all { background-color: #ffffff !important; }
+
+/* DARK MODE STATUS BACKGROUNDS */
+.dark .bg-status-pending { background-color: rgba(255, 193, 7, 0.08) !important; }
+.dark .bg-status-confirmed { background-color: rgba(13, 202, 240, 0.08) !important; }
+.dark .bg-status-processing, .dark .bg-status-shipping { background-color: rgba(13, 110, 253, 0.08) !important; }
+.dark .bg-status-completed { background-color: rgba(25, 135, 84, 0.08) !important; }
+.dark .bg-status-cancelled { background-color: rgba(220, 53, 69, 0.08) !important; }
+.dark .bg-status-returned { background-color: rgba(108, 117, 125, 0.08) !important; }
+.dark .bg-status-all { background-color: #1a2533 !important; }
+
+/* TAB STATUS COLORS */
+.active-tab-all { color: var(--color-urban) !important; border-bottom-color: var(--color-urban) !important; }
+.active-tab-pending { color: #ffc107 !important; border-bottom-color: #ffc107 !important; }
+.active-tab-confirmed { color: #0dcaf0 !important; border-bottom-color: #0dcaf0 !important; }
+.active-tab-shipping, .active-tab-processing { color: #0d6efd !important; border-bottom-color: #0d6efd !important; }
+.active-tab-completed { color: #198754 !important; border-bottom-color: #198754 !important; }
+.active-tab-cancelled { color: #dc3545 !important; border-bottom-color: #dc3545 !important; }
+.active-tab-returned { color: #6c757d !important; border-bottom-color: #6c757d !important; }
+
+</style>
         <div class="text-start font-sans-vn mt-2">
           <label class="form-label small fw-bold text-muted text-uppercase mb-2">Lý do hủy đơn <span class="text-danger">*</span></label>
           <div class="d-flex flex-column mb-3">
@@ -578,9 +620,7 @@ const cancelOrder = (order) => {
   });
 };
 
-// ========================================================
 // YÊU CẦU HOÀN TRẢ: SỬ DỤNG CHECKLIST HTML CUSTOM
-// ========================================================
 const requestReturn = (order) => {
   Swal.fire({
       title: 'Hỗ trợ Hoàn trả / Đổi hàng',
@@ -591,7 +631,35 @@ const requestReturn = (order) => {
           .swal-checklist-label input[type="radio"] { cursor: pointer; width: 1.1rem; height: 1.1rem; accent-color: #dc3545; margin-top: 0; margin-right: 0.6rem; flex-shrink: 0; }
           .dark .swal-checklist-label { border-color: rgba(255,255,255,0.2); }
           .dark .swal-checklist-label:hover { background-color: rgba(255,255,255,0.05); }
-        </style>
+        
+/* STATUS BACKGROUND COLORS */
+.bg-status-pending { background-color: #fffdf5 !important; }
+.bg-status-confirmed { background-color: #f0fbfe !important; }
+.bg-status-processing, .bg-status-shipping { background-color: #f5f8fd !important; }
+.bg-status-completed { background-color: #f5fdf7 !important; }
+.bg-status-cancelled { background-color: #fdf5f6 !important; }
+.bg-status-returned { background-color: #f8f9fa !important; }
+.bg-status-all { background-color: #ffffff !important; }
+
+/* DARK MODE STATUS BACKGROUNDS */
+.dark .bg-status-pending { background-color: rgba(255, 193, 7, 0.08) !important; }
+.dark .bg-status-confirmed { background-color: rgba(13, 202, 240, 0.08) !important; }
+.dark .bg-status-processing, .dark .bg-status-shipping { background-color: rgba(13, 110, 253, 0.08) !important; }
+.dark .bg-status-completed { background-color: rgba(25, 135, 84, 0.08) !important; }
+.dark .bg-status-cancelled { background-color: rgba(220, 53, 69, 0.08) !important; }
+.dark .bg-status-returned { background-color: rgba(108, 117, 125, 0.08) !important; }
+.dark .bg-status-all { background-color: #1a2533 !important; }
+
+/* TAB STATUS COLORS */
+.active-tab-all { color: var(--color-urban) !important; border-bottom-color: var(--color-urban) !important; }
+.active-tab-pending { color: #ffc107 !important; border-bottom-color: #ffc107 !important; }
+.active-tab-confirmed { color: #0dcaf0 !important; border-bottom-color: #0dcaf0 !important; }
+.active-tab-shipping, .active-tab-processing { color: #0d6efd !important; border-bottom-color: #0d6efd !important; }
+.active-tab-completed { color: #198754 !important; border-bottom-color: #198754 !important; }
+.active-tab-cancelled { color: #dc3545 !important; border-bottom-color: #dc3545 !important; }
+.active-tab-returned { color: #6c757d !important; border-bottom-color: #6c757d !important; }
+
+</style>
         <div class="text-start font-sans-vn mt-2">
           <div class="alert alert-warning small border-0 py-2 px-3 mb-3 dark:bg-yellow-900/30">
              <i class="bi bi-info-circle-fill me-1"></i> Lưu ý: ZYRO hỗ trợ giải quyết yêu cầu trên toàn bộ đơn hàng.
@@ -634,10 +702,35 @@ const requestReturn = (order) => {
                 <span class="small fw-medium text-dark dark:text-gray-200">Lý do khác...</span>
              </label>
           </div>
-          
+
           <!-- Chi tiết Mô tả -->
           <label class="form-label small fw-bold text-muted text-uppercase mb-2">Mô tả thêm chi tiết</label>
           <textarea id="swal-return-detail" class="form-control shadow-none bg-light dark:bg-[#212529] dark:text-white border-secondary-subtle dark:border-gray-700" rows="3" placeholder="Nhập tình trạng cụ thể (VD: Size S áo chật quá...) để ZYRO hỗ trợ nhanh nhất..."></textarea>
+          
+          <!-- THÔNG TIN NGÂN HÀNG (MỚI) -->
+          <div class="mt-4 p-3 bg-white dark:bg-[#212529] rounded-3 border border-success-subtle text-start">
+             <label class="form-label small fw-bold text-success text-uppercase mb-1"><i class="bi bi-bank2"></i> Thông tin thụ hưởng (Hoàn tiền)</label>
+             <p class="small text-muted mb-3" style="font-size: 0.75rem;">Cung cấp thẻ ngân hàng hoặc mã QR để Kế toán hoàn tiền nhanh nhất.</p>
+             
+             <div class="row g-2 mb-3">
+                <div class="col-12">
+                   <input type="text" id="swal-bank-name" class="form-control form-control-sm" placeholder="Tên Ngân hàng (VD: Vietcombank, MB Bank)">
+                </div>
+                <div class="col-6">
+                   <input type="text" id="swal-account-number" class="form-control form-control-sm" placeholder="Số tài khoản">
+                </div>
+                <div class="col-6">
+                   <input type="text" id="swal-account-name" class="form-control form-control-sm text-uppercase" placeholder="Tên chủ thẻ">
+                </div>
+             </div>
+             
+             <div class="text-center small fw-bold text-muted mb-2">- HOẶC -</div>
+             
+             <div class="mb-1">
+                <label class="form-label small fw-bold text-muted mb-1" style="font-size: 0.75rem;">Tải lên mã QR Ngân Hàng (Khuyên dùng)</label>
+                <input type="file" id="swal-qr-code" class="form-control form-control-sm" accept="image/*">
+             </div>
+          </div>
         </div>
       `,
       showCancelButton: true,
@@ -648,12 +741,12 @@ const requestReturn = (order) => {
         const type = document.querySelector('input[name="return_type"]:checked')?.value;
         const reason = document.querySelector('input[name="return_reason"]:checked')?.value;
         const detail = document.getElementById('swal-return-detail').value.trim();
-        
+
         if (reason === 'Lý do khác' && !detail) {
           Swal.showValidationMessage('Vui lòng nhập mô tả chi tiết lý do của bạn!');
           return false;
         }
-        
+
         // Nối chuỗi để lưu vào DB một cách chi tiết và rõ ràng nhất
         let finalReason = `[Yêu cầu: ${type}] - Lý do: ${reason}`;
         if (detail) {
@@ -699,7 +792,7 @@ const openReview = (order) => {
 const getImageUrl = (path) => {
   if (!path) return '/client_placeholder.png';
   if (path.startsWith('http')) return path;
-  return import.meta.env.VITE_API_BASE_URL.replace('/api/v1', '/storage/') + path;
+  return import.meta.env.VITE_STORAGE_URL + path;
 };
 const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
 const formatDate = (dateString) => {
@@ -710,7 +803,7 @@ const parseAttributes = (jsonStr) => {
   if(!jsonStr) return 'Mặc định';
   if(Array.isArray(jsonStr)) return jsonStr.join(' - ');
   if(typeof jsonStr === 'string') {
-     try { 
+     try {
          const parsed = JSON.parse(jsonStr);
          return Array.isArray(parsed) ? parsed.join(' - ') : parsed;
      } catch(e) { return jsonStr; }
@@ -721,6 +814,15 @@ const parseAttributes = (jsonStr) => {
 const getOrderStatusLabel = (status) => {
   const map = { 'pending': 'Chờ xác nhận', 'confirmed': 'Đã xác nhận', 'processing': 'Đang chuẩn bị', 'shipping': 'Đang giao', 'completed': 'Thành công', 'cancelled': 'Đã hủy', 'returned': 'Hoàn trả' };
   return map[status] || status;
+};
+
+
+const getOrderBgClass = (order) => {
+  if (order.return_status && order.status !== 'returned') {
+     return 'bg-status-returned'; // Ưu tiên bg hoàn trả nếu có request đổi trả
+  }
+  const map = { 'pending': 'bg-status-pending', 'confirmed': 'bg-status-confirmed', 'processing': 'bg-status-processing', 'shipping': 'bg-status-shipping', 'completed': 'bg-status-completed', 'cancelled': 'bg-status-cancelled', 'returned': 'bg-status-returned' };
+  return map[order.status] || 'bg-status-all';
 };
 
 const getOrderStatusColor = (status) => {
@@ -750,64 +852,226 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.user-orders-wrapper { width: 100%; padding: 28px;}
+.user-orders-wrapper {
+  width: 100%;
+  padding: 28px;
+}
 
-.zyro-container { width: 100%; max-width: 1310px; margin: 0 auto; padding-left: 20px; padding-right: 20px; }
-@media (min-width: 1400px) { .zyro-container { padding-left: 0; padding-right: 0; } }
+.zyro-container {
+  width: 100%;
+  max-width: 1310px;
+  margin: 0 auto;
+  padding-left: 20px;
+  padding-right: 20px;
+}
 
-.text-c-dark { color: var(--color-c-dark) !important; }
-html.dark .text-c-dark { color: #f8f9fa !important; }
-.text-urban { color: var(--color-c-hover, #547792) !important; }
+@media (min-width: 1400px) {
+  .zyro-container {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
 
-.bg-urban { background-color: var(--color-c-hover, #547792) !important; }
-.btn-urban { background-color: var(--color-c-hover, #547792); color: white; border: none; transition: 0.2s; }
-.btn-urban:hover { background-color: var(--color-c-dark, #213448); color: white; }
+.text-c-dark {
+  color: var(--color-c-dark) !important;
+}
 
-.btn-outline-urban { color: var(--color-c-hover, #547792); border-color: var(--color-c-hover, #547792); background: transparent; transition: 0.2s; }
-.btn-outline-urban:hover { background-color: var(--color-c-hover, #547792); color: white; }
-.hover-urban-bg:hover { background-color: var(--color-c-hover, #547792); color: white; border-color: var(--color-c-hover, #547792); }
+html.dark .text-c-dark {
+  color: #f8f9fa !important;
+}
 
-.btn-outline-danger { transition: 0.2s; }
-.btn-outline-danger:hover { background-color: #dc3545; color: white; }
+.text-urban {
+  color: var(--color-c-hover, #547792) !important;
+}
 
-.bg-c-effect { background-color: var(--color-c-effect, #EBF1F5); }
+.bg-urban {
+  background-color: var(--color-c-hover, #547792) !important;
+}
+
+.btn-urban {
+  background-color: var(--color-c-hover, #547792);
+  color: white;
+  border: none;
+  transition: 0.2s;
+}
+
+.btn-urban:hover {
+  background-color: var(--color-c-dark, #213448);
+  color: white;
+}
+
+.btn-outline-urban {
+  color: var(--color-c-hover, #547792);
+  border-color: var(--color-c-hover, #547792);
+  background: transparent;
+  transition: 0.2s;
+}
+
+.btn-outline-urban:hover {
+  background-color: var(--color-c-hover, #547792);
+  color: white;
+}
+
+.hover-urban-bg:hover {
+  background-color: var(--color-c-hover, #547792);
+  color: white;
+  border-color: var(--color-c-hover, #547792);
+}
+
+.btn-outline-danger {
+  transition: 0.2s;
+}
+
+.btn-outline-danger:hover {
+  background-color: #dc3545;
+  color: white;
+}
+
+.bg-c-effect {
+  background-color: var(--color-c-effect, #EBF1F5);
+}
 
 /* TABS TÙY CHỈNH CHỐNG VỠ RESPONSIVE */
-.custom-tab { color: #6c757d; border-bottom: 2px solid transparent; transition: all 0.3s; padding-bottom: 12px !important; font-size: 0.95rem; }
-.custom-tab:hover { color: var(--color-c-hover, #547792); }
-.custom-tab.active-tab { color: var(--color-c-hover, #547792) !important; border-bottom-color: var(--color-c-hover, #547792) !important; }
+.custom-tab {
+  color: #6c757d;
+  border-bottom: 2px solid transparent;
+  transition: all 0.3s;
+  padding-bottom: 12px !important;
+  font-size: 0.95rem;
+}
+
+.custom-tab:hover {
+  color: var(--color-c-hover, #547792);
+}
+
+.custom-tab.active-tab {
+  color: var(--color-c-hover, #547792) !important;
+  border-bottom-color: var(--color-c-hover, #547792) !important;
+}
 
 /* UTILS */
-.hover-text-dark:hover { color: #000 !important; }
-html.dark .hover-text-dark:hover { color: #fff !important; }
-.hover-text-urban:hover { color: var(--color-c-hover, #547792) !important; text-decoration: underline !important; }
-.hover-opacity { transition: opacity 0.2s ease; }
-.hover-opacity:hover { opacity: 0.7; }
-.hover-bg-dark:hover { background-color: #343a40 !important; color: #fff !important; }
+.hover-text-dark:hover {
+  color: #000 !important;
+}
 
-.hover-transform { transition: transform 0.2s ease, box-shadow 0.2s ease; }
-.hover-transform:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important; }
+html.dark .hover-text-dark:hover {
+  color: #fff !important;
+}
 
-.hover-border-urban:hover { border-color: var(--color-c-hover, #547792) !important; }
-.hover-dark:hover { background-color: #212529 !important; color: white !important; border-color: #212529 !important; }
-.hover-danger:hover { background-color: #dc3545 !important; color: white !important; border-color: #dc3545 !important; }
+.hover-text-urban:hover {
+  color: var(--color-c-hover, #547792) !important;
+  text-decoration: underline !important;
+}
 
-.shadow-sm-hover { transition: box-shadow 0.2s ease, border-color 0.2s ease; }
-.shadow-sm-hover:focus-within { box-shadow: 0 4px 15px rgba(84, 119, 146, 0.1) !important; border-color: var(--color-c-hover, #547792) !important; }
-.form-control:focus, .form-select:focus { box-shadow: none !important; border-color: var(--color-c-hover, #547792) !important; }
+.hover-opacity {
+  transition: opacity 0.2s ease;
+}
 
-.line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; }
-.line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; }
-.cursor-pointer { cursor: pointer; }
+.hover-opacity:hover {
+  opacity: 0.7;
+}
 
-.border-dashed { border-style: dashed !important; border-color: #dee2e6 !important; }
-html.dark .border-dashed { border-color: #373b3e !important; }
-.last-no-border:last-child { margin-bottom: 0 !important; padding-bottom: 0 !important; border: none !important; }
+.hover-bg-dark:hover {
+  background-color: #343a40 !important;
+  color: #fff !important;
+}
 
-.font-sans-vn { font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif !important; }
+.hover-transform {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
 
-.animation-fade-in { animation: fadeIn 0.4s ease-in-out; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+.hover-transform:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+.hover-border-urban:hover {
+  border-color: var(--color-c-hover, #547792) !important;
+}
+
+.hover-dark:hover {
+  background-color: #212529 !important;
+  color: white !important;
+  border-color: #212529 !important;
+}
+
+.hover-danger:hover {
+  background-color: #dc3545 !important;
+  color: white !important;
+  border-color: #dc3545 !important;
+}
+
+.shadow-sm-hover {
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.shadow-sm-hover:focus-within {
+  box-shadow: 0 4px 15px rgba(84, 119, 146, 0.1) !important;
+  border-color: var(--color-c-hover, #547792) !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+  box-shadow: none !important;
+  border-color: var(--color-c-hover, #547792) !important;
+}
+
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.border-dashed {
+  border-style: dashed !important;
+  border-color: #dee2e6 !important;
+}
+
+html.dark .border-dashed {
+  border-color: #373b3e !important;
+}
+
+.last-no-border:last-child {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+  border: none !important;
+}
+
+.font-sans-vn {
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif !important;
+}
+
+.animation-fade-in {
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
 /* SKELETON CSS */
 .shimmer {
@@ -817,10 +1081,47 @@ html.dark .border-dashed { border-color: #373b3e !important; }
   background-size: 800px 100%;
   animation: placeholderShimmer 1.5s infinite linear;
 }
+
 html.dark .shimmer {
   background: #2b3035;
   background-image: linear-gradient(to right, #2b3035 0%, #343a40 20%, #2b3035 40%, #2b3035 100%);
 }
-@keyframes placeholderShimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
+
+@keyframes placeholderShimmer {
+  0% {
+    background-position: -400px 0;
+  }
+
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+/* STATUS BACKGROUND COLORS */
+.bg-status-pending { background-color: #fffdf5 !important; }
+.bg-status-confirmed { background-color: #f0fbfe !important; }
+.bg-status-processing, .bg-status-shipping { background-color: #f5f8fd !important; }
+.bg-status-completed { background-color: #f5fdf7 !important; }
+.bg-status-cancelled { background-color: #fdf5f6 !important; }
+.bg-status-returned { background-color: #f8f9fa !important; }
+.bg-status-all { background-color: #ffffff !important; }
+
+/* DARK MODE STATUS BACKGROUNDS */
+.dark .bg-status-pending { background-color: rgba(255, 193, 7, 0.08) !important; }
+.dark .bg-status-confirmed { background-color: rgba(13, 202, 240, 0.08) !important; }
+.dark .bg-status-processing, .dark .bg-status-shipping { background-color: rgba(13, 110, 253, 0.08) !important; }
+.dark .bg-status-completed { background-color: rgba(25, 135, 84, 0.08) !important; }
+.dark .bg-status-cancelled { background-color: rgba(220, 53, 69, 0.08) !important; }
+.dark .bg-status-returned { background-color: rgba(108, 117, 125, 0.08) !important; }
+.dark .bg-status-all { background-color: #1a2533 !important; }
+
+/* TAB STATUS COLORS */
+.active-tab-all { color: var(--color-urban) !important; border-bottom-color: var(--color-urban) !important; }
+.active-tab-pending { color: #ffc107 !important; border-bottom-color: #ffc107 !important; }
+.active-tab-confirmed { color: #0dcaf0 !important; border-bottom-color: #0dcaf0 !important; }
+.active-tab-shipping, .active-tab-processing { color: #0d6efd !important; border-bottom-color: #0d6efd !important; }
+.active-tab-completed { color: #198754 !important; border-bottom-color: #198754 !important; }
+.active-tab-cancelled { color: #dc3545 !important; border-bottom-color: #dc3545 !important; }
+.active-tab-returned { color: #6c757d !important; border-bottom-color: #6c757d !important; }
 
 </style>

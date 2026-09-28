@@ -1,5 +1,5 @@
 <template>
-  <div class="return-edit-wrapper pb-5 mb-5">
+  <div class="return-edit-wrapper">
     
     <div v-if="isPageLoading" class="d-flex flex-column justify-content-center align-items-center w-100" style="min-height: 70vh;">
       <h1 class="logo-shimmer mb-3">ZYRO</h1>
@@ -143,20 +143,21 @@
 
             <!-- Tổng kết Tài chính -->
             <div class="row mt-4">
-              <div class="col-md-6 offset-md-6 col-xl-5 offset-xl-7">
-                <div class="p-3 bg-light dark:bg-[#212529] border dark:border-gray-700 rounded-3 font-sans-vn">
-                  <div class="d-flex justify-content-between mb-2 text-success">
-                    <span class="small fw-semibold">Khuyến mãi đã áp:</span>
-                    <span class="fw-bold">- {{ formatCurrency(order.discount_amount) }}</span>
-                  </div>
-                  <div class="d-flex justify-content-between mb-2">
-                    <span class="text-muted dark:text-gray-400 small fw-semibold">Khách đã thanh toán:</span>
-                    <span class="text-dark dark:text-gray-200 fw-bold">{{ formatCurrency(order.total_amount) }}</span>
-                  </div>
-                  <hr class="dark:border-gray-600 my-2">
-                  <div class="d-flex justify-content-between align-items-center mt-2">
-                    <span class="text-uppercase fw-bold text-dark dark:text-white">GIÁ TRỊ HOÀN TỐI ĐA</span>
-                    <span class="text-danger fw-bold fs-4">{{ formatCurrency(order.total_amount) }}</span>
+              <div class="col-12">
+                <div class="p-4 bg-light dark:bg-[#212529] border dark:border-gray-700 rounded-4 shadow-sm font-sans-vn animation-fade-in">
+                  <div class="row align-items-center text-center text-md-start">
+                    <div class="col-md-4 border-end dark:border-gray-600 mb-3 mb-md-0">
+                      <div class="text-muted small fw-bold text-uppercase mb-1">Khuyến mãi đã áp</div>
+                      <div class="text-success fw-bold fs-5">- {{ formatCurrency(order.discount_amount) }}</div>
+                    </div>
+                    <div class="col-md-4 border-end dark:border-gray-600 mb-3 mb-md-0 ps-md-4">
+                      <div class="text-muted small fw-bold text-uppercase mb-1">Khách đã thanh toán</div>
+                      <div class="text-dark dark:text-gray-200 fw-bold fs-5">{{ formatCurrency(order.total_amount) }}</div>
+                    </div>
+                    <div class="col-md-4 ps-md-4">
+                      <div class="text-urban small fw-bold text-uppercase mb-1">Giá trị hoàn tối đa</div>
+                      <div class="text-danger fw-bold fs-3">{{ formatCurrency(order.total_amount) }}</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -232,12 +233,20 @@
                 </div>
 
                 <div class="mb-4" v-if="refundForm.action !== 'reject'">
-                  <label class="form-label text-muted small fw-bold text-uppercase mb-2">Số tiền hoàn (VNĐ) <span class="text-danger">*</span></label>
-                  <div class="input-group shadow-sm-hover">
-                    <input type="number" class="form-control form-control-lg fw-bold text-danger dark:bg-[#212529] dark:text-white border-0" v-model.number="refundForm.refund_amount" min="0" :max="order.total_amount" required>
-                    <span class="input-group-text bg-white dark:bg-[#212529] border-0 text-muted">₫</span>
+                  <div class="form-floating position-relative shadow-sm-hover rounded-3 overflow-hidden border dark:border-gray-700 bg-light dark:bg-[#212529]">
+                    <input type="text" id="refundAmountInput" class="form-control fw-bold text-danger fs-4 border-0 bg-transparent dark:text-white" style="padding-right: 40px;" :value="displayRefundAmount" @input="onRefundInput" placeholder="Số tiền hoàn (VNĐ)" required>
+                    <label for="refundAmountInput" class="text-muted fw-bold" style="transition: all 0.2s ease-in-out;">Số tiền hoàn (VNĐ) <span class="text-danger">*</span></label>
+                    <div class="position-absolute end-0 top-50 translate-middle-y pe-3 text-muted fw-bold fs-5" style="pointer-events: none;">₫</div>
                   </div>
-                  <small class="text-danger fw-bold d-block mt-1">{{ formatCurrency(refundForm.refund_amount) }}</small>
+                  <small v-if="refundExceedError" class="text-danger fw-bold d-block mt-2 animation-fade-in"><i class="bi bi-exclamation-triangle-fill"></i> Số tiền không được vượt quá {{ formatCurrency(order.total_amount) }}</small>
+                  
+                  <!-- Mức hoàn tiền nhanh -->
+                  <div class="d-flex gap-2 mt-3 flex-wrap">
+                    <button type="button" class="btn btn-sm btn-outline-urban rounded-pill fw-bold px-3" @click="applyRefundPercentage(100)">Hoàn 100%</button>
+                    <button type="button" class="btn btn-sm btn-outline-urban rounded-pill fw-bold px-3" @click="applyRefundPercentage(50)">Hoàn 50%</button>
+                    <button type="button" class="btn btn-sm btn-outline-urban rounded-pill fw-bold px-3" @click="applyRefundPercentage(30)">Hoàn 30%</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill fw-bold px-3" @click="applyRefundPercentage(0)">0đ</button>
+                  </div>
                 </div>
 
                 <!-- ======================================================== -->
@@ -339,6 +348,48 @@ const shippingInfoParsed = ref({});
 
 const refundForm = ref({ action: 'propose', refund_amount: 0, refund_note: '' });
 
+const displayRefundAmount = ref('');
+const refundExceedError = ref(false);
+
+const onRefundInput = (e) => {
+  let val = e.target.value.replace(/\D/g, '');
+  if (!val) {
+    displayRefundAmount.value = '';
+    refundForm.value.refund_amount = 0;
+    refundExceedError.value = false;
+    return;
+  }
+  
+  let num = parseInt(val, 10);
+  if (num > order.value.total_amount) {
+    refundExceedError.value = true;
+    num = order.value.total_amount;
+  } else {
+    refundExceedError.value = false;
+  }
+  
+  refundForm.value.refund_amount = num;
+  displayRefundAmount.value = new Intl.NumberFormat('vi-VN').format(num);
+  e.target.value = displayRefundAmount.value;
+};
+
+const applyRefundPercentage = (percent) => {
+  const num = Math.round((order.value.total_amount * percent) / 100);
+  refundForm.value.refund_amount = num;
+  displayRefundAmount.value = new Intl.NumberFormat('vi-VN').format(num);
+  refundExceedError.value = false;
+  
+  // Note: customTextNote is used for custom input note.
+  // We can automatically check the "isCustomNote" and append to customTextNote.
+  isCustomNote.value = true;
+  if (percent > 0) {
+     customTextNote.value = `Đề xuất hoàn trả ${percent}% giá trị hóa đơn (${new Intl.NumberFormat('vi-VN').format(num)}đ).`;
+  } else {
+     customTextNote.value = ``;
+  }
+};
+
+
 // ====== LOGIC QUICK NOTES DẠNG CHECKLIST ======
 const selectedNotes = ref([]);
 const isCustomNote = ref(false);
@@ -376,7 +427,7 @@ const mapData = ref(null);
 const isMapOpen = ref(false);
 
 const getHeaders = () => ({ 'Accept': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` });
-const getImageUrl = (path) => path ? `http://127.0.0.1:8000/storage/${path}` : defaultAvatar;
+const getImageUrl = (path) => path ? `${import.meta.env.VITE_STORAGE_URL}${path}` : defaultAvatar;
 const handleImageError = (e) => { e.target.src = defaultAvatar; };
 
 const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0);
@@ -384,6 +435,16 @@ const formatDateTime = (dateString) => {
   if(!dateString) return '';
   const d = new Date(dateString);
   return `${d.toLocaleDateString('vi-VN')} ${d.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}`;
+};
+
+
+const getBankInfo = (jsonStr, key) => {
+   if (!jsonStr) return 'N/A';
+   let obj = jsonStr;
+   if (typeof jsonStr === 'string') {
+       try { obj = JSON.parse(jsonStr); } catch(e) { return 'N/A'; }
+   }
+   return obj[key] || 'N/A';
 };
 
 const parseAttributes = (jsonStr) => {

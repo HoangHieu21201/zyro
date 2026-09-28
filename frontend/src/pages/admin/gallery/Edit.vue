@@ -1,5 +1,5 @@
 <template>
-  <div class="gallery-edit-wrapper pb-5 mb-5">
+  <div class="gallery-edit-wrapper">
     <div class="container-fluid py-4">
       
       <div class="row mb-4 align-items-center">
@@ -54,8 +54,10 @@
 
               <div class="col-md-7">
                 <div class="mb-4">
-                  <label class="form-label fw-bold text-dark">Tiêu đề ảnh <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control form-control-lg bg-light border-0 shadow-sm px-4" v-model="form.title" required>
+                  <div class="form-floating shadow-sm-hover">
+                    <input id="floating_o4xjif9u4" type="text" class="form-control form-control-lg bg-light border-0 shadow-sm px-4" v-model="form.title" required placeholder="...">
+                    <label for="floating_o4xjif9u4" class="fw-bold text-muted" style="font-size: 0.85rem;">TIÊU ĐỀ ẢNH <span class="text-danger">*</span></label>
+                  </div>
                   <div v-if="errors.title" class="text-danger small mt-2"><i class="bi bi-exclamation-circle me-1"></i>{{ errors.title[0] }}</div>
                 </div>
 

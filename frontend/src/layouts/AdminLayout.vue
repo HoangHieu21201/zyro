@@ -21,7 +21,7 @@ const isSidebarCollapsed = ref(false);
       
       <Header />
 
-      <main class="main-content flex-grow-1">
+      <main>
         <div class="container-fluid">
           <router-view v-slot="{ Component }">
             <transition name="fade" mode="out-in">
@@ -51,13 +51,11 @@ const isSidebarCollapsed = ref(false);
   transition: all 0.3s ease;
 }
 
-/* Khi thu gọn Sidebar ở Desktop */
 .admin-layout-wrapper.sidebar-collapsed .content-wrapper {
   margin-left: 80px;
   width: calc(100% - 80px);
 }
 
-/* Cố định Sidebar bằng position: fixed */
 :deep(.main-sidebar) {
   position: fixed !important;
   top: 0;
@@ -65,27 +63,24 @@ const isSidebarCollapsed = ref(false);
   bottom: 0;
   height: 100vh !important;
   z-index: 1060 !important;
-  overflow: visible !important; /* QUAN TRỌNG: Để nút thò ra không bị cắt */
+  overflow: visible !important;
   transition: transform 0.3s ease, width 0.3s ease !important;
 }
 
-/* =======================================================
-   NÚT TOGGLE CHUYÊN NGHIỆP (HÌNH TRÒN)
-======================================================== */
 :deep(.toggle-sidebar-btn) {
-  display: flex !important; /* Ghi đè mọi class ẩn của Bootstrap (d-none) */
+  display: flex !important; 
   position: absolute !important;
-  top: 14px !important; /* Căn giữa Header (Header cao ~60px) */
-  right: -16px !important; /* Thò ra ngoài chính xác 1 nửa width (32px/2) */
+  top: 14px !important; 
+  right: -16px !important; 
   width: 32px !important;
   height: 32px !important;
-  border-radius: 50% !important; /* Hình tròn hoàn hảo như trong ảnh */
-  background-color: #212529 !important; /* Màu đen tối sang trọng */
+  border-radius: 50% !important;
+  background-color: #212529 !important; 
   color: #fff !important;
-  border: 2px solid #fff !important; /* Viền trắng tách biệt */
+  border: 2px solid #fff !important; 
   align-items: center !important;
   justify-content: center !important;
-  z-index: 9999 !important; /* Đảm bảo luôn nằm trên cùng mọi thứ */
+  z-index: 9999 !important; 
   padding: 0 !important;
   box-shadow: 0 2px 6px rgba(0,0,0,0.2) !important;
   cursor: pointer !important;
@@ -94,40 +89,33 @@ const isSidebarCollapsed = ref(false);
 
 :deep(.toggle-sidebar-btn i) {
   font-size: 14px !important;
-  transition: transform 0.3s ease !important; /* Hiệu ứng trượt mũi tên mượt mà */
+  transition: transform 0.3s ease !important;
 }
 
 :deep(.toggle-sidebar-btn:hover) {
-  background-color: #009981 !important; /* Đổi màu xanh SORA khi hover */
+  background-color: #009981 !important; 
   transform: scale(1.1) !important;
 }
 
-/* =======================================================
-   2. GIAO DIỆN MOBILE (Dưới 768px) - TỐI ƯU ƯU TIÊN
-======================================================== */
 @media (max-width: 767.98px) {
   
-  /* Mobile: Nội dung luôn chiếm 100% màn hình */
   .content-wrapper,
   .admin-layout-wrapper.sidebar-collapsed .content-wrapper {
     margin-left: 0 !important;
     width: 100% !important;
   }
 
-  /* Mobile: Khi Sidebar mở -> Hiển thị đè lên nội dung (Overlay) */
   :deep(.main-sidebar) {
     width: 260px !important;
-    transform: translateX(0); /* Nằm nguyên vị trí */
+    transform: translateX(0);
     box-shadow: 5px 0 25px rgba(0,0,0,0.5) !important;
   }
 
-  /* Mobile: Khi Sidebar ẩn -> Trượt tuột 100% sang trái, biến mất hoàn toàn */
   .admin-layout-wrapper.sidebar-collapsed :deep(.main-sidebar) {
     transform: translateX(-100%);
     box-shadow: none !important;
   }
 
-  /* Nút Mobile to ra một chút để ngón tay dễ bấm */
   :deep(.toggle-sidebar-btn) {
     width: 32px !important;
     height: 32px !important;
@@ -135,14 +123,10 @@ const isSidebarCollapsed = ref(false);
     top: 14px !important;
   }
   
-  /* FIX TINH TẾ CỦA BẠN NẰM Ở ĐÂY: 
-     Khi Sidebar ẩn, nút bị cắt làm đôi -> Đẩy icon dịch sang phải 6px 
-     để nó nằm chính giữa phần thò ra (Bán nguyệt) */
   .admin-layout-wrapper.sidebar-collapsed :deep(.toggle-sidebar-btn i) {
     transform: translateX(6px) !important;
   }
 
-  /* Ép hiển thị lại text Logo khi mở trên mobile */
   :deep(.brand-text) {
     display: inline-block !important;
   }
@@ -164,7 +148,6 @@ const isSidebarCollapsed = ref(false);
 }
 </style>
 
-<!-- STYLE KHÔNG SCOPED: Chứa css dark mode gốc của bạn -->
 <style>
 [data-bs-theme="dark"] body {
     background-color: #121416 !important;
@@ -178,12 +161,10 @@ const isSidebarCollapsed = ref(false);
     color: #e0e0e0 !important;
 }
 
-/* Cứu cánh cho các chữ bị tàng hình (chữ đen -> chữ trắng) */
 [data-bs-theme="dark"] .text-dark {
     color: #f8f9fa !important;
 }
 
-/* FIX LỖI ẢNH CỦA BẠN: Thêm class text-black-50 vào đây để nó sáng lên cùng text-muted */
 [data-bs-theme="dark"] .text-muted,
 [data-bs-theme="dark"] .text-black-50 {
     color: #adb5bd !important;
@@ -221,7 +202,6 @@ const isSidebarCollapsed = ref(false);
     color: #ffffff !important;
 }
 
-/* Đảm bảo cái nút cũng đẹp khi ở giao diện Dark Mode */
 [data-bs-theme="dark"] .toggle-sidebar-btn {
     background-color: #121416 !important;
     border-color: #373b3e !important;

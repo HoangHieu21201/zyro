@@ -4,7 +4,7 @@ import Swal from 'sweetalert2';
 
 export const useCartStore = defineStore('cart', {
   state: () => ({
-    items: [], 
+    items: [],
     isLoading: false,
   }),
 
@@ -22,12 +22,18 @@ export const useCartStore = defineStore('cart', {
 
   actions: {
     async initCart() {
-      const token = localStorage.getItem('access_token'); 
+      const token = localStorage.getItem('access_token');
       if (token) {
         await this.fetchDBCart();
       } else {
         const localCart = localStorage.getItem('zyro_guest_cart');
-        this.items = localCart ? JSON.parse(localCart) : [];
+        const parsedCart = localCart ? JSON.parse(localCart) : [];
+        const fixedCart = parsedCart.map(item => ({
+          ...item,
+          is_available: item.is_available !== undefined ? item.is_available : true
+        }));
+        localStorage.setItem('zyro_guest_cart', JSON.stringify(fixedCart));
+        this.items = fixedCart;
       }
     },
 
@@ -55,10 +61,10 @@ export const useCartStore = defineStore('cart', {
             quantity: quantity
           });
           if (res.data.success) {
-            await this.fetchDBCart(); 
+            await this.fetchDBCart();
           }
         } catch (error) {
-          throw error; 
+          throw error;
         }
       } else {
         let localCart = JSON.parse(localStorage.getItem('zyro_guest_cart')) || [];
@@ -76,6 +82,7 @@ export const useCartStore = defineStore('cart', {
             image: productData.image,
             attributes: `${productData.color || ''} ${productData.size ? '- ' + productData.size : ''}`.trim(),
             product_slug: productData.slug,
+            is_available: true,
           });
         }
         localStorage.setItem('zyro_guest_cart', JSON.stringify(localCart));
@@ -83,9 +90,7 @@ export const useCartStore = defineStore('cart', {
       }
     },
 
-    // ==================================================
     // ĐÃ BỔ SUNG: CẬP NHẬT SỐ LƯỢNG
-    // ==================================================
     async updateQuantity(itemId, variantId, quantity) {
       const token = localStorage.getItem('access_token');
       if (token) {
@@ -95,7 +100,7 @@ export const useCartStore = defineStore('cart', {
           await this.fetchDBCart();
         } catch (error) {
           console.error(error);
-          Swal.fire({toast: true, position: 'top-end', icon: 'error', title: error.response?.data?.message || 'Lỗi cập nhật', showConfirmButton: false, timer: 1500});
+          Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: error.response?.data?.message || 'Lỗi cập nhật', showConfirmButton: false, timer: 1500 });
           await this.fetchDBCart(); // Revert lại data nếu lỗi
         }
       } else {
@@ -103,43 +108,49 @@ export const useCartStore = defineStore('cart', {
         const index = localCart.findIndex(i => i.variant_id === variantId);
         if (index > -1) {
           localCart[index].quantity = quantity;
+          localCart = localCart.map(item => ({
+            ...item,
+            is_available: item.is_available !== undefined ? item.is_available : true
+          }));
           localStorage.setItem('zyro_guest_cart', JSON.stringify(localCart));
           this.items = localCart;
         }
       }
     },
 
-    // ==================================================
     // ĐÃ BỔ SUNG: XÓA SẢN PHẨM KHỎI GIỎ
-    // ==================================================
-    async removeItem(itemId, variantId) {
-      const token = localStorage.getItem('access_token');
-      if (token) {
-        try {
-          await api.delete(`/client/cart/${itemId}`);
-          await this.fetchDBCart();
-        } catch (error) {
-          console.error(error);
-        }
-      } else {
-        let localCart = JSON.parse(localStorage.getItem('zyro_guest_cart')) || [];
-        localCart = localCart.filter(i => i.variant_id !== variantId);
-        localStorage.setItem('zyro_guest_cart', JSON.stringify(localCart));
-        this.items = localCart;
-      }
-    },
-
-    async mergeCartAfterLogin() {
-      const localCart = JSON.parse(localStorage.getItem('zyro_guest_cart')) || [];
-      if (localCart.length > 0) {
-        try {
-          await api.post('/client/cart/merge', { local_items: localCart });
-          localStorage.removeItem('zyro_guest_cart');
-        } catch (error) {
-          console.error("Lỗi gộp giỏ hàng", error);
-        }
-      }
+  async removeItem(itemId, variantId) {
+  const token = localStorage.getItem('access_token');
+  if(token) {
+    try {
+      await api.delete(`/client/cart/${itemId}`);
       await this.fetchDBCart();
+    } catch (error) {
+      console.error(error);
+    }
+  } else {
+    let localCart = JSON.parse(localStorage.getItem('zyro_guest_cart')) || [];
+    localCart = localCart.filter(i => i.variant_id !== variantId);
+    localCart = localCart.map(item => ({
+      ...item,
+      is_available: item.is_available !== undefined ? item.is_available : true
+    }));
+    localStorage.setItem('zyro_guest_cart', JSON.stringify(localCart));
+    this.items = localCart;
+  }
+},
+
+  async mergeCartAfterLogin() {
+  const localCart = JSON.parse(localStorage.getItem('zyro_guest_cart')) || [];
+  if(localCart.length > 0) {
+    try {
+      await api.post('/client/cart/merge', { local_items: localCart });
+localStorage.removeItem('zyro_guest_cart');
+        } catch (error) {
+  console.error("Lỗi gộp giỏ hàng", error);
+}
+      }
+await this.fetchDBCart();
     }
   }
 });

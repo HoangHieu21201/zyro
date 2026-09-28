@@ -1,36 +1,56 @@
-import axios from 'axios';
+﻿import axios from 'axios';
+import Swal from 'sweetalert2';
 
-// 1. Tạo một instance mới của axios với cấu hình mặc định
 const api = axios.create({
-  // Lấy URL từ file .env (ví dụ: VITE_API_BASE_URL=http://127.0.0.1:8000/api/v1)
   baseURL: import.meta.env.VITE_API_BASE_URL,
-  timeout: 10000, // Quá 10 giây không phản hồi sẽ báo lỗi mạng
+  timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
   }
 });
 
-// ==============================================================
-// 2. REQUEST INTERCEPTOR: Tự động gắn Token vào mọi request
-// ==============================================================
+// --- REFRESH TOKEN LOGIC ---
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
 api.interceptors.request.use(
   (config) => {
-    // ĐÃ FIX: Phân luồng Token thông minh dựa trên Endpoint
-    // Tránh tình trạng "râu ông nọ cắm cằm bà kia" gây lỗi 500 Server
-    
+    // Determine if it's an admin request or client request based on URL
     if (config.url.includes('/admin')) {
       const adminToken = localStorage.getItem('admin_token');
-      if (adminToken) {
+      // Special case: if calling /refresh-token, we use the refresh_token in the Authorization header
+      if (config.url.includes('/refresh-token')) {
+        const adminRefreshToken = localStorage.getItem('admin_refresh_token');
+        if (adminRefreshToken) {
+          config.headers.Authorization = `Bearer ${adminRefreshToken}`;
+        }
+      } else if (adminToken) {
         config.headers.Authorization = `Bearer ${adminToken}`;
       }
-    } else if (config.url.includes('/client')) {
+    } else {
+      // Client
       const clientToken = localStorage.getItem('access_token');
-      if (clientToken) {
+      if (config.url.includes('/refresh-token')) {
+        const clientRefreshToken = localStorage.getItem('client_refresh_token');
+        if (clientRefreshToken) {
+          config.headers.Authorization = `Bearer ${clientRefreshToken}`;
+        }
+      } else if (clientToken) {
         config.headers.Authorization = `Bearer ${clientToken}`;
       }
     }
-    
     return config;
   },
   (error) => {
@@ -38,21 +58,104 @@ api.interceptors.request.use(
   }
 );
 
-// ==============================================================
-// 3. RESPONSE INTERCEPTOR: Xử lý lỗi chung toàn cục
-// ==============================================================
 api.interceptors.response.use(
   (response) => {
-    // Nếu API trả về OK, cứ thế pass qua
     return response;
   },
-  (error) => {
-    // Nếu token hết hạn (lỗi 401), văng cảnh báo
-    if (error.response && error.response.status === 401) {
-      console.warn("Token hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại!");
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Bỏ qua nếu lỗi không phải 401 hoặc API đang gọi đã là /refresh-token (để tránh lặp vô hạn)
+    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url.includes('/refresh-token') && !originalRequest.url.includes('/login')) {
+      
+      const isAdmin = originalRequest.url.includes('/admin');
+      const refreshToken = isAdmin ? localStorage.getItem('admin_refresh_token') : localStorage.getItem('client_refresh_token');
+      
+      // Nếu không có refresh token thì bắt buộc phải login lại
+      if (!refreshToken) {
+        handleLogout(isAdmin);
+        return Promise.reject(error);
+      }
+
+      if (isRefreshing) {
+        // Đang lấy token mới, đưa request vào hàng đợi
+        return new Promise(function(resolve, reject) {
+          failedQueue.push({ resolve, reject });
+        }).then(token => {
+          originalRequest.headers['Authorization'] = 'Bearer ' + token;
+          return api(originalRequest);
+        }).catch(err => {
+          return Promise.reject(err);
+        });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        // Gửi request lấy token mới
+        const endpoint = isAdmin ? '/admin/refresh-token' : '/refresh-token';
+        const res = await api.post(endpoint);
+        const newAccessToken = res.data.token || res.data.access_token;
+        const newRefreshToken = res.data.refresh_token;
+
+        // Lưu token mới
+        if (isAdmin) {
+          localStorage.setItem('admin_token', newAccessToken);
+          localStorage.setItem('admin_refresh_token', newRefreshToken);
+        } else {
+          localStorage.setItem('access_token', newAccessToken);
+          localStorage.setItem('client_refresh_token', newRefreshToken);
+        }
+
+        // Cập nhật header cho request gốc và chạy lại các request trong queue
+        api.defaults.headers.common['Authorization'] = 'Bearer ' + newAccessToken;
+        originalRequest.headers['Authorization'] = 'Bearer ' + newAccessToken;
+        
+        processQueue(null, newAccessToken);
+        isRefreshing = false;
+        
+        return api(originalRequest);
+        
+      } catch (refreshError) {
+        // Refresh token cũng hết hạn hoặc hỏng
+        processQueue(refreshError, null);
+        isRefreshing = false;
+        handleLogout(isAdmin);
+        return Promise.reject(refreshError);
+      }
     }
+
     return Promise.reject(error);
   }
 );
+
+function handleLogout(isAdmin) {
+  if (isAdmin) {
+    localStorage.removeItem('admin_token');
+    localStorage.removeItem('admin_refresh_token');
+    localStorage.removeItem('admin_info');
+    Swal.fire({
+      icon: 'warning',
+      title: 'Hết phiên đăng nhập',
+      text: 'Phiên đăng nhập của bạn đã hết hạn. Vui lòng đăng nhập lại để tiếp tục.',
+      confirmButtonText: 'Đăng nhập lại'
+    }).then(() => {
+      window.location.href = '/admin/login';
+    });
+  } else {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('client_refresh_token');
+    localStorage.removeItem('user_info');
+    Swal.fire({
+      icon: 'warning',
+      title: 'Hết phiên đăng nhập',
+      text: 'Phiên đăng nhập của bạn đã hết hạn. Vui lòng đăng nhập lại để tiếp tục.',
+      confirmButtonText: 'Đăng nhập lại'
+    }).then(() => {
+      window.location.href = '/login';
+    });
+  }
+}
 
 export default api;

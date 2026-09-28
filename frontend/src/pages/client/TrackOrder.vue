@@ -1,9 +1,9 @@
 <template>
-  <div class="track-order-wrapper pb-5 mb-5">
+  <div class="track-order-wrapper">
     <div class="pt-5 mt-4">
       <div class="zyro-container">
         
-        <nav aria-label="breadcrumb" class="mb-4">
+        <nav aria-label="breadcrumb" class="mb-4 pt-4">
           <ol class="breadcrumb small fw-semibold text-uppercase" style="letter-spacing: 0.5px;">
             <li class="breadcrumb-item"><router-link to="/" class="text-decoration-none text-muted hover-text-dark">Trang chủ</router-link></li>
             <li class="breadcrumb-item active text-c-dark" aria-current="page">Tra cứu đơn hàng</li>

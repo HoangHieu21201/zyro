@@ -47,7 +47,7 @@
             <i class="bi bi-heart fs-5"></i>
           </router-link>
           
-          <router-link v-if="!isLoggedIn" to="/login" class="btn btn-link p-0 border-0 hover-opacity d-none d-md-block transition-color" 
+          <router-link v-if="!isLoggedIn" :to="`/login?redirect=${$route.fullPath}`" class="btn btn-link p-0 border-0 hover-opacity d-none d-md-block transition-color" 
                        :class="(isScrolled || !isHomePage || isMegaMenuOpen || isSearchOpen || isMiniCartOpen) ? 'text-dark' : 'text-white'" title="Đăng nhập / Đăng ký">
             <i class="bi bi-person fs-5"></i>
           </router-link>
@@ -386,9 +386,6 @@ onUnmounted(() => {
 .transition-color { transition: color 0.3s ease, background-color 0.3s ease; }
 .cursor-pointer { cursor: pointer; }
 
-/* =========================================
-   STYLE CHO CUSTOM USER DROPDOWN (VUE)
-========================================= */
 .custom-user-dropdown {
   top: 100%;
   border: 1px solid rgba(0,0,0,0.08);

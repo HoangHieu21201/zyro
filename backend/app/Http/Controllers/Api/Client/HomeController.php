@@ -194,7 +194,7 @@ class HomeController extends Controller
     {
         if (!$path) return null;
         if (Str::startsWith($path, ['http://', 'https://'])) return $path;
-        return 'http://127.0.0.1:8000/storage/' . ltrim($path, '/');
+        return env('APP_URL') . '/storage/' . ltrim($path, '/');
     }
 
     private function getVietnameseColorHex(string $colorName): string
@@ -715,6 +715,17 @@ class HomeController extends Controller
                 'success' => false,
                 'message' => 'Lỗi tìm kiếm: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    public function trackBannerClick($id): JsonResponse
+    {
+        try {
+            $banner = Banner::findOrFail($id);
+            $banner->increment('click_count');
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 }

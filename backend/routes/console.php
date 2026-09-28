@@ -11,3 +11,5 @@ Artisan::command('inspire', function () {
 Schedule::command('sora:crawl-gold')->everyFiveMinutes();
 
 Schedule::command('sora:birthday-mail')->dailyAt('08:00');
+
+Schedule::command('zyro:sync-shipping')->hourly();

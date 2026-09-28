@@ -1,5 +1,5 @@
 <template>
-  <div class="role-index-wrapper pb-5 mb-5">
+  <div class="role-index-wrapper">
     
     <div class="container-fluid py-4" v-if="!isPageLoading">
       <!-- HEADER -->
@@ -455,7 +455,7 @@ const fetchRoles = async (isSilent = false) => {
   else isLoadingRoles.value = true;
 
   try {
-    const res = await axios.get('http://127.0.0.1:8000/api/v1/admin/roles', { headers: getHeaders() });
+    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/roles`, { headers: getHeaders() });
     roles.value = res.data.data;
   } catch (err) { 
       console.error('Lỗi tải roles', err); 
@@ -470,7 +470,7 @@ const fetchModules = async (isSilent = false) => {
   else isLoadingModules.value = true;
 
   try {
-    const res = await axios.get('http://127.0.0.1:8000/api/v1/admin/modules', { headers: getHeaders() });
+    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/modules`, { headers: getHeaders() });
     systemModules.value = res.data.data || [];
     
     const currentCode = route.meta.moduleCode;
@@ -532,7 +532,7 @@ const restoreRole = (id) => {
 const syncModules = async () => {
   isSyncing.value = true;
   try {
-    const res = await axios.post('http://127.0.0.1:8000/api/v1/admin/modules/sync', {}, { headers: getHeaders() });
+    const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/admin/modules/sync`, {}, { headers: getHeaders() });
     Swal.fire({ icon: 'success', title: 'Hoàn tất', text: res.data.message, timer: 2000, showConfirmButton: false });
     fetchModules(true);
   } catch (err) { 

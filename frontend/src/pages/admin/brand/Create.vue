@@ -1,5 +1,5 @@
 <template>
-  <div class="brand-create-wrapper mb-5">
+  <div class="brand-create-wrapper">
     <div class="container-fluid py-4">
       <div class="d-flex align-items-center mb-4">
         <router-link :to="{ name: 'admin-brands' }" class="text-decoration-none text-muted me-3 hover:text-urban transition-all">
@@ -124,7 +124,7 @@ const saveBrand = async () => {
   });
 
   try {
-    await axios.post('http://127.0.0.1:8000/api/v1/admin/brands', formData, { headers: { ...getHeaders(), 'Content-Type': 'multipart/form-data' } });
+    await axios.post(`${import.meta.env.VITE_API_BASE_URL}/admin/brands`, formData, { headers: { ...getHeaders(), 'Content-Type': 'multipart/form-data' } });
     Swal.fire({ icon: 'success', title: 'Thành công', text: 'Đã tạo thương hiệu mới', timer: 1500, showConfirmButton: false });
     router.push({ name: 'admin-brands' });
   } catch (err) {

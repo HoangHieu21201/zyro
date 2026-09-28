@@ -1,5 +1,5 @@
 <template>
-  <div class="role-create-wrapper pb-5 mb-5">
+  <div class="role-create-wrapper">
     <div class="container-fluid py-4">
       <div class="d-flex align-items-center justify-content-between mb-4">
         <h3 class="fw-bold text-dark dark:text-white mb-0">
@@ -19,13 +19,17 @@
         <form @submit.prevent="saveRole">
           <div class="row g-4 mb-4">
             <div class="col-md-6">
-              <label class="form-label fw-semibold text-dark dark:text-gray-200">Tên hiển thị (Label) <span class="text-danger">*</span></label>
-              <input type="text" class="form-control py-2 dark:bg-[#212529] dark:text-white dark:border-gray-700" v-model="roleForm.label" :class="{'is-invalid': errors.label}" placeholder="VD: Kế Toán Trưởng">
+              <div class="form-floating shadow-sm-hover">
+                    <input id="floating_avnk66kn5" type="text" class="form-control dark:bg-[#212529] dark:text-white dark:border-gray-700" v-model="roleForm.label" :class="{'is-invalid': errors.label}" placeholder="VD: Kế Toán Trưởng">
+                    <label for="floating_avnk66kn5" class="fw-bold text-muted" style="font-size: 0.85rem;">TÊN HIỂN THỊ (LABEL) <span class="text-danger">*</span></label>
+                  </div>
               <div class="invalid-feedback fw-bold">{{ errors.label?.[0] }}</div>
             </div>
             <div class="col-md-6">
-              <label class="form-label fw-semibold text-dark dark:text-gray-200">Mã hệ thống (Value) <span class="text-danger">*</span></label>
-              <input type="text" class="form-control font-monospace py-2 dark:bg-[#212529] dark:text-white dark:border-gray-700" v-model="roleForm.value" :class="{'is-invalid': errors.value}" placeholder="VD: accountant_manager">
+              <div class="form-floating shadow-sm-hover">
+                    <input id="floating_ly48swna9" type="text" class="form-control font-monospace dark:bg-[#212529] dark:text-white dark:border-gray-700" v-model="roleForm.value" :class="{'is-invalid': errors.value}" placeholder="VD: accountant_manager">
+                    <label for="floating_ly48swna9" class="fw-bold text-muted" style="font-size: 0.85rem;">MÃ HỆ THỐNG (VALUE) <span class="text-danger">*</span></label>
+                  </div>
               <div class="invalid-feedback fw-bold">{{ errors.value?.[0] }}</div>
             </div>
           </div>
@@ -111,7 +115,7 @@ const accessibleModulesPreview = computed(() => {
 
 const fetchModules = async () => {
   try {
-    const res = await axios.get('http://127.0.0.1:8000/api/v1/admin/modules', { headers: getHeaders() });
+    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/modules`, { headers: getHeaders() });
     systemModules.value = res.data.data || [];
   } catch (err) { 
       console.error('Lỗi tải modules', err); 
@@ -122,7 +126,7 @@ const saveRole = async () => {
   isSaving.value = true;
   errors.value = {};
   try {
-    const res = await axios.post('http://127.0.0.1:8000/api/v1/admin/roles', roleForm.value, { headers: getHeaders() });
+    const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/admin/roles`, roleForm.value, { headers: getHeaders() });
     Swal.fire({ icon: 'success', title: 'Thành công', text: res.data.message, timer: 1500, showConfirmButton: false });
     router.push({ name: 'admin-roles' });
   } catch (err) { 

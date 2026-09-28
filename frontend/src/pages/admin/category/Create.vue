@@ -1,5 +1,5 @@
 <template>
-  <div class="category-create-wrapper pb-5 mb-5">
+  <div class="category-create-wrapper">
     <div class="container-fluid py-4">
       <div class="d-flex align-items-center mb-4">
         <router-link :to="{ name: 'admin-categories' }" class="text-decoration-none text-muted me-3 hover:text-urban transition-all">
@@ -17,9 +17,11 @@
               
               <div class="row g-4">
                 <div class="col-md-12">
-                  <label class="form-label fw-bold text-dark dark:text-gray-200">Tên danh mục <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control py-2 dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" 
+                  <div class="form-floating shadow-sm-hover">
+                    <input id="floating_hp7wzu0pw" type="text" class="form-control dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" 
                          v-model="form.name" :class="{'is-invalid': errors.name}" placeholder="VD: Áo thun nam">
+                    <label for="floating_hp7wzu0pw" class="fw-bold text-muted" style="font-size: 0.85rem;">TÊN DANH MỤC <span class="text-danger">*</span></label>
+                  </div>
                   <div class="invalid-feedback">{{ errors.name?.[0] }}</div>
                 </div>
 
@@ -159,7 +161,7 @@ const getHeaders = () => ({ 'Authorization': `Bearer ${localStorage.getItem('adm
 
 const fetchParents = async () => {
   try {
-    const res = await axios.get('http://127.0.0.1:8000/api/v1/admin/categories', { headers: getHeaders() });
+    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/categories`, { headers: getHeaders() });
     const allCats = Array.isArray(res.data.data) ? res.data.data : [];
     parentCategories.value = allCats.filter(c => !c.deleted_at && !c.parent_id);
   } catch (err) { console.error(err); }
@@ -214,7 +216,7 @@ const saveCategory = async () => {
   });
 
   try {
-    await axios.post('http://127.0.0.1:8000/api/v1/admin/categories', formData, { headers: { ...getHeaders(), 'Content-Type': 'multipart/form-data' } });
+    await axios.post(`${import.meta.env.VITE_API_BASE_URL}/admin/categories`, formData, { headers: { ...getHeaders(), 'Content-Type': 'multipart/form-data' } });
     Swal.fire({ icon: 'success', title: 'Thành công', text: 'Đã tạo danh mục mới', timer: 1500, showConfirmButton: false });
     router.push({ name: 'admin-categories' });
   } catch (err) {

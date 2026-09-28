@@ -20,6 +20,11 @@ const admin = [
     component: () => import('../pages/admin/auth/ResetPassword.vue'),
   },
   {
+    path: '/admin/orders/print',
+    name: 'admin-orders-print',
+    component: () => import('../pages/admin/order/Print.vue'),
+  },
+  {
     path: '/admin',
     component: () => import('../layouts/AdminLayout.vue'),
     children: [

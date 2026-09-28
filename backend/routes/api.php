@@ -72,6 +72,7 @@ Route::prefix('v1/admin')->group(function () {
         Route::post('profile/info', [AdminProfileController::class, 'updateInfo']);
         Route::put('profile/password', [AdminProfileController::class, 'updatePassword']);
 
+        Route::post('contacts/bulk-reply', [AdminContactController::class, 'bulkReply']);
         Route::post('contacts/{id}/reply', [AdminContactController::class, 'reply']);
         Route::apiResource('contacts', AdminContactController::class);
 
@@ -157,6 +158,10 @@ Route::prefix('v1/admin')->group(function () {
         });
 
         Route::middleware(['check.module:admin_orders'])->group(function () {
+            Route::post('orders/bulk-status', [OrderController::class, 'bulkUpdateStatus']);
+            Route::post('orders/print', [OrderController::class, 'printOrders']);
+            Route::post('orders/export', [OrderController::class, 'exportExcel']);
+            Route::post('orders/import-tracking', [OrderController::class, 'importTracking']);
             Route::post('orders/{id}/restore', [OrderController::class, 'restore']);
             Route::patch('orders/{id}/status', [OrderController::class, 'updateStatus']);
             Route::post('orders/{id}/refund', [OrderController::class, 'processRefund']);
@@ -221,6 +226,7 @@ Route::prefix('v1/client')->group(function () {
 
     Route::get('home', [HomeController::class, 'index']);
     Route::get('home/new-arrivals-tab', [HomeController::class, 'getNewArrivalsByCategory']);
+    Route::post('banners/{id}/click', [HomeController::class, 'trackBannerClick']);
 
     Route::middleware('throttle:3,1')->post('/contact', [ContactController::class, 'submit']);
 
@@ -270,5 +276,4 @@ Route::prefix('v1/client')->group(function () {
     });
 
     Route::get('/checkout/momo-return', [ClientCheckoutController::class, 'momoReturn']);
-    Route::post('/checkout/momo-ipn', [ClientCheckoutController::class, 'momoIpn']);
 });

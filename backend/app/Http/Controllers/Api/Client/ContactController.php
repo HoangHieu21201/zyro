@@ -21,9 +21,6 @@ class ContactController extends Controller
     {
         $data = $request->validated();
 
-        // =========================================================================
-        // 0. LỚP BẢO VỆ "THÉP": CHẶN EMAIL ẢO/RÁC NGAY TẠI CỬA (ZERO-TOLERANCE)
-        // =========================================================================
         if ($this->isDisposableEmail($data['email'])) {
             return response()->json([
                 'success' => false, 

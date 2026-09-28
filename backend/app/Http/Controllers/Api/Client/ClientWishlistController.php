@@ -104,14 +104,11 @@ class ClientWishlistController extends Controller
         }
     }
 
-    // ========================================================
-    // CÁC HÀM BỔ TRỢ FORMAT DỮ LIỆU
-    // ========================================================
     private function getImageUrl(?string $path): ?string
     {
         if (!$path) return null;
         if (Str::startsWith($path, ['http://', 'https://'])) return $path;
-        return env('APP_URL', 'http://127.0.0.1:8000') . '/storage/' . ltrim($path, '/');
+        return env('APP_URL') . '/storage/' . ltrim($path, '/');
     }
 
     private function getVietnameseColorHex(string $colorName): string

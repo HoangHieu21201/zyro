@@ -56,11 +56,6 @@ class Product extends Model
         ];
     }
 
-    /**
-     * ========================================================
-     * BỨC TƯỜNG LỬA (HOOKS): TỰ ĐỘNG DỌN DẸP DỮ LIỆU RÁC
-     * ========================================================
-     */
     protected static function booted()
     {
         $cleanupRelations = function ($model) {

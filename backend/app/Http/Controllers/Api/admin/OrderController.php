@@ -427,4 +427,159 @@ class OrderController extends Controller
 
         return array_reverse($events);
     }
+
+    public function exportExcel(Request $request)
+    {
+        $exportType = $request->input('export_type', 'all');
+        $orderIds = $request->input('order_ids', []);
+        
+        $query = Order::with(['items.product', 'items.variant', 'user'])->withTrashed();
+        
+        if ($exportType === 'selected' && !empty($orderIds)) {
+            $query->whereIn('id', $orderIds);
+        } else {
+            // Apply Date Filters
+            if ($request->has('date_from') && !empty($request->date_from)) {
+                $query->whereDate('created_at', '>=', $request->date_from);
+            }
+            if ($request->has('date_to') && !empty($request->date_to)) {
+                $query->whereDate('created_at', '<=', $request->date_to);
+            }
+            
+            // Apply Statuses Array (Checkbox)
+            $statuses = $request->input('statuses', []);
+            if (!empty($statuses) && is_array($statuses)) {
+                $query->whereIn('status', $statuses);
+            }
+        }
+
+        $orders = $query->orderBy('id', 'desc')->get();
+
+        if ($orders->isEmpty()) {
+            return response()->json(['message' => 'Không có đơn hàng nào phù hợp với bộ lọc để xuất Excel!'], 400);
+        }
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet->removeSheetByIndex(0);
+        
+        $splitBy = $request->input('split_by', '');
+        $groupedOrders = [];
+        
+        $statusLabels = [
+            'pending' => 'Chờ xác nhận',
+            'confirmed' => 'Đã xác nhận',
+            'processing' => 'Đang chuẩn bị',
+            'shipping' => 'Đang giao',
+            'completed' => 'Thành công',
+            'cancelled' => 'Đã hủy',
+            'returned' => 'Hoàn trả',
+        ];
+
+        if ($splitBy === 'status') {
+            foreach ($orders as $order) {
+                $statusName = $statusLabels[$order->status] ?? ($order->status ?: 'Khác');
+                $groupedOrders[$statusName][] = $order;
+            }
+        } elseif ($splitBy === 'month') {
+            foreach ($orders as $order) {
+                $month = $order->created_at->format('m-Y');
+                $groupedOrders[$month][] = $order;
+            }
+        } else {
+            $groupedOrders['Tất cả'] = $orders;
+        }
+
+        $sheetIndex = 0;
+        foreach ($groupedOrders as $sheetName => $sheetOrders) {
+            $safeName = str_replace(['\\', '/', '?', '*', ':', '[', ']'], '', $sheetName);
+            if (empty(trim($safeName))) $safeName = "Sheet " . ($sheetIndex + 1);
+            $safeName = mb_substr(trim($safeName), 0, 31);
+            
+            $sheet = new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet($spreadsheet, $safeName);
+            $spreadsheet->addSheet($sheet, $sheetIndex);
+            
+            $titleSuffix = $splitBy ? ' - ' . strtoupper($safeName) : '';
+            $sheet->setCellValue('A1', 'DANH SÁCH ĐƠN HÀNG ZYRO' . $titleSuffix);
+            $sheet->mergeCells('A1:J1');
+            $sheet->getStyle('A1')->applyFromArray([
+                'font' => ['bold' => true, 'size' => 16, 'color' => ['rgb' => 'FFFFFF']],
+                'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
+                'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => '547792']]
+            ]);
+
+            $columns = ['A'=>'Mã Đơn Hàng', 'B'=>'Ngày Đặt', 'C'=>'Khách Hàng', 'D'=>'Số Điện Thoại', 'E'=>'Địa Chỉ', 'F'=>'Tổng Tiền', 'G'=>'Thanh Toán', 'H'=>'Phương Thức', 'I'=>'Trạng Thái', 'J'=>'Sản Phẩm'];
+            
+            foreach ($columns as $col => $title) {
+                $sheet->setCellValue($col.'2', $title);
+            }
+            
+            $sheet->getStyle('A2:J2')->applyFromArray([
+                'font' => ['bold' => true],
+                'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => 'E9ECEF']],
+                'borders' => ['allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN]],
+                'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER]
+            ]);
+            
+            $sheet->getColumnDimension('A')->setWidth(20);
+            $sheet->getColumnDimension('B')->setWidth(20);
+            $sheet->getColumnDimension('C')->setWidth(25);
+            $sheet->getColumnDimension('D')->setWidth(15);
+            $sheet->getColumnDimension('E')->setWidth(40);
+            $sheet->getColumnDimension('F')->setWidth(15);
+            $sheet->getColumnDimension('G')->setWidth(15);
+            $sheet->getColumnDimension('H')->setWidth(15);
+            $sheet->getColumnDimension('I')->setWidth(15);
+            $sheet->getColumnDimension('J')->setWidth(50);
+            
+            $rowIdx = 3;
+            foreach ($sheetOrders as $order) {
+                $productsList = [];
+                foreach ($order->items as $item) {
+                    $prodName = $item->product ? $item->product->name : 'Sản phẩm đã xóa';
+                    $varName = $item->variant ? $item->variant->sku : '';
+                    $priceFormatted = number_format($item->purchased_price, 0, ',', '.');
+                    $productsList[] = "- $prodName ($varName) x " . $item->quantity . " [Giá: {$priceFormatted}đ]";
+                }
+                $productsString = implode("\n", $productsList);
+
+                $sheet->setCellValue("A$rowIdx", $order->order_code);
+                $sheet->setCellValue("B$rowIdx", $order->created_at->format('d/m/Y H:i'));
+                $sheet->setCellValue("C$rowIdx", $order->shipping_info['name'] ?? ($order->user ? $order->user->full_name : 'Khách vãng lai'));
+                $sheet->setCellValue("D$rowIdx", $order->shipping_info['phone'] ?? ($order->user ? $order->user->phone : ''));
+                $sheet->setCellValue("E$rowIdx", $order->shipping_info['address'] ?? '');
+                $sheet->setCellValue("F$rowIdx", $order->total_amount);
+                $sheet->getStyle("F$rowIdx")->getNumberFormat()->setFormatCode('#,##0');
+                $sheet->setCellValue("G$rowIdx", $order->payment_status == 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán');
+                $sheet->setCellValue("H$rowIdx", strtoupper($order->payment_method ?? 'COD'));
+                $sheet->setCellValue("I$rowIdx", $order->status);
+                $sheet->setCellValue("J$rowIdx", $productsString);
+                
+                $sheet->getStyle("J$rowIdx")->getAlignment()->setWrapText(true);
+                $sheet->getStyle("A$rowIdx:J$rowIdx")->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP);
+                
+                $rowIdx++;
+            }
+            
+            if ($rowIdx > 3) {
+                $sheet->getStyle("A3:J".($rowIdx-1))->applyFromArray([
+                    'borders' => [
+                        'allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN, 'color' => ['rgb' => 'CCCCCC']]
+                    ]
+                ]);
+            }
+            
+            $sheetIndex++;
+        }
+        
+        $spreadsheet->setActiveSheetIndex(0);
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $fileName = "don_hang_zyro_" . date('Ymd_His') . ".xlsx";
+        
+        return response()->streamDownload(function() use ($writer) {
+            $writer->save('php://output');
+        }, $fileName, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
+    }
 }

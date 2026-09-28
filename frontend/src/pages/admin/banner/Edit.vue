@@ -1,6 +1,6 @@
 <!-- File: frontend/src/pages/admin/banner/Edit.vue -->
 <template>
-  <div class="banner-edit-wrapper pb-5 mb-5">
+  <div class="banner-edit-wrapper">
     <div class="container-fluid py-4" v-if="!isLoading">
       <div class="d-flex align-items-center mb-4">
         <router-link :to="{ name: 'admin-banners' }" class="text-decoration-none text-muted me-3 hover:text-urban transition-all">
@@ -18,9 +18,11 @@
               
               <div class="row g-4">
                 <div class="col-md-12">
-                  <label class="form-label fw-bold text-dark dark:text-gray-200">Tiêu đề Banner <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control py-2 dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" 
-                         v-model="form.title" :class="{'is-invalid': errors.title}">
+                  <div class="form-floating shadow-sm-hover">
+                    <input id="floating_cm2yg3lo8" type="text" class="form-control dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" 
+                         v-model="form.title" :class="{'is-invalid': errors.title}" placeholder="...">
+                    <label for="floating_cm2yg3lo8" class="fw-bold text-muted" style="font-size: 0.85rem;">TIÊU ĐỀ BANNER <span class="text-danger">*</span></label>
+                  </div>
                   <div class="invalid-feedback">{{ errors.title?.[0] }}</div>
                 </div>
 
@@ -56,12 +58,16 @@
                   <h6 class="fw-bold text-urban mb-3"><i class="bi bi-clock-history me-2"></i>Hẹn giờ hiển thị</h6>
                   <div class="row g-3">
                     <div class="col-md-6">
-                      <label class="form-label small fw-bold text-muted text-uppercase">Bắt đầu lúc</label>
-                      <input type="datetime-local" class="form-control dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" v-model="form.start_time">
+                      <div class="form-floating shadow-sm-hover">
+                    <input id="floating_3bbt2d63a" type="datetime-local" class="form-control dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" v-model="form.start_time" placeholder="...">
+                    <label for="floating_3bbt2d63a" class="fw-bold text-muted" style="font-size: 0.85rem;">BẮT ĐẦU LÚC</label>
+                  </div>
                     </div>
                     <div class="col-md-6">
-                      <label class="form-label small fw-bold text-muted text-uppercase">Kết thúc lúc</label>
-                      <input type="datetime-local" class="form-control dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" v-model="form.end_time" :class="{'is-invalid': errors.end_time}">
+                      <div class="form-floating shadow-sm-hover">
+                    <input id="floating_dwonaspzz" type="datetime-local" class="form-control dark:bg-[#212529] dark:text-white dark:border-gray-700 shadow-sm-hover" v-model="form.end_time" :class="{'is-invalid': errors.end_time}" placeholder="...">
+                    <label for="floating_dwonaspzz" class="fw-bold text-muted" style="font-size: 0.85rem;">KẾT THÚC LÚC</label>
+                  </div>
                       <div class="invalid-feedback">{{ errors.end_time?.[0] }}</div>
                       <small class="text-success fw-bold d-block mt-1"><i class="bi bi-infinity"></i> Bỏ trống = Vô thời hạn</small>
                     </div>
@@ -199,11 +205,11 @@ const fetchData = async () => {
     form.value.end_time = formatDateForInput(b.end_time);
 
     if (b.image_desktop) {
-       previewDesktop.value = `http://127.0.0.1:8000/storage/${b.image_desktop}`;
+       previewDesktop.value = `${import.meta.env.VITE_STORAGE_URL}${b.image_desktop}`;
        hasOldDesktop.value = true;
     }
     if (b.image_mobile) {
-       previewMobile.value = `http://127.0.0.1:8000/storage/${b.image_mobile}`;
+       previewMobile.value = `${import.meta.env.VITE_STORAGE_URL}${b.image_mobile}`;
        hasOldMobile.value = true;
     }
   } catch (err) { 

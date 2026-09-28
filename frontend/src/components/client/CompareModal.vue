@@ -169,7 +169,7 @@ const defaultSizes = ['S', 'M', 'L', 'XL', '2XL'];
 const getImageUrl = (path) => {
   if (!path) return '/client_placeholder.png';
   if (path.startsWith('http')) return path;
-  const baseStorageUrl = import.meta.env.VITE_API_BASE_URL.replace('/api/v1', '/storage/');
+  const baseStorageUrl = import.meta.env.VITE_STORAGE_URL;
   return baseStorageUrl + path;
 };
 
